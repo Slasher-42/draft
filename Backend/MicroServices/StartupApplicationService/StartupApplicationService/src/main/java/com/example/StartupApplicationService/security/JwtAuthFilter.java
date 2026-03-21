@@ -1,5 +1,6 @@
 package com.example.StartupApplicationService.security;
 
+import com.example.StartupApplicationService.dto.response.ApiResponse;
 import com.example.StartupApplicationService.dto.response.TokenValidationResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,13 +37,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                TokenValidationResponse validation = webClientBuilder.build()
+                ApiResponse<TokenValidationResponse> validationResult = webClientBuilder.build()
                         .get()
                         .uri(userManagementUrl + "/api/auth/validate")
                         .header("Authorization", "Bearer " + token)
                         .retrieve()
-                        .bodyToMono(TokenValidationResponse.class)
+                        .bodyToMono(new ParameterizedTypeReference<ApiResponse<TokenValidationResponse>>() {})
                         .block();
+
+                TokenValidationResponse validation = (validationResult != null) ? validationResult.getData() : null;
 
                 if (validation != null && validation.isValid()) {
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority(validation.getRole());

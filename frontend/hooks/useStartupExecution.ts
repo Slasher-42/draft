@@ -1,31 +1,31 @@
 import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import startupServiceApi from '@/lib/startupServiceApi';
 import type { ApiResponse } from '@/types/common';
 import type { StartupExecution, StartupExecutionRequest } from '@/types/execution';
 
 export const startupExecutionService = {
   async submit(data: StartupExecutionRequest): Promise<StartupExecution> {
-    const res = await api.post<ApiResponse<StartupExecution>>('/api/executions/startup', data);
+    const res = await startupServiceApi.post<ApiResponse<StartupExecution>>('/api/executions/startup', data);
     return res.data.data;
   },
 
   async getAll(): Promise<StartupExecution[]> {
-    const res = await api.get<ApiResponse<StartupExecution[]>>('/api/executions/startup');
+    const res = await startupServiceApi.get<ApiResponse<StartupExecution[]>>('/api/executions/startup');
     return res.data.data;
   },
 
   async getById(id: number): Promise<StartupExecution> {
-    const res = await api.get<ApiResponse<StartupExecution>>(`/api/executions/startup/${id}`);
+    const res = await startupServiceApi.get<ApiResponse<StartupExecution>>(`/api/executions/startup/${id}`);
     return res.data.data;
   },
 
   async update(id: number, data: StartupExecutionRequest): Promise<StartupExecution> {
-    const res = await api.put<ApiResponse<StartupExecution>>(`/api/executions/startup/${id}`, data);
+    const res = await startupServiceApi.put<ApiResponse<StartupExecution>>(`/api/executions/startup/${id}`, data);
     return res.data.data;
   },
 
   async saveConsiderations(id: number, additionalConsiderations: string): Promise<void> {
-    await api.patch(`/api/executions/startup/${id}/considerations`, null, {
+    await startupServiceApi.patch(`/api/executions/startup/${id}/considerations`, null, {
       params: { additionalConsiderations },
     });
   },
