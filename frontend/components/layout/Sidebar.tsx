@@ -9,29 +9,35 @@ import {
   User,
   Users,
   Settings,
-  BarChart2,
+  PlayCircle,
+  List,
+  Search,
   ChevronRight,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
-
+ 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
 }
-
+ 
 const startupNav: NavItem[] = [
-  { label: 'Dashboard',    href: '/startup/dashboard',         icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: 'My Profile',   href: '/startup/profile',           icon: <User className="h-4 w-4" /> },
-  { label: 'Settings',     href: '/startup/settings',          icon: <Settings className="h-4 w-4" /> },
+  { label: 'Dashboard',  href: '/startup/dashboard',   icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: 'My Profile', href: '/startup/profile',      icon: <User className="h-4 w-4" /> },
+  { label: 'Execute',    href: '/startup/execute',      icon: <PlayCircle className="h-4 w-4" /> },
+  { label: 'Startups',   href: '/startup/executions',   icon: <List className="h-4 w-4" /> },
+  { label: 'Settings',   href: '/startup/settings',     icon: <Settings className="h-4 w-4" /> },
 ];
-
+ 
 const investorNav: NavItem[] = [
-  { label: 'Dashboard',    href: '/investor/dashboard',        icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: 'My Profile',   href: '/investor/profile',          icon: <User className="h-4 w-4" /> },
-  { label: 'Settings',     href: '/investor/settings',         icon: <Settings className="h-4 w-4" /> },
+  { label: 'Dashboard',          href: '/investor/dashboard',   icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: 'My Profile',         href: '/investor/profile',     icon: <User className="h-4 w-4" /> },
+  { label: 'Investment Execute', href: '/investor/execute',     icon: <PlayCircle className="h-4 w-4" /> },
+  { label: 'Look Up',            href: '/investor/executions',  icon: <Search className="h-4 w-4" /> },
+  { label: 'Settings',           href: '/investor/settings',    icon: <Settings className="h-4 w-4" /> },
 ];
-
+ 
 const evaluatorNav: NavItem[] = [
   { label: 'Dashboard',    href: '/evaluator/dashboard',       icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: 'My Profile',   href: '/evaluator/profile',         icon: <User className="h-4 w-4" /> },
