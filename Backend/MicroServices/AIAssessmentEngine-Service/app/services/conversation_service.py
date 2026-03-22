@@ -1,6 +1,7 @@
 import uuid
 from groq import Groq
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from app.models import AISession, SessionType, SessionStatus
 from app.config import settings
 
@@ -110,19 +111,48 @@ def send_message(db: Session, session_id: str, user_message: str) -> tuple[str, 
     history = session.conversation_history or []
     history.append({"role": "user", "content": user_message})
 
+    aria_turns = [msg for msg in history if msg["role"] == "model"]
+    aria_question_count = len(aria_turns)
+
+    MAX_QUESTIONS = 6
+    CLOSING_QUESTION = "Is there anything else you would like me to consider or factor into your assessment?"
+
     messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
+
+    if aria_question_count >= MAX_QUESTIONS:
+        messages.append({
+            "role": "system",
+            "content": (
+                f"You have now asked {aria_question_count} questions. "
+                f"You MUST stop asking questions immediately. "
+                f"Your ONLY allowed response is to ask: \"{CLOSING_QUESTION}\" "
+                f"Do not ask anything else."
+            )
+        })
+
     for msg in history:
         role = "user" if msg["role"] == "user" else "assistant"
         messages.append({"role": role, "content": msg["content"]})
 
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages
-    )
-    aria_reply = response.choices[0].message.content
+    if aria_question_count >= MAX_QUESTIONS:
+        aria_reply = CLOSING_QUESTION
+    else:
+        messages[0]["content"] = (
+            ARIA_SYSTEM_PROMPT +
+            f"\n\n[INTERNAL TRACKER: You have asked {aria_question_count} question(s) so far out of a maximum of {MAX_QUESTIONS}. "
+            f"{'Ask your next question.' if aria_question_count < MAX_QUESTIONS else f'You must now ask the closing question: \"{CLOSING_QUESTION}\"'}"
+            f"]"
+        )
+
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages
+        )
+        aria_reply = response.choices[0].message.content
 
     history.append({"role": "model", "content": aria_reply})
     session.conversation_history = history
+    flag_modified(session, "conversation_history")
     db.commit()
 
     closing_signals = [
@@ -176,6 +206,7 @@ Sign off as Aria from Annick AI powered by RG Partners.
 
     history.append({"role": "model", "content": closing_message})
     session.conversation_history = history
+    flag_modified(session, "conversation_history")
     db.commit()
 
     return closing_message
