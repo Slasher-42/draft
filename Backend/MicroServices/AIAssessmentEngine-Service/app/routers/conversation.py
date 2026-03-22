@@ -1,4 +1,5 @@
 import httpx
+import traceback
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -45,6 +46,7 @@ async def start_conversation(
             message=opening_message
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

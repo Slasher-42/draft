@@ -69,6 +69,16 @@ export default function StartupConversationPage() {
     return <LoadingSpinner size="fullscreen" message="Aria is reviewing your submission..." />;
   }
 
+  if (phase === 'error') {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <p className="text-white font-semibold text-lg">Failed to start conversation</p>
+        <p className="text-surface-muted text-sm">The AI service could not be reached. Please try again.</p>
+        <Button variant="primary" onClick={() => router.push('/startup/execute')}>Go Back</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-surface">
       <div className="border-b border-surface-border px-6 py-4 flex items-center gap-3 bg-surface-subtle">

@@ -1,11 +1,11 @@
 import uuid
-import json
-import google.generativeai as genai
+from groq import Groq
 from sqlalchemy.orm import Session
 from app.models import AISession, SessionType, SessionStatus
 from app.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+client = Groq(api_key=settings.GROQ_API_KEY)
+MODEL = "llama-3.3-70b-versatile"
 
 ARIA_SYSTEM_PROMPT = """
 You are Aria, the AI Investment Analyst for Annick AI, powered by RG Partners.
@@ -35,6 +35,7 @@ Important rules:
 - This conversation is private and will not be shown to anyone — it is purely for your assessment
 """
 
+
 def build_startup_intro(form_data: dict) -> str:
     return f"""
 I have reviewed your submission. Here is what I noted:
@@ -50,6 +51,7 @@ I have reviewed your submission. Here is what I noted:
 Now start the conversation. Greet them warmly as Aria from Annick AI, briefly acknowledge what you have seen in their submission, and ask your first focused question to understand them better. Start with understanding the founder's personal motivation.
 """
 
+
 def build_investor_intro(form_data: dict) -> str:
     return f"""
 I have reviewed this investor's submission. Here is what I noted:
@@ -62,6 +64,7 @@ I have reviewed this investor's submission. Here is what I noted:
 Now start the conversation. Greet them warmly as Aria from Annick AI, briefly acknowledge their investment interest, and ask your first focused question to understand their investment thesis and goals more deeply.
 """
 
+
 def start_session(db: Session, execution_id: int, user_id: int,
                   session_type: str, form_data: dict) -> tuple[str, str]:
     session_id = str(uuid.uuid4())
@@ -71,13 +74,14 @@ def start_session(db: Session, execution_id: int, user_id: int,
     else:
         intro_prompt = build_investor_intro(form_data)
 
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=ARIA_SYSTEM_PROMPT
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": ARIA_SYSTEM_PROMPT},
+            {"role": "user", "content": intro_prompt},
+        ]
     )
-
-    response = model.generate_content(intro_prompt)
-    aria_opening = response.text
+    aria_opening = response.choices[0].message.content
 
     conversation_history = [
         {"role": "model", "content": aria_opening}
@@ -106,19 +110,16 @@ def send_message(db: Session, session_id: str, user_message: str) -> tuple[str, 
     history = session.conversation_history or []
     history.append({"role": "user", "content": user_message})
 
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        system_instruction=ARIA_SYSTEM_PROMPT
-    )
-
-    chat_history = []
+    messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
     for msg in history:
-        role = "user" if msg["role"] == "user" else "model"
-        chat_history.append({"role": role, "parts": [msg["content"]]})
+        role = "user" if msg["role"] == "user" else "assistant"
+        messages.append({"role": role, "content": msg["content"]})
 
-    chat = model.start_chat(history=chat_history[:-1])
-    response = chat.send_message(user_message)
-    aria_reply = response.text
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages
+    )
+    aria_reply = response.choices[0].message.content
 
     history.append({"role": "model", "content": aria_reply})
     session.conversation_history = history
@@ -148,26 +149,24 @@ def finish_session(db: Session, session_id: str,
     history = session.conversation_history or []
 
     if additional_considerations and additional_considerations.strip():
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=ARIA_SYSTEM_PROMPT
-        )
-
-        chat_history = []
-        for msg in history:
-            role = "user" if msg["role"] == "user" else "model"
-            chat_history.append({"role": role, "parts": [msg["content"]]})
-
         closing_prompt = f"""
 The person has shared these additional considerations: "{additional_considerations}"
 
-Acknowledge their additional input warmly, confirm their submission has been saved, 
-and let them know they will receive an update within {update_interval}. 
+Acknowledge their additional input warmly, confirm their submission has been saved,
+and let them know they will receive an update within {update_interval}.
 Sign off as Aria from Annick AI powered by RG Partners.
 """
-        chat = model.start_chat(history=chat_history)
-        response = chat.send_message(closing_prompt)
-        closing_message = response.text
+        messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
+        for msg in history:
+            role = "user" if msg["role"] == "user" else "assistant"
+            messages.append({"role": role, "content": msg["content"]})
+        messages.append({"role": "user", "content": closing_prompt})
+
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages
+        )
+        closing_message = response.choices[0].message.content
     else:
         closing_message = (
             f"Thank you for your time today. Your submission has been saved and "

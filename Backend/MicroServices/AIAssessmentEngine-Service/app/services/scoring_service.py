@@ -1,10 +1,12 @@
 import json
-import google.generativeai as genai
+from groq import Groq
 from sqlalchemy.orm import Session
 from app.models import AISession, AssessmentScore, Classification, SessionStatus
 from app.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+client = Groq(api_key=settings.GROQ_API_KEY)
+MODEL = "llama-3.3-70b-versatile"
+
 
 def compute_score(
     db: Session,
@@ -32,7 +34,7 @@ def compute_score(
     scoring_prompt = f"""
 You are Aria, the AI Investment Analyst for Annick AI powered by RG Partners.
 
-You have completed a conversation with a {'startup founder' if session.session_type == 'STARTUP' else 'potential investor'} 
+You have completed a conversation with a {'startup founder' if session.session_type == 'STARTUP' else 'potential investor'}
 and you must now produce a final investment readiness assessment.
 
 --- FORM SUBMISSION DATA ---
@@ -45,7 +47,7 @@ and you must now produce a final investment readiness assessment.
 {conversation_text}
 
 --- SCORING INSTRUCTIONS ---
-Based on everything above, score this {'startup' if session.session_type == 'STARTUP' else 'investor'} 
+Based on everything above, score this {'startup' if session.session_type == 'STARTUP' else 'investor'}
 across these four dimensions. Each dimension is scored out of 100.
 
 The admin has configured these weights:
@@ -61,7 +63,7 @@ Classification rules:
 - MODERATELY_READY: overall score meets threshold but has at least one weak dimension
 - NOT_READY: overall score below the minimum passing score
 
-Be honest and precise in your scoring. Consider the depth of answers, realism of numbers, 
+Be honest and precise in your scoring. Consider the depth of answers, realism of numbers,
 team credibility, market understanding, and business model clarity.
 
 Respond ONLY with this exact JSON structure and nothing else:
@@ -76,16 +78,13 @@ Respond ONLY with this exact JSON structure and nothing else:
 }}
 """
 
-    model = genai.GenerativeModel(model_name="gemini-2.0-flash")
-    response = model.generate_content(scoring_prompt)
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": scoring_prompt}],
+        response_format={"type": "json_object"}
+    )
 
-    raw = response.text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip()
-
+    raw = response.choices[0].message.content.strip()
     result = json.loads(raw)
 
     classification_map = {

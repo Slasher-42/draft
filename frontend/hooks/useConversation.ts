@@ -17,7 +17,8 @@ export type ConversationPhase =
   | 'chatting'
   | 'asking_considerations'
   | 'finishing'
-  | 'done';
+  | 'done'
+  | 'error';
 
 export const useConversation = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -62,6 +63,7 @@ export const useConversation = () => {
       });
     } catch (err: any) {
       toast.error('Failed to start conversation. Please try again.');
+      setPhase('error');
     } finally {
       setIsLoading(false);
     }
