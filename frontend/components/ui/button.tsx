@@ -4,27 +4,46 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50',
+  // Base — wider padding, taller height, sharper shadow, smoother transitions
+  'inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:pointer-events-none disabled:opacity-45 active:scale-[0.98]',
   {
     variants: {
       variant: {
-        default:     'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
-        primary:     'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
-        brand:       'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
-        outline:     'border border-[var(--bg-border)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
-        secondary:   'bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-border)] hover:text-[var(--text-primary)]',
-        ghost:       'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
-        destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
-        danger:      'bg-red-600 text-white hover:bg-red-700 shadow-sm',
-        gold:        'bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/20',
-        link:        'text-blue-500 underline-offset-4 hover:underline',
+        default:
+          'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-500/35',
+        primary:
+          'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-500/35',
+        brand:
+          'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-500/35',
+        outline:
+          'border-2 border-[var(--bg-border)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] hover:border-[var(--text-muted)]',
+        secondary:
+          'bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--bg-border)] hover:bg-[var(--bg-border)] hover:text-[var(--text-primary)]',
+        ghost:
+          'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
+        destructive:
+          'bg-red-600 text-white hover:bg-red-500 shadow-md shadow-red-600/30 hover:shadow-lg hover:shadow-red-500/35',
+        danger:
+          'bg-red-600 text-white hover:bg-red-500 shadow-md shadow-red-600/30 hover:shadow-lg hover:shadow-red-500/35',
+        gold:
+          'bg-amber-500 text-white hover:bg-amber-400 shadow-md shadow-amber-500/30 hover:shadow-lg hover:shadow-amber-400/35',
+        success:
+          'bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 hover:shadow-lg hover:shadow-emerald-500/35',
+        link:
+          'text-blue-400 underline-offset-4 hover:underline hover:text-blue-300',
       },
       size: {
-        default: 'h-9 px-4 py-2',
-        sm:      'h-7 px-3 text-xs',
-        lg:      'h-11 px-6',
-        icon:    'h-9 w-9',
-        'icon-sm': 'h-7 w-7',
+        // sm  — compact but still readable
+        sm: 'h-9 px-5 text-xs',
+        // default — the new "comfortable" baseline (was h-9 px-4)
+        default: 'h-11 px-6',
+        // lg  — prominent CTA (was h-11 px-6)
+        lg: 'h-12 px-8 text-base',
+        // xl  — hero / page-level CTA
+        xl: 'h-14 px-10 text-base',
+        // icon sizes — unchanged
+        icon: 'h-10 w-10',
+        'icon-sm': 'h-8 w-8',
       },
     },
     defaultVariants: {
@@ -53,10 +72,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <>
-            <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+            <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin flex-shrink-0" />
             {children}
           </>
-        ) : children}
+        ) : (
+          children
+        )}
       </Comp>
     );
   }

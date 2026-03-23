@@ -101,13 +101,6 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
 
 button, a, input, textarea { transition: all 0.15s ease; }
 
-/* Active nav item */
-.nav-active {
-  background: linear-gradient(90deg, var(--brand-light) 0%, transparent 100%);
-  border-left: 3px solid var(--brand);
-  color: var(--text-active) !important;
-}
-
 /* Animations */
 @keyframes typing-blink {
   0%, 100% { opacity: 1; }
