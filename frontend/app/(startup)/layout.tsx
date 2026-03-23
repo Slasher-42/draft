@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDashboardPath } from '@/lib/utils';
-import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export default function StartupLayout({ children }: { children: React.ReactNode }) {
@@ -26,11 +26,11 @@ export default function StartupLayout({ children }: { children: React.ReactNode 
   if (!user || normalizedRole !== 'STARTUP') return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a1628', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
-      <div style={{ display: 'flex', flex: 1 }}>
-        <Sidebar />
-        <main style={{ flex: 1, padding: '28px', overflowAuto: 'auto' } as any}>
+    <div className="flex h-screen overflow-hidden bg-[var(--bg-primary)]">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <DashboardHeader />
+        <main className="flex-1 overflow-y-auto p-5 md:p-6">
           {children}
         </main>
       </div>

@@ -1,38 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: 'Playfair Display', Georgia, serif;
+  --font-display: 'Sora', 'Georgia', serif;
   --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
 
-  --color-brand-50:  #f0faf5;
-  --color-brand-100: #d9f2e6;
-  --color-brand-200: #b3e5cd;
-  --color-brand-300: #7dcfaa;
-  --color-brand-400: #44b282;
-  --color-brand-500: #229163;
-  --color-brand-600: #167550;
-  --color-brand-700: #125e41;
-  --color-brand-800: #0f4b35;
-  --color-brand-900: #0c3d2b;
-  --color-brand-950: #071f16;
+  --color-brand-50:  #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
 
   --color-gold-50:  #fffbeb;
-  --color-gold-100: #fef3c7;
-  --color-gold-200: #fde68a;
-  --color-gold-300: #fcd34d;
   --color-gold-400: #fbbf24;
   --color-gold-500: #f59e0b;
-  --color-gold-600: #d97706;
-  --color-gold-700: #b45309;
-  --color-gold-800: #92400e;
-  --color-gold-900: #78350f;
-  --color-gold-950: #451a03;
 
-  --color-surface:        #0a1628;
-  --color-surface-card:   #111f35;
-  --color-surface-border: #1e3352;
-  --color-surface-muted:  #4a6080;
-  --color-surface-subtle: #0d1c30;
+  --color-surface:        #0a0f1e;
+  --color-surface-card:   #0f172a;
+  --color-surface-border: #1e293b;
+  --color-surface-muted:  #475569;
+  --color-surface-subtle: #0d1424;
 
   --color-success:       #10b981;
   --color-success-light: #d1fae5;
@@ -45,49 +38,115 @@
   --color-danger-dark:   #991b1b;
 
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 40px rgba(34, 145, 99, 0.15);
+  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
 }
 
+/* ── Light/Dark CSS variables ── */
 :root {
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --border: 217 33% 20%;
-  --input: 217 33% 20%;
-  --ring: 158 61% 35%;
-  --radius: 0.5rem;
+  --bg-primary:     #f8fafc;
+  --bg-card:        #ffffff;
+  --bg-sidebar:     #ffffff;
+  --bg-border:      #e2e8f0;
+  --bg-hover:       #f1f5f9;
+  --bg-active:      #eff6ff;
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-active:    #2563eb;
+  --brand:          #2563eb;
+  --brand-light:    #eff6ff;
+  --brand-hover:    #1d4ed8;
+  --input-bg:       #f8fafc;
+  --input-border:   #e2e8f0;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --bg-primary:     #0a0f1e;
+  --bg-card:        #0f172a;
+  --bg-sidebar:     #0c1322;
+  --bg-border:      #1e293b;
+  --bg-hover:       #1e293b;
+  --bg-active:      #172554;
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:     #475569;
+  --text-active:    #60a5fa;
+  --brand:          #3b82f6;
+  --brand-light:    #172554;
+  --brand-hover:    #2563eb;
+  --input-bg:       #0f172a;
+  --input-border:   #1e293b;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background-color: #0a1628;
-  color: #e2e8f0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html { scroll-behavior: smooth; }
 
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
 
-/* Custom scrollbar */
-::-webkit-scrollbar       { width: 5px; }
-::-webkit-scrollbar-track { background: #0a1628; }
-::-webkit-scrollbar-thumb { background: #229163; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #44b282; }
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand); }
 
-/* Navbar icon buttons */
-.nav-icon-btn:hover {
-  border-color: #229163 !important;
-  color: #fff !important;
-}
-.nav-logout-btn:hover {
-  border-color: #ef4444 !important;
-  color: #ef4444 !important;
+button, a, input, textarea { transition: all 0.15s ease; }
+
+/* Active nav item */
+.nav-active {
+  background: linear-gradient(90deg, var(--brand-light) 0%, transparent 100%);
+  border-left: 3px solid var(--brand);
+  color: var(--text-active) !important;
 }
 
-/* Smooth transitions on interactive elements */
-button, a { transition: all 0.15s ease; }
+/* Animations */
+@keyframes typing-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.typing-cursor { animation: typing-blink 1s infinite; }
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.6; }
+}
+.pulse-dot { animation: pulse-dot 1.5s infinite; }
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-in { animation: msg-in 0.35s ease forwards; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50%       { transform: scaleY(1); }
+}
+.wave-bar { animation: wave 1s ease-in-out infinite; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--bg-border) 25%, var(--bg-hover) 50%, var(--bg-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }

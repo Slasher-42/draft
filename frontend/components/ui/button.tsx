@@ -1,29 +1,35 @@
 import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        primary:   'bg-brand-500 text-white hover:bg-brand-600 focus:ring-brand-500 shadow-md hover:shadow-glow',
-        secondary: 'bg-surface-card text-white border border-surface-border hover:bg-surface-border focus:ring-brand-500',
-        gold:      'bg-gold-500 text-white hover:bg-gold-600 focus:ring-gold-500 shadow-md hover:shadow-gold',
-        ghost:     'text-brand-400 hover:bg-surface-card hover:text-brand-300 focus:ring-brand-500',
-        danger:    'bg-danger text-white hover:bg-danger-dark focus:ring-danger',
-        outline:   'border border-brand-500 text-brand-400 hover:bg-brand-500 hover:text-white focus:ring-brand-500',
+        default:     'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
+        primary:     'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
+        brand:       'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-500/20',
+        outline:     'border border-[var(--bg-border)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
+        secondary:   'bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:bg-[var(--bg-border)] hover:text-[var(--text-primary)]',
+        ghost:       'bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
+        destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+        danger:      'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+        gold:        'bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/20',
+        link:        'text-blue-500 underline-offset-4 hover:underline',
       },
       size: {
-        sm:   'h-8  px-3 text-xs',
-        md:   'h-10 px-5 text-sm',
-        lg:   'h-12 px-8 text-base',
-        icon: 'h-10 w-10',
+        default: 'h-9 px-4 py-2',
+        sm:      'h-7 px-3 text-xs',
+        lg:      'h-11 px-6',
+        icon:    'h-9 w-9',
+        'icon-sm': 'h-7 w-7',
       },
     },
     defaultVariants: {
-      variant: 'primary',
-      size:    'md',
+      variant: 'default',
+      size: 'default',
     },
   }
 );
@@ -31,31 +37,30 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, children, disabled, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
     return (
-      <button
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
         disabled={disabled || loading}
         {...props}
       >
         {loading ? (
-          <span className="flex items-center gap-2">
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-            Loading...
-          </span>
+          <>
+            <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+            {children}
+          </>
         ) : children}
-      </button>
+      </Comp>
     );
   }
 );
-
 Button.displayName = 'Button';
+
 export { Button, buttonVariants };
