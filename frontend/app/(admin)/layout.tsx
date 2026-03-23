@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDashboardPath } from '@/lib/utils';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -29,8 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen overflow-hidden bg-[var(--bg-primary)]">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto p-5 md:p-6">
+        <main className="flex-1 overflow-y-auto p-5 md:p-8">
           {children}
         </main>
       </div>
