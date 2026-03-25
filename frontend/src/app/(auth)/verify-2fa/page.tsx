@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -36,6 +36,16 @@ function TwoFAForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
+  useEffect(() => {
+    if (email) {
+      api
+        .post(`/api/auth/2fa/send?email=${encodeURIComponent(email)}`)
+        .catch(() => {
+          toast.error("Failed to send verification code. Please try resending.");
+        });
+    }
+  }, [email]);
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
@@ -51,7 +61,7 @@ function TwoFAForm() {
       const token = data.accessToken;
       const role = data.role?.replace("ROLE_", "") as UserRole;
 
-      loginWithToken(token, String(data.userId), data.email, role);
+      loginWithToken(token, String(data.userId), data.email, role, data.trustedDeviceToken);
 
       toast.success("Verification successful!");
       router.push(roleRedirectMap[role] || "/");

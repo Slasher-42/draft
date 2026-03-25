@@ -16,7 +16,7 @@ export const authService = {
     api.post("/api/auth/2fa/verify", { email, code }),
 
   send2FA: (email: string) =>
-    api.post("/api/auth/2fa/send", { email }),
+     api.post(`/api/auth/2fa/send?email=${encodeURIComponent(email)}`),
 
   forgotPassword: (email: string) =>
     api.post("/api/auth/forgot-password", { email }),

@@ -15,7 +15,14 @@ export const userService = {
   saveInvestorProfile: (data: any) =>
     api.post("/api/users/investor-profile", data),
 
-  // Admin
+  uploadProfilePicture: (userId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post(`/api/users/${userId}/profile-picture`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
   getAllUsers: (params?: { role?: string; search?: string; page?: number }) =>
     api.get("/api/admin/users", { params }),
 

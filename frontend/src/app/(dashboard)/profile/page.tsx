@@ -1,78 +1,84 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "react-toastify";
-import { Loader2, Save, User, Building2, MapPin, Globe, Users, Calendar } from "lucide-react";
+import { Loader2, Save, User, Building2, MapPin, Globe, Users, Calendar, Camera } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
 
-  // Common fields
-  const [fullName, setFullName] = useState(user?.fullName ?? "");
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber ?? "");
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [website, setWebsite] = useState("");
+  const [teamSize, setTeamSize] = useState("");
+  const [foundedYear, setFoundedYear] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [preferredIndustry, setPreferredIndustry] = useState("");
+  const [investmentBudgetRange, setInvestmentBudgetRange] = useState("");
+  const [department, setDepartment] = useState("");
+  const [specialization, setSpecialization] = useState("");
 
-  // Startup profile fields
-  const [companyName, setCompanyName] = useState(
-    user?.startupProfile?.companyName ?? ""
-  );
-  const [industry, setIndustry] = useState(
-    user?.startupProfile?.industry ?? ""
-  );
-  const [country, setCountry] = useState(
-    user?.startupProfile?.country ??
-      user?.investorProfile?.country ??
-      user?.evaluatorProfile?.country ??
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.fullName ?? "");
+    setPhoneNumber(user.phoneNumber ?? "");
+    setCompanyName(user.startupProfile?.companyName ?? "");
+    setIndustry(user.startupProfile?.industry ?? "");
+    setCountry(
+      user.startupProfile?.country ??
+      user.investorProfile?.country ??
+      user.evaluatorProfile?.country ??
       ""
-  );
-  const [city, setCity] = useState(
-    user?.startupProfile?.city ??
-      user?.investorProfile?.city ??
-      user?.evaluatorProfile?.city ??
+    );
+    setCity(
+      user.startupProfile?.city ??
+      user.investorProfile?.city ??
+      user.evaluatorProfile?.city ??
       ""
-  );
-  const [website, setWebsite] = useState(
-    user?.startupProfile?.website ?? ""
-  );
-  const [teamSize, setTeamSize] = useState(
-    user?.startupProfile?.teamSize?.toString() ?? ""
-  );
-  const [foundedYear, setFoundedYear] = useState(
-    user?.startupProfile?.foundedYear?.toString() ?? ""
-  );
+    );
+    setWebsite(user.startupProfile?.website ?? "");
+    setTeamSize(user.startupProfile?.teamSize?.toString() ?? "");
+    setFoundedYear(user.startupProfile?.foundedYear?.toString() ?? "");
+    setOrganizationName(user.investorProfile?.organizationName ?? "");
+    setPreferredIndustry(user.investorProfile?.preferredIndustry ?? "");
+    setInvestmentBudgetRange(user.investorProfile?.investmentBudgetRange ?? "");
+    setDepartment(user.evaluatorProfile?.department ?? "");
+    setSpecialization(user.evaluatorProfile?.specialization ?? "");
+  }, [user]);
 
-  // Investor profile fields
-  const [organizationName, setOrganizationName] = useState(
-    user?.investorProfile?.organizationName ?? ""
-  );
-  const [preferredIndustry, setPreferredIndustry] = useState(
-    user?.investorProfile?.preferredIndustry ?? ""
-  );
-  const [investmentBudgetRange, setInvestmentBudgetRange] = useState(
-    user?.investorProfile?.investmentBudgetRange ?? ""
-  );
-
-  // Evaluator profile fields
-  const [department, setDepartment] = useState(
-    user?.evaluatorProfile?.department ?? ""
-  );
-  const [specialization, setSpecialization] = useState(
-    user?.evaluatorProfile?.specialization ?? ""
-  );
+  const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    setIsUploadingPicture(true);
+    try {
+      const res = await userService.uploadProfilePicture(user.id, file);
+      const updated = res.data?.data ?? res.data;
+      updateUser({ profilePictureUrl: updated.profilePictureUrl });
+      toast.success("Profile picture updated.");
+    } catch {
+      toast.error("Failed to upload profile picture.");
+    } finally {
+      setIsUploadingPicture(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Update basic profile
       await userService.updateProfile({ fullName, phoneNumber });
 
-      // Update role-specific identity profile
       if (user?.role === "STARTUP") {
         await userService.saveStartupProfile({
           companyName,
@@ -113,11 +119,39 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {/* Avatar block */}
       <Card className="border border-[var(--color-border)]">
         <CardContent className="p-5 flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-            {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+          <div className="relative flex-shrink-0">
+            <div className="h-16 w-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+              {user?.profilePictureUrl ? (
+                <img
+                  src={user.profilePictureUrl}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingPicture}
+              className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {isUploadingPicture ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Camera className="h-3 w-3" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePictureChange}
+            />
           </div>
           <div>
             <p className="font-semibold text-[var(--color-primary-800)] text-lg">
@@ -133,7 +167,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Basic info */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -178,7 +211,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Startup identity profile */}
       {user?.role === "STARTUP" && (
         <Card className="border border-[var(--color-border)]">
           <CardHeader>
@@ -278,7 +310,6 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Investor identity profile */}
       {user?.role === "INVESTOR" && (
         <Card className="border border-[var(--color-border)]">
           <CardHeader>
@@ -344,7 +375,6 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Evaluator identity profile */}
       {user?.role === "EVALUATOR" && (
         <Card className="border border-[var(--color-border)]">
           <CardHeader>

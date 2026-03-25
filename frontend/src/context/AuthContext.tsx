@@ -11,7 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithToken: (accessToken: string, userId: string, email: string, role: UserRole) => void;
+  loginWithToken: (accessToken: string, userId: string, email: string, role: UserRole, trustedDeviceToken?: string) => void;
   register: (
     fullName: string,
     email: string,
@@ -41,7 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       const res = await api.get("/api/auth/me");
-      setUser(res.data);
+      const raw = res.data?.data ?? res.data;
+      setUser({
+        id: String(raw.id),
+        fullName: raw.fullName ?? "",
+        email: raw.email ?? "",
+        phoneNumber: raw.phoneNumber ?? "",
+        profilePictureUrl: raw.profilePictureUrl ?? "",
+        role: (raw.role?.replace("ROLE_", "") ?? "") as UserRole,
+        isActive: raw.enabled ?? true,
+        createdAt: raw.createdAt,
+        startupProfile: raw.startupProfile,
+        investorProfile: raw.investorProfile,
+        evaluatorProfile: raw.evaluatorProfile,
+      });
     } catch {
       localStorage.removeItem("token");
       delete api.defaults.headers.common["Authorization"];
@@ -64,32 +77,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const res = await api.post("/api/auth/login", { email, password });
+
+      const trustedToken = localStorage.getItem("trustedDeviceToken");
+      const headers: Record<string, string> = {};
+      if (trustedToken) {
+        headers["X-Trusted-Device"] = trustedToken;
+      }
+
+      const res = await api.post("/api/auth/login", { email, password }, { headers });
       const data = res.data;
 
       if (data.requiresTwoFactor) {
-        toast.success("Verification code sent to your email.");
         router.push(`/verify-2fa?email=${encodeURIComponent(email)}`);
         return;
+      }
+
+      if (data.trustedDeviceToken) {
+        localStorage.setItem("trustedDeviceToken", data.trustedDeviceToken);
       }
 
       const token = data.accessToken;
       const role = data.role?.replace("ROLE_", "") as UserRole;
 
-      if (!token) {
-        throw new Error("No token received");
-      }
+      if (!token) throw new Error("No token received");
 
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      setUser({
-        id: String(data.userId),
-        email: data.email,
-        role: role,
-        isActive: true,
-        fullName: "",
-      });
+      await fetchCurrentUser();
 
       toast.success("Welcome back!");
       router.push(roleRedirectMap[role] || "/");
@@ -102,17 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithToken = (accessToken: string, userId: string, email: string, role: UserRole) => {
+  const loginWithToken = (accessToken: string, userId: string, email: string, role: UserRole, trustedDeviceToken?: string) => {
     localStorage.setItem("token", accessToken);
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
-    setUser({
-      id: userId,
-      email: email,
-      role: role,
-      isActive: true,
-      fullName: "",
-    });
+    if (trustedDeviceToken) {
+      localStorage.setItem("trustedDeviceToken", trustedDeviceToken);
+    }
+
+    fetchCurrentUser();
   };
 
   const register = async (
@@ -124,13 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     try {
       setIsLoading(true);
-      await api.post("/api/auth/register", {
-        fullName,
-        email,
-        password,
-        phoneNumber,
-        role,
-      });
+      await api.post("/api/auth/register", { fullName, email, password, phoneNumber, role });
       toast.success("Registration successful! Please log in.");
       router.push("/login");
     } catch (error: any) {
