@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const [foundedYear, setFoundedYear] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [preferredIndustry, setPreferredIndustry] = useState("");
-  const [investmentBudgetRange, setInvestmentBudgetRange] = useState("");
+  const [investmentBudget, setInvestmentBudget] = useState<string>("");
   const [department, setDepartment] = useState("");
   const [specialization, setSpecialization] = useState("");
 
@@ -63,7 +63,7 @@ export default function ProfilePage() {
             const ip = await userService.getInvestorProfile(user.id);
             setOrganizationName(ip.organizationName ?? "");
             setPreferredIndustry(ip.preferredIndustry ?? "");
-            setInvestmentBudgetRange(ip.investmentBudgetRange ?? "");
+            setInvestmentBudget(ip.investmentBudget?.toString() ?? "");
             setCountry(ip.country ?? "");
             setCity(ip.city ?? "");
           } catch (err: any) {
@@ -131,7 +131,7 @@ export default function ProfilePage() {
         await userService.saveInvestorProfile(user.id, {
           organizationName,
           preferredIndustry,
-          investmentBudgetRange,
+          investmentBudget: investmentBudget ? Number(investmentBudget) : undefined,
           country,
           city,
         });
@@ -317,11 +317,36 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="preferredIndustry">Preferred Industry</Label>
-              <Input id="preferredIndustry" value={preferredIndustry} onChange={(e) => setPreferredIndustry(e.target.value)} placeholder="e.g. Fintech, Agritech" />
+              <select
+                id="preferredIndustry"
+                value={preferredIndustry}
+                onChange={(e) => setPreferredIndustry(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                <option value="">Select industry</option>
+                <option value="TECHNOLOGY">Technology</option>
+                <option value="HEALTHCARE">Healthcare</option>
+                <option value="FINANCE">Finance</option>
+                <option value="EDUCATION">Education</option>
+                <option value="AGRICULTURE">Agriculture</option>
+                <option value="ENERGY">Energy</option>
+                <option value="REAL_ESTATE">Real Estate</option>
+                <option value="MANUFACTURING">Manufacturing</option>
+                <option value="RETAIL">Retail</option>
+                <option value="TRANSPORTATION">Transportation</option>
+                <option value="ENTERTAINMENT">Entertainment</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="investmentBudgetRange">Investment Budget Range</Label>
-              <Input id="investmentBudgetRange" value={investmentBudgetRange} onChange={(e) => setInvestmentBudgetRange(e.target.value)} placeholder="e.g. $100K – $500K" />
+              <Label htmlFor="investmentBudget">Investment Budget (USD)</Label>
+              <Input
+                id="investmentBudget"
+                type="number"
+                value={investmentBudget}
+                onChange={(e) => setInvestmentBudget(e.target.value)}
+                placeholder="e.g. 500000"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
