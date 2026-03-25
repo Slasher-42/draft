@@ -37,7 +37,7 @@ export default function InvestorExecutionDetailPage() {
   useEffect(() => {
     investorService
       .getExecutionById(id as string)
-      .then((res) => setExecution(res.data))
+      .then((res) => setExecution(res.data.data))
       .catch(() => setExecution(null))
       .finally(() => setIsLoading(false));
   }, [id]);

@@ -45,7 +45,7 @@ export default function InvestorExecutionsPage() {
   useEffect(() => {
     investorService
       .getExecutions()
-      .then((res) => setExecutions(res.data))
+      .then((res) => setExecutions(res.data.data ?? []))
       .catch(() => setExecutions([]))
       .finally(() => setIsLoading(false));
   }, []);
