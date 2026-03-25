@@ -1,46 +1,84 @@
 import { api } from "@/lib/api";
 
+export interface UpdateUserRequest {
+  fullName: string;
+  phoneNumber?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const userService = {
-  getProfile: () => api.get("/api/users/profile"),
-
-  updateProfile: (data: any) =>
-    api.put("/api/users/profile", data),
-
-  changePassword: (currentPassword: string, newPassword: string) =>
-    api.put("/api/users/change-password", { currentPassword, newPassword }),
-
-  saveStartupProfile: (data: any) =>
-    api.post("/api/users/startup-profile", data),
-
-  saveInvestorProfile: (data: any) =>
-    api.post("/api/users/investor-profile", data),
-
-  uploadProfilePicture: (userId: string, file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return api.post(`/api/users/${userId}/profile-picture`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  async getById(id: number | string): Promise<any> {
+    const res = await api.get(`/api/users/${id}`);
+    return res.data?.data ?? res.data;
   },
 
-  getAllUsers: (params?: { role?: string; search?: string; page?: number }) =>
-    api.get("/api/admin/users", { params }),
+  async update(id: number | string, data: UpdateUserRequest): Promise<any> {
+    const res = await api.patch(`/api/users/${id}`, data);
+    return res.data?.data ?? res.data;
+  },
 
-  getUserById: (id: string) =>
-    api.get(`/api/admin/users/${id}`),
+  async changePassword(id: number | string, data: ChangePasswordRequest): Promise<void> {
+    await api.post(`/api/users/${id}/change-password`, data);
+  },
 
-  createUser: (data: any) =>
-    api.post("/api/admin/users", data),
+  async saveStartupProfile(userId: number | string, data: any): Promise<any> {
+    const res = await api.post(`/api/startup/profile/${userId}`, data);
+    return res.data?.data ?? res.data;
+  },
 
-  updateUser: (id: string, data: any) =>
-    api.put(`/api/admin/users/${id}`, data),
+  async saveInvestorProfile(userId: number | string, data: any): Promise<any> {
+    const res = await api.post(`/api/investor/profile/${userId}`, data);
+    return res.data?.data ?? res.data;
+  },
 
-  activateUser: (id: string) =>
-    api.patch(`/api/admin/users/${id}/activate`),
+  async saveEvaluatorProfile(userId: number | string, data: any): Promise<any> {
+    const res = await api.post(`/api/evaluator/profile/${userId}`, data);
+    return res.data?.data ?? res.data;
+  },
 
-  deactivateUser: (id: string) =>
-    api.patch(`/api/admin/users/${id}/deactivate`),
+  async getStartupProfile(userId: number | string): Promise<any> {
+    const res = await api.get(`/api/startup/profile/${userId}`);
+    return res.data?.data ?? res.data;
+  },
 
-  deleteUser: (id: string) =>
-    api.delete(`/api/admin/users/${id}`),
+  async getInvestorProfile(userId: number | string): Promise<any> {
+    const res = await api.get(`/api/investor/profile/${userId}`);
+    return res.data?.data ?? res.data;
+  },
+
+  async getEvaluatorProfile(userId: number | string): Promise<any> {
+    const res = await api.get(`/api/evaluator/profile/${userId}`);
+    return res.data?.data ?? res.data;
+  },
+
+  async uploadProfilePicture(id: number | string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await api.post(`/api/users/${id}/profile-picture`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data ?? res.data;
+  },
+
+  async getAllUsers(params?: { role?: string; search?: string; page?: number }): Promise<any> {
+    const res = await api.get("/api/users", { params });
+    return res.data?.data ?? res.data;
+  },
+
+  async createUser(data: any): Promise<any> {
+    const res = await api.post("/api/auth/admin/create-user", data);
+    return res.data?.data ?? res.data;
+  },
+
+  async toggleStatus(id: number | string): Promise<void> {
+    await api.patch(`/api/users/${id}/status`);
+  },
+
+  async delete(id: number | string): Promise<void> {
+    await api.delete(`/api/users/${id}`);
+  },
 };

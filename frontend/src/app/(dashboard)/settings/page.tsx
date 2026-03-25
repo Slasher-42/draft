@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
     setIsSaving(true);
     try {
-      await userService.changePassword(currentPassword, newPassword);
+      await userService.changePassword(user!.id, { currentPassword, newPassword });
       toast.success("Password changed successfully.");
       setCurrentPassword("");
       setNewPassword("");
@@ -64,7 +64,6 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* Account info */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -97,7 +96,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Change password */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -178,7 +176,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Logout */}
       <Card className="border border-red-100">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-red-600">
