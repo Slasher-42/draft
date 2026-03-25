@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithToken: (accessToken: string, userId: string, email: string, role: UserRole) => void;
   register: (
     fullName: string,
     email: string,
@@ -61,46 +62,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-  try {
-    setIsLoading(true);
-    const res = await api.post("/api/auth/login", { email, password });
-    const data = res.data;
+    try {
+      setIsLoading(true);
+      const res = await api.post("/api/auth/login", { email, password });
+      const data = res.data;
 
-    if (data.requiresTwoFactor) {
-      toast.success("Verification code sent to your email.");
-      router.push(`/verify-2fa?email=${encodeURIComponent(email)}`);
-      return;
+      if (data.requiresTwoFactor) {
+        toast.success("Verification code sent to your email.");
+        router.push(`/verify-2fa?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
+      const token = data.accessToken;
+      const role = data.role?.replace("ROLE_", "") as UserRole;
+
+      if (!token) {
+        throw new Error("No token received");
+      }
+
+      localStorage.setItem("token", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      setUser({
+        id: String(data.userId),
+        email: data.email,
+        role: role,
+        isActive: true,
+        fullName: "",
+      });
+
+      toast.success("Welcome back!");
+      router.push(roleRedirectMap[role] || "/");
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Invalid email or password."
+      );
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const token = data.accessToken;
-    const role = data.role?.replace("ROLE_", "") as UserRole;
+  const loginWithToken = (accessToken: string, userId: string, email: string, role: UserRole) => {
+    localStorage.setItem("token", accessToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
-    if (!token) {
-      throw new Error("No token received");
-    }
-
-    localStorage.setItem("token", token);
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    const userData: User = {
-      id: data.userId,
-      email: data.email,
+    setUser({
+      id: userId,
+      email: email,
       role: role,
       isActive: true,
       fullName: "",
-    };
-
-    setUser(userData);
-    toast.success("Welcome back!");
-    router.push(roleRedirectMap[role] || "/");
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || "Invalid email or password."
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
+    });
+  };
 
   const register = async (
     fullName: string,
@@ -148,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        loginWithToken,
         register,
         logout,
         updateUser,

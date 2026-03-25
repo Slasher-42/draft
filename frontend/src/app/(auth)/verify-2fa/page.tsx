@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
+import { UserRole } from "@/types/user";
 
 const roleRedirectMap: Record<string, string> = {
   STARTUP: "/startup/executions",
@@ -28,7 +29,7 @@ function TwoFAForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const router = useRouter();
-  const { updateUser } = useAuth();
+  const { loginWithToken } = useAuth();
 
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +46,15 @@ function TwoFAForm() {
     setIsLoading(true);
     try {
       const res = await api.post("/api/auth/2fa/verify", { email, code });
-      const { token, user } = res.data;
-      localStorage.setItem("token", token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      updateUser(user);
+      const data = res.data.data;
+
+      const token = data.accessToken;
+      const role = data.role?.replace("ROLE_", "") as UserRole;
+
+      loginWithToken(token, String(data.userId), data.email, role);
+
       toast.success("Verification successful!");
-      router.push(roleRedirectMap[user.role] || "/");
+      router.push(roleRedirectMap[role] || "/");
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
@@ -64,7 +68,7 @@ function TwoFAForm() {
   const handleResend = async () => {
     setResending(true);
     try {
-      await api.post("/api/auth/2fa/send", { email });
+      await api.post(`/api/auth/2fa/send?email=${encodeURIComponent(email)}`);
       toast.success("New code sent to your email.");
     } catch {
       toast.error("Failed to resend code.");
