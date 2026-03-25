@@ -2,14 +2,14 @@ import { api } from "@/lib/api";
 
 export const investorService = {
   getExecutions: () =>
-    api.get("/api/investor/executions"),
+    api.get("/api/executions/investor"),         
 
   getExecutionById: (id: string) =>
-    api.get(`/api/investor/executions/${id}`),
+    api.get(`/api/executions/investor/${id}`),    
 
   createExecution: (data: any) =>
-    api.post("/api/investor/executions", data),
+    api.post("/api/executions/investor", data),   
 
   updateExecution: (id: string, data: any) =>
-    api.put(`/api/investor/executions/${id}`, data),
+    api.put(`/api/executions/investor/${id}`, data), 
 };

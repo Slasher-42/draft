@@ -58,8 +58,16 @@ export function DashboardHeader() {
         </button>
 
         <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-[var(--color-border)]">
-          <div className="h-8 w-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-xs font-bold">
-            {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+          <div className="h-8 w-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+            {user?.profilePictureUrl ? (
+              <img
+                src={user.profilePictureUrl}
+                alt={user.fullName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
+            )}
           </div>
           <div className="leading-tight">
             <p className="text-sm font-medium text-[var(--color-neutral-800)]">
