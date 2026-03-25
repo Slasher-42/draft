@@ -4,6 +4,7 @@ import com.example.UserManagement.MicroService.dto.request.*;
 import com.example.UserManagement.MicroService.dto.response.*;
 import com.example.UserManagement.MicroService.enums.RoleType;
 import com.example.UserManagement.MicroService.exception.ResourceNotFoundException;
+import com.example.UserManagement.MicroService.mapper.UserMapper;
 import com.example.UserManagement.MicroService.model.RefreshToken;
 import com.example.UserManagement.MicroService.model.Role;
 import com.example.UserManagement.MicroService.model.User;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -102,7 +104,13 @@ public class AuthController {
                 newAccessToken, stored.getToken(), user.getEmail(), role, user.getId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refreshed successfully", fullAuth));
     }
-
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return ResponseEntity.ok(new ApiResponse<>(true, "User fetched successfully", UserMapper.toResponse(user)));
+    }
     @GetMapping("/validate")
     public ResponseEntity<ApiResponse<TokenValidationResponse>> validateToken(
             @RequestHeader("Authorization") String authHeader) {

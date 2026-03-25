@@ -11,7 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithToken: (accessToken: string, userId: string, email: string, role: UserRole, trustedDeviceToken?: string) => void;
+  loginWithToken: (accessToken: string, userId: string, email: string, role: UserRole, trustedDeviceToken?: string) => Promise<void>;
   register: (
     fullName: string,
     email: string,
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       const res = await api.get("/api/auth/me");
-      setUser(res.data);
+      setUser(res.data.data);
     } catch {
       localStorage.removeItem("token");
       delete api.defaults.headers.common["Authorization"];
@@ -91,13 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      setUser({
-        id: String(data.userId),
-        email: data.email,
-        role: role,
-        isActive: true,
-        fullName: "",
-      });
+      await fetchCurrentUser();
 
       toast.success("Welcome back!");
       router.push(roleRedirectMap[role] || "/");
@@ -110,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithToken = (accessToken: string, userId: string, email: string, role: UserRole, trustedDeviceToken?: string) => {
+  const loginWithToken = async (accessToken: string, _userId: string, _email: string, _role: UserRole, trustedDeviceToken?: string) => {
     localStorage.setItem("token", accessToken);
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
@@ -118,13 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("trustedDeviceToken", trustedDeviceToken);
     }
 
-    setUser({
-      id: userId,
-      email: email,
-      role: role,
-      isActive: true,
-      fullName: "",
-    });
+    await fetchCurrentUser();
   };
 
   const register = async (
