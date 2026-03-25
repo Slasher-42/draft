@@ -41,20 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       const res = await api.get("/api/auth/me");
-      const raw = res.data?.data ?? res.data;
-      setUser({
-        id: String(raw.id),
-        fullName: raw.fullName ?? "",
-        email: raw.email ?? "",
-        phoneNumber: raw.phoneNumber ?? "",
-        profilePictureUrl: raw.profilePictureUrl ?? "",
-        role: (raw.role?.replace("ROLE_", "") ?? "") as UserRole,
-        isActive: raw.enabled ?? true,
-        createdAt: raw.createdAt,
-        startupProfile: raw.startupProfile,
-        investorProfile: raw.investorProfile,
-        evaluatorProfile: raw.evaluatorProfile,
-      });
+      setUser(res.data);
     } catch {
       localStorage.removeItem("token");
       delete api.defaults.headers.common["Authorization"];
@@ -104,7 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      await fetchCurrentUser();
+      setUser({
+        id: String(data.userId),
+        email: data.email,
+        role: role,
+        isActive: true,
+        fullName: "",
+      });
 
       toast.success("Welcome back!");
       router.push(roleRedirectMap[role] || "/");
@@ -125,7 +118,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("trustedDeviceToken", trustedDeviceToken);
     }
 
-    fetchCurrentUser();
+    setUser({
+      id: userId,
+      email: email,
+      role: role,
+      isActive: true,
+      fullName: "",
+    });
   };
 
   const register = async (
