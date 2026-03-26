@@ -38,13 +38,12 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const companySizes = [
-  { value: "PRE_SEED", label: "Pre-seed (1–5 people)", suggested: 50000 },
-  { value: "SEED", label: "Seed (5–15 people)", suggested: 250000 },
-  { value: "SERIES_A", label: "Series A (15–50 people)", suggested: 1500000 },
-  { value: "SERIES_B", label: "Series B (50–200 people)", suggested: 10000000 },
-  { value: "GROWTH", label: "Growth (200+ people)", suggested: 50000000 },
+  { value: "MICRO",      label: "Micro (1–10 employees)",      suggested: 50000     },
+  { value: "SMALL",      label: "Small (11–50 employees)",     suggested: 250000    },
+  { value: "MEDIUM",     label: "Medium (51–200 employees)",   suggested: 1500000   },
+  { value: "LARGE",      label: "Large (201–500 employees)",   suggested: 10000000  },
+  { value: "ENTERPRISE", label: "Enterprise (500+ employees)", suggested: 50000000  },
 ];
-
 export default function StartupExecutePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);

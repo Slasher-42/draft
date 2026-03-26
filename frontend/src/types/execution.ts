@@ -1,55 +1,62 @@
 export type ExecutionStatus = "PENDING" | "MATCHED" | "REJECTED";
 
-export type CompanySize =
-  | "PRE_SEED"
-  | "SEED"
-  | "SERIES_A"
-  | "SERIES_B"
-  | "GROWTH";
+export type CompanySize = "MICRO" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE";
 
 export interface StartupExecution {
-  id: string;
-  userId: string;
-  companySize: CompanySize;
+  id: number;
+  userId: number;
+  targetCompanySize: CompanySize;
+  suggestedFundingRange: string;
   problemStatement: string;
   businessModel: string;
   targetMarket: string;
   teamDetails: string;
-  financialDetails: string;
+  annualRevenue: number;
+  monthlyBurnRate: number;
   fundingNeeded: number;
+  aiSessionId?: string;
   additionalConsiderations?: string;
   status: ExecutionStatus;
-  reason?: string;
-  sessionId?: string;
+  statusReason?: string;
+  statusUpdatedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StartupExecutionRequest {
+  targetCompanySize: CompanySize;
+  problemStatement: string;
+  businessModel: string;
+  targetMarket: string;
+  teamDetails: string;
+  annualRevenue: number;
+  monthlyBurnRate: number;
+  fundingNeeded: number;
 }
 
 export interface InvestorExecution {
-  id: string;
-  userId: string;
-  industry: string;
-  reasonForInvesting: string;
+  id: number;
+  userId: number;
+  preferredIndustry: string;
+  investmentReason: string;
   investmentBudget: number;
-  dreamOfSuccess: string;
-  specificCriteria?: string;
+  expectedReturnTimeline: string;
+  successCriteria?: string;
+  aiSessionId?: string;
   additionalConsiderations?: string;
   status: ExecutionStatus;
-  reason?: string;
-  sessionId?: string;
-  matchedStartups?: MatchedStartup[];
+  statusReason?: string;
+  statusUpdatedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface MatchedStartup {
-  id: string;
-  companyName: string;
-  industry: string;
-  fundingNeeded: number;
-  targetMarket: string;
-  overallScore?: number;
-  classification?: string;
+export interface InvestorExecutionRequest {
+  preferredIndustry: string;
+  investmentReason: string;
+  investmentBudget: number;
+  expectedReturnTimeline: string;
+  successCriteria?: string;
 }
 
 export interface AISessionResponse {
