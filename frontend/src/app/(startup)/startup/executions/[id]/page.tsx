@@ -41,10 +41,17 @@ export default function ExecutionDetailPage() {
   const [execution, setExecution] = useState<StartupExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
     startupService
       .getExecutionById(id as string)
-      .then((res) => setExecution(res.data))
+      .then((res) => {
+        const raw = res.data;
+        if (raw?.data && typeof raw.data === "object") {
+          setExecution(raw.data);
+        } else {
+          setExecution(raw);
+        }
+      })
       .catch(() => setExecution(null))
       .finally(() => setIsLoading(false));
   }, [id]);
@@ -69,8 +76,12 @@ export default function ExecutionDetailPage() {
     );
   }
 
-  const cfg = statusConfig[execution.status];
-  const StatusIcon = cfg.icon;
+ const cfg = statusConfig[execution.status] ?? {
+  label: execution.status ?? "Unknown",
+  icon: Clock,
+  variant: "pending" as const,
+};
+const StatusIcon = cfg.icon;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -113,10 +124,10 @@ export default function ExecutionDetailPage() {
               A potential investor match has been found for your startup.
             </p>
           )}
-          {execution.status === "REJECTED" && execution.reason && (
+          {execution.status === "REJECTED" && execution.statusReason && (
             <p className="text-xs text-red-500 flex items-start gap-1.5 max-w-xs text-right">
               <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-              {execution.reason}
+              {execution.statusReason}
             </p>
           )}
         </CardContent>
@@ -132,8 +143,8 @@ export default function ExecutionDetailPage() {
             {
               label: "Company Stage",
               value:
-                companySizeLabels[execution.companySize] ||
-                execution.companySize,
+                companySizeLabels[execution.targetCompanySize] ||
+                execution.targetCompanySize,
             },
             {
               label: "Problem Statement",
@@ -152,8 +163,12 @@ export default function ExecutionDetailPage() {
               value: execution.teamDetails,
             },
             {
-              label: "Financial Details",
-              value: execution.financialDetails,
+              label: "Annual Revenue",
+              value: `$${execution.annualRevenue?.toLocaleString()}`,
+            },
+            {
+              label: "Monthly Burn Rate",
+              value: `$${execution.monthlyBurnRate?.toLocaleString()}`,
             },
             {
               label: "Funding Needed",

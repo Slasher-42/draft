@@ -52,7 +52,18 @@ export default function StartupExecutionsPage() {
   useEffect(() => {
     startupService
       .getExecutions()
-      .then((res) => setExecutions(res.data))
+      .then((res) => {
+        const data = res.data;
+        if (Array.isArray(data)) {
+          setExecutions(data);
+        } else if (Array.isArray(data?.content)) {
+          setExecutions(data.content);
+        } else if (Array.isArray(data?.data)) {
+          setExecutions(data.data);
+        } else {
+          setExecutions([]);
+        }
+      })
       .catch(() => setExecutions([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -179,8 +190,8 @@ export default function StartupExecutionsPage() {
                       <div className="flex flex-wrap gap-4 mt-1">
                         <span className="text-xs text-[var(--color-neutral-500)]">
                           Stage:{" "}
-                          {companySizeLabels[exec.companySize] ||
-                            exec.companySize}
+                          {companySizeLabels[exec.targetCompanySize] ||
+                            exec.targetCompanySize}
                         </span>
                         <span className="text-xs text-[var(--color-neutral-500)]">
                           Market: {exec.targetMarket}
@@ -190,10 +201,10 @@ export default function StartupExecutionsPage() {
                         </span>
                       </div>
 
-                      {exec.status === "REJECTED" && exec.reason && (
+                      {exec.status === "REJECTED" && exec.statusReason && (
                         <div className="mt-2 flex items-start gap-1.5 text-xs text-red-500">
                           <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                          <span>{exec.reason}</span>
+                          <span>{exec.statusReason}</span>
                         </div>
                       )}
 
