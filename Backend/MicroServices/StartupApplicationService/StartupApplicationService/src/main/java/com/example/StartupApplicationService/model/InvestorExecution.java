@@ -33,7 +33,7 @@ public class InvestorExecution {
     @Column(nullable = false)
     private Double investmentBudget;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String expectedReturnTimeline;
 
     @Column(columnDefinition = "TEXT")

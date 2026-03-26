@@ -67,11 +67,11 @@ export default function InvestorExecutePage() {
   setIsSubmitting(true);
   try {
     const execRes = await investorService.createExecution({
-      industry: data.industry,
-      reasonForInvesting: data.reasonForInvesting,
+      preferredIndustry: data.industry,
+      investmentReason: data.reasonForInvesting,
       investmentBudget: data.investmentBudget,
-      dreamOfSuccess: data.dreamOfSuccess,
-      specificCriteria: data.specificCriteria ?? "",
+      expectedReturnTimeline: data.dreamOfSuccess,
+      successCriteria: data.specificCriteria ?? "",
     });
 
     const execution = execRes.data.data;
