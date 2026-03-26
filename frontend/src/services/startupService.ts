@@ -1,15 +1,29 @@
-import { api } from "@/lib/api";
+import axios from "axios";
+
+const startupServiceApi = axios.create({
+  baseURL: "http://localhost:8082",
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
+});
+
+startupServiceApi.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const startupService = {
   getExecutions: () =>
-    api.get("/api/startup/executions"),
+    startupServiceApi.get("/api/executions/startup"),
 
   getExecutionById: (id: string) =>
-    api.get(`/api/startup/executions/${id}`),
+    startupServiceApi.get(`/api/executions/startup/${id}`),
 
   createExecution: (data: any) =>
-    api.post("/api/startup/executions", data),
+    startupServiceApi.post("/api/executions/startup", data),
 
   updateExecution: (id: string, data: any) =>
-    api.put(`/api/startup/executions/${id}`, data),
+    startupServiceApi.put(`/api/executions/startup/${id}`, data),
 };

@@ -29,6 +29,12 @@ export const aiService = {
       message: data.answer,
     }),
 
+  finishSession: (data: { sessionId: string; additionalConsiderations: string | null }) =>
+    aiServiceApi.post("/api/conversation/finish", {
+      session_id: data.sessionId,
+      additional_considerations: data.additionalConsiderations,
+    }),
+
   getConfig: () =>
     axios.get("http://localhost:8081/api/config"),
 };
