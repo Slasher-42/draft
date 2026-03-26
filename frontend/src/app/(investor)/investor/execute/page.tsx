@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { aiService } from "@/services/aiService";
+import { investorService } from "@/services/investorService";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import {
@@ -48,6 +50,7 @@ const industries = [
 
 export default function InvestorExecutePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -61,26 +64,42 @@ export default function InvestorExecutePage() {
   const selectedIndustry = watch("industry");
 
   const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    try {
-      const res = await aiService.startSession({
-        type: "INVESTOR",
-        formData: data,
-      });
+  setIsSubmitting(true);
+  try {
+    const execRes = await investorService.createExecution({
+      industry: data.industry,
+      reasonForInvesting: data.reasonForInvesting,
+      investmentBudget: data.investmentBudget,
+      dreamOfSuccess: data.dreamOfSuccess,
+      specificCriteria: data.specificCriteria ?? "",
+    });
 
-      const { sessionId, firstQuestion } = res.data;
+    const execution = execRes.data.data;
 
-      router.push(
-        `/investor/ai?sessionId=${sessionId}&firstQuestion=${encodeURIComponent(
-          firstQuestion
-        )}`
-      );
-    } catch {
-      toast.error("Failed to start AI session. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    const res = await aiService.startSession({
+      type: "INVESTOR",
+      formData: {
+        executionId: execution.id,
+        userId: Number(user?.id),
+        preferredIndustry: data.industry,
+        investmentReason: data.reasonForInvesting,
+        investmentBudget: data.investmentBudget,
+        expectedReturnTimeline: data.dreamOfSuccess,
+        successCriteria: data.specificCriteria ?? "",
+      },
+    });
+
+    const { session_id, message } = res.data;
+
+    router.push(
+      `/investor/ai?sessionId=${session_id}&firstQuestion=${encodeURIComponent(message)}`
+    );
+  } catch {
+    toast.error("Failed to start AI session. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
