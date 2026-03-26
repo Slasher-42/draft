@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { aiService } from "@/services/aiService";
 import { investorService } from "@/services/investorService";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,13 @@ function InvestorAIConversation() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const sessionId = searchParams.get("sessionId") || "";
-  const firstQuestion = searchParams.get("firstQuestion") || "";
+  const { user } = useAuth();
+  const executionId = Number(searchParams.get("executionId"));
 
+  const [sessionId, setSessionId] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState("");
+  const [isStarting, setIsStarting] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingAdditional, setAwaitingAdditional] = useState(false);
@@ -37,26 +40,47 @@ function InvestorAIConversation() {
   const [isDone, setIsDone] = useState(false);
   const [updateInterval, setUpdateInterval] = useState("48 hours");
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (firstQuestion) {
-      setMessages([{ role: "ai", content: firstQuestion }]);
-    }
-  }, [firstQuestion]);
+  const started = useRef(false);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    aiService
-      .getConfig()
-      .then((res) => {
-        if (res.data?.updateInterval)
-          setUpdateInterval(res.data.updateInterval);
-      })
-      .catch(() => {});
-  }, []);
+    if (!executionId || !user || started.current) return;
+    started.current = true;
+
+    const init = async () => {
+      try {
+        const execRes = await investorService.getExecutionById(String(executionId));
+        const execution = execRes.data.data;
+
+        const aiRes = await aiService.startSession({
+          type: "INVESTOR",
+          formData: {
+            executionId: execution.id,
+            userId: Number(user.id),
+            preferredIndustry: execution.industry,
+            investmentReason: execution.reasonForInvesting,
+            investmentBudget: execution.investmentBudget,
+            expectedReturnTimeline: execution.dreamOfSuccess,
+            successCriteria: execution.specificCriteria ?? "",
+          },
+        });
+
+        const { session_id, message } = aiRes.data;
+        setSessionId(session_id);
+        setMessages([{ role: "ai", content: message }]);
+      } catch {
+        toast.error("Failed to start conversation. Please try again.");
+        router.push("/investor/execute");
+      } finally {
+        setIsStarting(false);
+      }
+    };
+
+    init();
+  }, [executionId, user]);
 
   const sendAnswer = async () => {
     if (!userInput.trim() || !sessionId) return;
@@ -85,7 +109,7 @@ function InvestorAIConversation() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: "ai", content: res.data.nextQuestion || "" },
+          { role: "ai", content: res.data.reply || "" },
         ]);
       }
     } catch {
@@ -101,26 +125,19 @@ function InvestorAIConversation() {
     if (!sessionId) return;
     setIsSubmitting(true);
     try {
-      await investorService.createExecution({
+      const finishRes = await aiService.finishSession({
         sessionId,
-        additionalConsiderations: additionalText,
+        additionalConsiderations: additionalText || null,
       });
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: "user",
-          content: additionalText || "(No additional considerations)",
-        },
-        {
-          role: "ai",
-          content: `Thank you for your submission. Your investment execution has been saved. We will search for matching startups and notify you within ${updateInterval}.`,
-        },
+        { role: "ai", content: finishRes.data.message },
       ]);
       setAwaitingAdditional(false);
       setIsDone(true);
     } catch {
-      toast.error("Failed to save execution. Please try again.");
+      toast.error("Failed to finalise. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

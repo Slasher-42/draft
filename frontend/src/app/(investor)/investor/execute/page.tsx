@@ -76,26 +76,9 @@ export default function InvestorExecutePage() {
 
     const execution = execRes.data.data;
 
-    const res = await aiService.startSession({
-      type: "INVESTOR",
-      formData: {
-        executionId: execution.id,
-        userId: Number(user?.id),
-        preferredIndustry: data.industry,
-        investmentReason: data.reasonForInvesting,
-        investmentBudget: data.investmentBudget,
-        expectedReturnTimeline: data.dreamOfSuccess,
-        successCriteria: data.specificCriteria ?? "",
-      },
-    });
-
-    const { session_id, message } = res.data;
-
-    router.push(
-      `/investor/ai?sessionId=${session_id}&firstQuestion=${encodeURIComponent(message)}`
-    );
+    router.push(`/investor/ai?executionId=${execution.id}`);
   } catch {
-    toast.error("Failed to start AI session. Please try again.");
+    toast.error("Failed to save execution. Please try again.");
   } finally {
     setIsSubmitting(false);
   }
