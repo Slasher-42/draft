@@ -38,18 +38,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const fetchCurrentUser = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.get("/api/auth/me");
-      setUser(res.data.data);
-    } catch {
-      localStorage.removeItem("token");
-      delete api.defaults.headers.common["Authorization"];
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  try {
+    setIsLoading(true);
+    const res = await api.get("/api/auth/me");
+    const userData = res.data.data;
+    setUser({
+      ...userData,
+      role: userData.role?.replace("ROLE_", "") as UserRole,
+    });
+  } catch {
+    localStorage.removeItem("token");
+    delete api.defaults.headers.common["Authorization"];
+    setUser(null);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem("token");
