@@ -1,31 +1,129 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { aiService } from "@/services/aiService";
 import { investorService } from "@/services/investorService";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { toast } from "react-toastify";
-import { Bot, Send, User, CheckCircle2, Loader2 } from "lucide-react";
 
 interface ChatMessage {
   role: "ai" | "user";
   content: string;
+  timestamp?: Date;
+  attachedFile?: string;
+}
+
+function VoiceWave({ active }: { active: boolean }) {
+  return (
+    <div className="flex items-center gap-[3px] h-6">
+      {[1, 1.6, 0.8, 1.4, 0.6, 1.8, 1, 1.5, 0.7, 1.3].map((h, i) => (
+        <span
+          key={i}
+          style={{
+            display: "block",
+            width: 3,
+            borderRadius: 9,
+            background: active ? "#d4af37" : "#444",
+            height: active ? `${h * 18}px` : "4px",
+            transition: `height 0.15s ease ${i * 40}ms`,
+            animation: active ? `waveBar 0.7s ease-in-out ${i * 60}ms infinite alternate` : "none",
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes waveBar {
+          0%   { transform: scaleY(0.4); }
+          100% { transform: scaleY(1.1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function AriaAvatar({ speaking }: { speaking: boolean }) {
+  return (
+    <div className="relative flex-shrink-0">
+      <div
+        style={{
+          width: 40, height: 40,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #d4af37 0%, #b8962e 50%, #8a6e1c 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 16, fontWeight: 700, color: "#0a0a0a",
+          boxShadow: speaking ? "0 0 0 3px rgba(212,175,55,0.35), 0 0 18px rgba(212,175,55,0.25)" : "0 0 0 1px rgba(212,175,55,0.2)",
+          transition: "box-shadow 0.3s ease",
+          fontFamily: "'Playfair Display', serif",
+        }}
+      >
+        A
+      </div>
+      {speaking && (
+        <span
+          style={{
+            position: "absolute", inset: -4,
+            borderRadius: "50%",
+            border: "2px solid rgba(212,175,55,0.4)",
+            animation: "ping 1s ease-in-out infinite",
+          }}
+        />
+      )}
+      <style>{`@keyframes ping { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0;transform:scale(1.4)} }`}</style>
+    </div>
+  );
+}
+
+function ProgressBar({ step }: { step: number }) {
+  const steps = ["Connected", "Conversation", "Review", "Complete"];
+  return (
+    <div className="flex items-center gap-2">
+      {steps.map((label, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: i <= step ? "linear-gradient(135deg,#d4af37,#8a6e1c)" : "#1a1a1a",
+              border: i === step ? "2px solid #d4af37" : "1px solid #333",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 11, color: i <= step ? "#0a0a0a" : "#555",
+              fontWeight: 700, transition: "all 0.3s",
+            }}>
+              {i < step ? "✓" : i + 1}
+            </div>
+            <span style={{ fontSize: 9, color: i <= step ? "#d4af37" : "#444", whiteSpace: "nowrap" }}>{label}</span>
+          </div>
+          {i < steps.length - 1 && (
+            <div style={{
+              height: 1, width: 32, marginBottom: 18,
+              background: i < step ? "linear-gradient(90deg,#d4af37,#8a6e1c)" : "#222",
+              transition: "background 0.4s",
+            }} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <div style={{ display: "flex", gap: 5, alignItems: "center", padding: "12px 16px" }}>
+      {[0, 120, 240].map((d) => (
+        <span key={d} style={{
+          width: 7, height: 7, borderRadius: "50%",
+          background: "#d4af37",
+          animation: `typingBounce 0.9s ease-in-out ${d}ms infinite`,
+          display: "block",
+        }} />
+      ))}
+      <style>{`@keyframes typingBounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-7px);opacity:1}}`}</style>
+    </div>
+  );
 }
 
 function InvestorAIConversation() {
   const searchParams = useSearchParams();
   const router = useRouter();
-
   const { user } = useAuth();
   const executionId = Number(searchParams.get("executionId"));
 
@@ -39,12 +137,77 @@ function InvestorAIConversation() {
   const [additionalText, setAdditionalText] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [updateInterval, setUpdateInterval] = useState("48 hours");
+  const [progressStep, setProgressStep] = useState(0);
+
+  const [inputMode, setInputMode] = useState<"text" | "voice">("text");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isAriaSpeaking, setIsAriaSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [transcript, setTranscript] = useState("");
+
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfText, setPdfText] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [fontSize, setFontSize] = useState(14);
+  const [showTimestamps, setShowTimestamps] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [connectionQuality] = useState<"excellent" | "good" | "poor">("excellent");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
+    if (user && voiceEnabled) {
+      const lastName = user.fullName?.split(" ").pop() || "there";
+      const greeting = `Welcome to RG AI Conversation. Good to have you here, ${lastName}. I'm Aria, your AI Investment Analyst. Let me prepare your session.`;
+      speakText(greeting);
+    }
+    sessionTimerRef.current = setInterval(() => {
+      setSessionDuration((d) => d + 1);
+    }, 1000);
+    return () => {
+      if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setMessageCount(messages.length);
   }, [messages]);
+
+  const speakText = useCallback((text: string) => {
+    if (isMuted || !voiceEnabled || typeof window === "undefined") return;
+    window.speechSynthesis?.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 1.05;
+    utter.volume = 1;
+    const voices = window.speechSynthesis?.getVoices() || [];
+    const preferred = voices.find((v) =>
+      v.name.toLowerCase().includes("female") ||
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("karen")
+    );
+    if (preferred) utter.voice = preferred;
+    utter.onstart = () => setIsAriaSpeaking(true);
+    utter.onend = () => setIsAriaSpeaking(false);
+    synthRef.current = utter;
+    window.speechSynthesis?.speak(utter);
+  }, [isMuted, voiceEnabled]);
 
   useEffect(() => {
     if (!executionId || !user || started.current) return;
@@ -70,7 +233,9 @@ function InvestorAIConversation() {
 
         const { session_id, message } = aiRes.data;
         setSessionId(session_id);
-        setMessages([{ role: "ai", content: message }]);
+        setProgressStep(1);
+        setMessages([{ role: "ai", content: message, timestamp: new Date() }]);
+        setTimeout(() => speakText(message), 500);
       } catch {
         toast.error("Failed to start conversation. Please try again.");
         router.push("/investor/execute");
@@ -82,40 +247,81 @@ function InvestorAIConversation() {
     init();
   }, [executionId, user]);
 
+  const startRecording = () => {
+    if (typeof window === "undefined") return;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { toast.error("Speech recognition not supported in this browser."); return; }
+
+    const recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.onresult = (e: any) => {
+      const t = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+      setTranscript(t);
+      setUserInput(t);
+    };
+    recognition.onend = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setTranscript("");
+  };
+
+  const stopRecording = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const handlePdfUpload = async (file: File) => {
+    if (!file.type.includes("pdf")) { toast.error("Please upload a PDF file."); return; }
+    setPdfFile(file);
+    toast.success(`PDF "${file.name}" attached — Aria will factor this into the assessment.`);
+    setPdfText(`[PDF Document: ${file.name} — ${(file.size / 1024).toFixed(1)} KB attached]`);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handlePdfUpload(file);
+  };
+
   const sendAnswer = async () => {
-    if (!userInput.trim() || !sessionId) return;
-    const answer = userInput.trim();
+    const rawAnswer = userInput.trim();
+    if (!rawAnswer || !sessionId) return;
+    const answer = pdfText ? `${rawAnswer}\n\n${pdfText}` : rawAnswer;
+
     setUserInput("");
-    setMessages((prev) => [...prev, { role: "user", content: answer }]);
+    setPdfFile(null);
+    setPdfText("");
+    setTranscript("");
+    setMessages((prev) => [...prev, { role: "user", content: rawAnswer, timestamp: new Date() }]);
     setIsSending(true);
 
     try {
       const res = await aiService.sendAnswer({ sessionId, answer });
 
-      if (res.data.done) {
+      if (res.data.is_complete) {
+        const aiMsg = res.data.reply || "Thank you for your answers.";
+        const additionalPrompt = "Is there anything else you would like me to consider when finding startups for you? Feel free to share any additional context.";
         setMessages((prev) => [
           ...prev,
-          {
-            role: "ai",
-            content: res.data.message || "Thank you for your answers.",
-          },
-          {
-            role: "ai",
-            content:
-              "Is there anything else you would like me to consider when finding startups for you? Feel free to share any additional context.",
-          },
+          { role: "ai", content: aiMsg, timestamp: new Date() },
+          { role: "ai", content: additionalPrompt, timestamp: new Date() },
         ]);
         setAwaitingAdditional(true);
+        setProgressStep(2);
+        speakText(aiMsg + " " + additionalPrompt);
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", content: res.data.reply || "" },
-        ]);
+        const reply = res.data.reply || "";
+        setMessages((prev) => [...prev, { role: "ai", content: reply, timestamp: new Date() }]);
+        speakText(reply);
       }
     } catch {
       toast.error("Failed to send response. Please try again.");
       setMessages((prev) => prev.slice(0, -1));
-      setUserInput(answer);
+      setUserInput(rawAnswer);
     } finally {
       setIsSending(false);
     }
@@ -129,13 +335,12 @@ function InvestorAIConversation() {
         sessionId,
         additionalConsiderations: additionalText || null,
       });
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", content: finishRes.data.message },
-      ]);
+      const closing = finishRes.data.message;
+      setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
       setAwaitingAdditional(false);
       setIsDone(true);
+      setProgressStep(3);
+      speakText(closing);
     } catch {
       toast.error("Failed to finalise. Please try again.");
     } finally {
@@ -143,182 +348,540 @@ function InvestorAIConversation() {
     }
   };
 
+  const formatDuration = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const lastName = user?.fullName?.split(" ").pop() || "Investor";
+
+  const filteredMessages = searchTerm
+    ? messages.filter((m) => m.content.toLowerCase().includes(searchTerm.toLowerCase()))
+    : messages;
+
+  if (isStarting) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: "#050505",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32,
+      }}>
+        <div style={{ position: "relative" }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: "50%",
+            background: "linear-gradient(135deg,#d4af37,#8a6e1c)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 32, fontWeight: 700, color: "#0a0a0a",
+            fontFamily: "'Playfair Display',serif",
+            animation: "pulse 2s ease-in-out infinite",
+          }}>A</div>
+          <div style={{
+            position: "absolute", inset: -6, borderRadius: "50%",
+            border: "2px solid rgba(212,175,55,0.3)",
+            animation: "spin 3s linear infinite",
+          }} />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ color: "#d4af37", fontFamily: "'Playfair Display',serif", fontSize: 22, margin: 0 }}>
+            Aria is preparing your session
+          </p>
+          <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>
+            Welcome, {lastName}. Reviewing your investment profile…
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[0, 0.2, 0.4].map((d, i) => (
+            <span key={i} style={{
+              width: 8, height: 8, borderRadius: "50%", background: "#d4af37",
+              animation: `typingBounce 0.9s ease-in-out ${d}s infinite`, display: "block",
+            }} />
+          ))}
+        </div>
+        <style>{`
+          @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,.4)}50%{box-shadow:0 0 0 20px rgba(212,175,55,0)}}
+          @keyframes spin{to{transform:rotate(360deg)}}
+          @keyframes typingBounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-7px);opacity:1}}
+        `}</style>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          AI Investment Assessment
-        </h2>
-        <p className="text-sm text-[var(--color-neutral-500)] mt-1">
-          Answer the AI questions to help us find the best startup matches for
-          your investment goals.
-        </p>
+    <div style={{
+      minHeight: "100vh", background: "#050505", color: "#e8e8e8",
+      fontFamily: "'DM Sans',sans-serif", fontSize: fontSize,
+      display: "flex", flexDirection: "column",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:#0a0a0a}
+        ::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
+        ::-webkit-scrollbar-thumb:hover{background:#d4af37}
+        .msg-ai-bubble{
+          background:linear-gradient(135deg,#111 0%,#161616 100%);
+          border:1px solid #222; border-radius: 0 16px 16px 16px;
+          padding:14px 18px; max-width:80%; line-height:1.65;
+          animation: fadeSlideIn 0.3s ease;
+        }
+        .msg-user-bubble{
+          background:linear-gradient(135deg,#1a1505 0%,#2a2008 100%);
+          border:1px solid rgba(212,175,55,0.25); border-radius:16px 0 16px 16px;
+          padding:14px 18px; max-width:80%; line-height:1.65;
+          color:#f0e8d0; animation: fadeSlideIn 0.3s ease;
+        }
+        @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .gold-btn{
+          background:linear-gradient(135deg,#d4af37,#b8962e);
+          color:#0a0a0a; border:none; border-radius:10px;
+          padding:10px 20px; font-weight:600; cursor:pointer;
+          transition:all 0.2s; font-size:13px;
+        }
+        .gold-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+        .gold-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+        .ghost-btn{
+          background:transparent; color:#666; border:1px solid #222;
+          border-radius:8px; padding:6px 12px; cursor:pointer;
+          transition:all 0.2s; font-size:12px;
+        }
+        .ghost-btn:hover{border-color:#d4af37;color:#d4af37}
+        .ghost-btn.active{border-color:#d4af37;color:#d4af37;background:rgba(212,175,55,.08)}
+        .dark-input{
+          background:#0f0f0f; border:1px solid #222; border-radius:10px;
+          color:#e8e8e8; padding:10px 14px; outline:none; width:100%; font-size:13px;
+          transition:border-color 0.2s; resize:none; font-family:inherit;
+        }
+        .dark-input:focus{border-color:rgba(212,175,55,.5)}
+        .dark-input::placeholder{color:#444}
+        .sidebar-item{
+          display:flex; align-items:center; gap:10px;
+          padding:10px 14px; border-radius:8px; cursor:pointer;
+          transition:background 0.2s; font-size:12px; color:#888;
+        }
+        .sidebar-item:hover{background:#111;color:#e8e8e8}
+        .icon-btn{
+          width:36px;height:36px;border-radius:8px;
+          background:#0f0f0f;border:1px solid #1f1f1f;
+          display:flex;align-items:center;justify-content:center;
+          cursor:pointer;transition:all 0.2s;color:#666;font-size:14px;
+        }
+        .icon-btn:hover{border-color:#d4af37;color:#d4af37}
+        .icon-btn.active{border-color:#d4af37;color:#d4af37;background:rgba(212,175,55,.08)}
+        .drag-zone{
+          border:2px dashed #222;border-radius:12px;
+          padding:24px;text-align:center;cursor:pointer;
+          transition:all 0.2s;
+        }
+        .drag-zone:hover,.drag-zone.over{border-color:#d4af37;background:rgba(212,175,55,.04)}
+      `}</style>
+
+      <div style={{
+        padding: "14px 24px", background: "#080808",
+        borderBottom: "1px solid #151515",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 50,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button className="icon-btn" onClick={() => setShowSidebar(!showSidebar)} title="Menu">
+            ☰
+          </button>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: "#d4af37" }}>
+                RG AI Conversation
+              </span>
+              <span style={{
+                fontSize: 10, padding: "2px 7px", borderRadius: 20,
+                background: "rgba(212,175,55,.12)", border: "1px solid rgba(212,175,55,.25)",
+                color: "#d4af37",
+              }}>LIVE</span>
+            </div>
+            <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
+              Aria · Investment Analyst · {lastName}
+            </p>
+          </div>
+        </div>
+
+        <ProgressBar step={progressStep} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{
+                width: 3, height: 6 + i * 4, borderRadius: 2,
+                background: connectionQuality === "excellent" ? "#22c55e" : i <= 2 ? "#eab308" : "#333",
+              }} />
+            ))}
+          </div>
+
+          <span style={{
+            fontSize: 12, color: "#555", fontFamily: "monospace",
+            background: "#0f0f0f", border: "1px solid #1a1a1a",
+            padding: "3px 8px", borderRadius: 6,
+          }}>
+            {formatDuration(sessionDuration)}
+          </span>
+
+          <button className={`icon-btn ${showSearch ? "active" : ""}`} onClick={() => setShowSearch(!showSearch)} title="Search messages">🔍</button>
+          <button className={`icon-btn ${showTimestamps ? "active" : ""}`} onClick={() => setShowTimestamps(!showTimestamps)} title="Toggle timestamps">🕐</button>
+          <button className={`icon-btn ${isMuted ? "active" : ""}`} onClick={() => setIsMuted(!isMuted)} title="Toggle voice">
+            {isMuted ? "🔇" : "🔊"}
+          </button>
+          <button className={`icon-btn ${isFullscreen ? "active" : ""}`} onClick={() => setIsFullscreen(!isFullscreen)} title="Fullscreen">⛶</button>
+          <button
+            onClick={() => router.push("/investor/executions")}
+            style={{
+              background: "transparent", border: "1px solid #1f1f1f", borderRadius: 8,
+              color: "#555", padding: "6px 12px", cursor: "pointer", fontSize: 12,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.borderColor = "#d4af37"; (e.target as HTMLButtonElement).style.color = "#d4af37"; }}
+            onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.borderColor = "#1f1f1f"; (e.target as HTMLButtonElement).style.color = "#555"; }}
+          >
+            ← Exit
+          </button>
+        </div>
       </div>
 
-      <Card className="border border-[var(--color-border)]">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
-              <Bot className="h-5 w-5 text-white" />
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+
+        {showSidebar && (
+          <div style={{
+            width: 240, background: "#080808",
+            borderRight: "1px solid #151515",
+            padding: "20px 12px", display: "flex", flexDirection: "column", gap: 4,
+            animation: "fadeSlideIn 0.2s ease",
+          }}>
+            <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
+              Session Controls
+            </p>
+
+            <div className="sidebar-item" onClick={() => fileInputRef.current?.click()}>
+              <span>📎</span> Attach PDF
             </div>
-            <div>
-              <CardTitle>Aria — AI Investment Analyst</CardTitle>
-              <CardDescription>Powered by RG Partners</CardDescription>
+            <div className="sidebar-item" onClick={() => { setInputMode(inputMode === "voice" ? "text" : "voice"); }}>
+              <span>{inputMode === "voice" ? "⌨️" : "🎙️"}</span>
+              {inputMode === "voice" ? "Switch to Text" : "Switch to Voice"}
+            </div>
+            <div className="sidebar-item" onClick={() => setIsMuted(!isMuted)}>
+              <span>{isMuted ? "🔇" : "🔊"}</span> {isMuted ? "Unmute Aria" : "Mute Aria"}
+            </div>
+            <div className="sidebar-item" onClick={() => setShowTimestamps(!showTimestamps)}>
+              <span>🕐</span> {showTimestamps ? "Hide" : "Show"} Timestamps
+            </div>
+
+            <div style={{ borderTop: "1px solid #111", margin: "8px 0" }} />
+            <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
+              Text Size
+            </p>
+            <div style={{ display: "flex", gap: 6, padding: "0 14px" }}>
+              {[12, 14, 16].map((s) => (
+                <button key={s} onClick={() => setFontSize(s)} className={`ghost-btn ${fontSize === s ? "active" : ""}`}>
+                  {s === 12 ? "S" : s === 14 ? "M" : "L"}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid #111", margin: "8px 0" }} />
+            <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
+              Session Stats
+            </p>
+            <div style={{ padding: "0 14px" }}>
+              {[
+                ["Messages", messageCount],
+                ["Duration", formatDuration(sessionDuration)],
+                ["Status", isDone ? "Complete" : "Active"],
+              ].map(([k, v]) => (
+                <div key={String(k)} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #111", fontSize: 12 }}>
+                  <span style={{ color: "#555" }}>{k}</span>
+                  <span style={{ color: isDone && k === "Status" ? "#22c55e" : "#d4af37" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid #111", margin: "8px 0" }} />
+            <div className="sidebar-item" onClick={() => {
+              const text = messages.map((m) => `${m.role === "ai" ? "Aria" : "You"}: ${m.content}`).join("\n\n");
+              navigator.clipboard.writeText(text);
+              toast.success("Transcript copied!");
+            }}>
+              <span>📋</span> Copy Transcript
             </div>
           </div>
-        </CardHeader>
+        )}
 
-        <CardContent className="space-y-4">
-          {/* Chat messages */}
-          <div className="bg-[var(--color-neutral-50)] rounded-xl p-4 min-h-[320px] max-h-[480px] overflow-y-auto space-y-4">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex gap-3 ${
-                  msg.role === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                <div
-                  className={`h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                    msg.role === "ai"
-                      ? "bg-[var(--color-primary)] text-white"
-                      : "bg-[var(--color-secondary)] text-white"
-                  }`}
-                >
-                  {msg.role === "ai" ? (
-                    <Bot className="h-4 w-4" />
-                  ) : (
-                    <User className="h-4 w-4" />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+          {showSearch && (
+            <div style={{ padding: "10px 20px", background: "#080808", borderBottom: "1px solid #151515" }}>
+              <input
+                className="dark-input"
+                placeholder="Search messages…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ maxWidth: 400 }}
+              />
+            </div>
+          )}
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
+
+            <div style={{
+              background: "linear-gradient(135deg,rgba(212,175,55,.06),rgba(212,175,55,.02))",
+              border: "1px solid rgba(212,175,55,.15)", borderRadius: 12,
+              padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
+            }}>
+              <span style={{ fontSize: 28 }}>💼</span>
+              <div>
+                <p style={{ margin: 0, color: "#d4af37", fontFamily: "'Playfair Display',serif", fontSize: 15 }}>
+                  Welcome back, {lastName}
+                </p>
+                <p style={{ margin: 0, color: "#555", fontSize: 12, marginTop: 3 }}>
+                  Your AI investment assessment session is now active. All responses are confidential.
+                </p>
+              </div>
+            </div>
+
+            {filteredMessages.map((msg, i) => (
+              <div key={i} style={{
+                display: "flex", gap: 12, flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                alignItems: "flex-start",
+              }}>
+                {msg.role === "ai" ? (
+                  <AriaAvatar speaking={isAriaSpeaking && i === messages.length - 1} />
+                ) : (
+                  <div style={{
+                    width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                    background: "#1a1a1a", border: "1px solid #2a2a2a",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16, color: "#d4af37",
+                  }}>
+                    {(user?.fullName?.[0] || "U").toUpperCase()}
+                  </div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, maxWidth: "80%" }}>
+                  <div className={msg.role === "ai" ? "msg-ai-bubble" : "msg-user-bubble"}>
+                    {msg.content}
+                    {msg.attachedFile && (
+                      <div style={{
+                        marginTop: 8, padding: "6px 10px", background: "rgba(212,175,55,.08)",
+                        border: "1px solid rgba(212,175,55,.2)", borderRadius: 6,
+                        fontSize: 11, color: "#d4af37",
+                      }}>
+                        📎 {msg.attachedFile}
+                      </div>
+                    )}
+                  </div>
+                  {showTimestamps && msg.timestamp && (
+                    <span style={{ fontSize: 10, color: "#333", textAlign: msg.role === "user" ? "right" : "left" }}>
+                      {msg.timestamp.toLocaleTimeString()}
+                    </span>
                   )}
-                </div>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "ai"
-                      ? "bg-white border border-[var(--color-border)] text-[var(--color-foreground)] rounded-tl-sm"
-                      : "bg-[var(--color-primary)] text-white rounded-tr-sm"
-                  }`}
-                >
-                  {msg.content}
                 </div>
               </div>
             ))}
 
             {isSending && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-[var(--color-primary)] text-white flex-shrink-0 flex items-center justify-center">
-                  <Bot className="h-4 w-4" />
-                </div>
-                <div className="bg-white border border-[var(--color-border)] rounded-2xl rounded-tl-sm px-4 py-3">
-                  <div className="flex gap-1">
-                    {[0, 150, 300].map((delay) => (
-                      <span
-                        key={delay}
-                        className="h-2 w-2 bg-[var(--color-neutral-400)] rounded-full animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
-                      />
-                    ))}
-                  </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <AriaAvatar speaking={false} />
+                <div style={{
+                  background: "#111", border: "1px solid #222",
+                  borderRadius: "0 16px 16px 16px",
+                }}>
+                  <TypingDots />
                 </div>
               </div>
             )}
+
+            {isDone && (
+              <div style={{
+                textAlign: "center", padding: "28px 20px",
+                background: "linear-gradient(135deg,rgba(34,197,94,.06),rgba(34,197,94,.02))",
+                border: "1px solid rgba(34,197,94,.2)", borderRadius: 14,
+                animation: "fadeSlideIn 0.4s ease",
+              }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
+                <p style={{ color: "#22c55e", fontFamily: "'Playfair Display',serif", fontSize: 18, margin: "0 0 6px" }}>
+                  Session Complete
+                </p>
+                <p style={{ color: "#555", fontSize: 13, margin: 0 }}>
+                  Your investment assessment has been saved. You will receive an update within {updateInterval}.
+                </p>
+                <button
+                  className="gold-btn"
+                  style={{ marginTop: 16 }}
+                  onClick={() => router.push("/investor/dashboard")}
+                >
+                  Return to Dashboard →
+                </button>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
           </div>
 
-          {/* Input */}
-          {!awaitingAdditional && !isDone && (
-            <div className="flex gap-2">
-              <Textarea
-                placeholder="Type your answer…"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendAnswer();
-                  }
-                }}
-                disabled={isSending}
-                className="flex-1 min-h-[40px] max-h-[120px] resize-none"
-                rows={1}
-              />
-              <Button
-                onClick={sendAnswer}
-                disabled={isSending || !userInput.trim()}
-                size="icon"
-                className="flex-shrink-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          {!isDone && (
+            <div style={{
+              padding: "16px 24px 20px",
+              background: "#080808",
+              borderTop: "1px solid #151515",
+            }}>
 
-          {/* Additional considerations */}
-          {awaitingAdditional && !isDone && (
-            <div className="space-y-3">
-              <Textarea
-                placeholder="Any additional context you would like the AI to consider (optional)…"
-                value={additionalText}
-                onChange={(e) => setAdditionalText(e.target.value)}
-                rows={3}
-                disabled={isSubmitting}
-              />
-              <Button
-                onClick={submitExecution}
-                className="w-full gap-2"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Submitting…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Submit Investment Execution
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+              {!awaitingAdditional && (
+                <div
+                  className={`drag-zone ${isDragOver ? "over" : ""}`}
+                  style={{ marginBottom: pdfFile ? 10 : 0, display: pdfFile || isDragOver ? "block" : "none" }}
+                  onDrop={handleDrop}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {pdfFile ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center" }}>
+                      <span style={{ fontSize: 20 }}>📄</span>
+                      <span style={{ color: "#d4af37", fontSize: 13 }}>{pdfFile.name}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPdfFile(null); setPdfText(""); }}
+                        style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: 16 }}
+                      >×</button>
+                    </div>
+                  ) : (
+                    <p style={{ color: "#555", fontSize: 12, margin: 0 }}>Drop PDF here or click to upload</p>
+                  )}
+                </div>
+              )}
 
-          {/* Done */}
-          {isDone && (
-            <div className="flex flex-col items-center gap-4 py-4">
-              <div className="h-14 w-14 rounded-full bg-[var(--color-secondary-50)] flex items-center justify-center">
-                <CheckCircle2 className="h-7 w-7 text-[var(--color-secondary)]" />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <button className={`ghost-btn ${inputMode === "text" ? "active" : ""}`} onClick={() => setInputMode("text")}>
+                  ⌨️ Text
+                </button>
+                <button className={`ghost-btn ${inputMode === "voice" ? "active" : ""}`} onClick={() => setInputMode("voice")}>
+                  🎙️ Voice
+                </button>
+                <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                  {!awaitingAdditional && (
+                    <button
+                      className="icon-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Attach PDF"
+                    >📎</button>
+                  )}
+                  <button
+                    className={`icon-btn ${isMuted ? "active" : ""}`}
+                    onClick={() => setIsMuted(!isMuted)}
+                    title={isMuted ? "Unmute" : "Mute Aria"}
+                  >
+                    {isMuted ? "🔇" : "🔊"}
+                  </button>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="font-semibold text-[var(--color-primary-800)] text-lg">
-                  Investment Execution Submitted!
-                </p>
-                <p className="text-sm text-[var(--color-neutral-500)] mt-1">
-                  You will receive an update within {updateInterval}.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/investor/executions")}
-              >
-                View My Investments
-              </Button>
+
+              {awaitingAdditional ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
+                    Optional: Share any additional context for Aria to consider.
+                  </p>
+                  <textarea
+                    className="dark-input"
+                    rows={3}
+                    placeholder="e.g. I prefer impact-focused startups in East Africa with a clear path to profitability within 3 years…"
+                    value={additionalText}
+                    onChange={(e) => setAdditionalText(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button className="gold-btn" onClick={submitExecution} disabled={isSubmitting} style={{ flex: 1 }}>
+                      {isSubmitting ? "Saving…" : "✓ Submit & Complete Assessment"}
+                    </button>
+                    <button className="ghost-btn" onClick={() => submitExecution()} disabled={isSubmitting}>
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              ) : inputMode === "voice" ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+                  {transcript && (
+                    <div style={{
+                      width: "100%", padding: "10px 14px", background: "#0f0f0f",
+                      border: "1px solid #222", borderRadius: 10, fontSize: 13, color: "#ccc",
+                    }}>
+                      <span style={{ color: "#d4af37", fontSize: 11 }}>Transcript: </span>
+                      {transcript}
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <VoiceWave active={isRecording} />
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      style={{
+                        width: 64, height: 64, borderRadius: "50%", border: "none",
+                        background: isRecording
+                          ? "linear-gradient(135deg,#dc2626,#991b1b)"
+                          : "linear-gradient(135deg,#d4af37,#8a6e1c)",
+                        color: isRecording ? "#fff" : "#0a0a0a",
+                        fontSize: 24, cursor: "pointer",
+                        boxShadow: isRecording ? "0 0 0 6px rgba(220,38,38,.2)" : "0 0 0 4px rgba(212,175,55,.15)",
+                        transition: "all 0.2s",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      {isRecording ? "⏹" : "🎙"}
+                    </button>
+                    <VoiceWave active={isRecording} />
+                  </div>
+                  <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
+                    {isRecording ? "Recording… click to stop" : "Click to start speaking"}
+                  </p>
+                  {transcript && (
+                    <button className="gold-btn" onClick={sendAnswer} disabled={isSending || !transcript.trim()}>
+                      Send Response →
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+                  <textarea
+                    ref={textareaRef}
+                    className="dark-input"
+                    rows={2}
+                    placeholder="Type your response…  (Enter to send, Shift+Enter for new line)"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAnswer(); }
+                    }}
+                    disabled={isSending}
+                    style={{ flex: 1, maxHeight: 120 }}
+                  />
+                  <button
+                    className="gold-btn"
+                    onClick={sendAnswer}
+                    disabled={isSending || !userInput.trim()}
+                    style={{ padding: "10px 16px", flexShrink: 0 }}
+                  >
+                    {isSending ? "…" : "↑"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf"
+        style={{ display: "none" }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); }}
+      />
     </div>
   );
 }
 
 export default function InvestorAIPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#050505", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#d4af37", fontFamily: "'Playfair Display',serif" }}>Loading…</div>
+      </div>
+    }>
       <InvestorAIConversation />
     </Suspense>
   );
