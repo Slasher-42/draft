@@ -9,38 +9,29 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ClipboardList, Clock, CheckCircle2, XCircle } from "lucide-react";
 
 export default function AdminExecutionsPage() {
-  const [executions, setExecutions] = useState<any[]>([]);
+  const [allExecutions, setAllExecutions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   useEffect(() => {
     setIsLoading(true);
-
     Promise.allSettled([
       api.get("/api/executions/startup/all"),
       api.get("/api/executions/investor/all"),
-    ])
-      .then(([startupRes, investorRes]) => {
-        const startups = startupRes.status === "fulfilled"
-          ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))
-          : [];
-        const investors = investorRes.status === "fulfilled"
-          ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
-          : [];
-
-        let combined = [...startups, ...investors].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        if (statusFilter !== "ALL") {
-          combined = combined.filter((e) => e.status === statusFilter);
-        }
-
-        setExecutions(combined);
-      })
-      .catch(() => setExecutions([]))
+    ]).then(([startupRes, investorRes]) => {
+      const startups  = startupRes.status  === "fulfilled" ? (startupRes.value.data?.data  ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))  : [];
+      const investors = investorRes.status === "fulfilled" ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" })) : [];
+      const combined = [...startups, ...investors].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setAllExecutions(combined);
+    }).catch(() => setAllExecutions([]))
       .finally(() => setIsLoading(false));
-  }, [statusFilter]);
+  }, []);
+
+  const executions = statusFilter === "ALL"
+    ? allExecutions
+    : allExecutions.filter((e) => e.status === statusFilter);
 
   const statusConfig: Record<string, any> = {
     PENDING: { label: "Pending", icon: Clock, variant: "pending" },
