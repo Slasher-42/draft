@@ -16,6 +16,11 @@ export const userService = {
     return res.data?.data ?? res.data;
   },
 
+  async getUserById(id: number | string): Promise<any> {
+    const res = await api.get(`/api/users/${id}`);
+    return res.data?.data ?? res.data;
+  },
+
   async update(id: number | string, data: UpdateUserRequest): Promise<any> {
     const res = await api.patch(`/api/users/${id}`, data);
     return res.data?.data ?? res.data;
@@ -64,9 +69,10 @@ export const userService = {
     return res.data?.data ?? res.data;
   },
 
-  async getAllUsers(params?: { role?: string; search?: string; page?: number }): Promise<any> {
+  async getAllUsers(params?: { role?: string; search?: string; page?: number }): Promise<any[]> {
     const res = await api.get("/api/users", { params });
-    return res.data?.data ?? res.data;
+    const result = res.data?.data ?? res.data;
+    return Array.isArray(result) ? result : [];
   },
 
   async createUser(data: any): Promise<any> {
@@ -76,6 +82,18 @@ export const userService = {
 
   async toggleStatus(id: number | string): Promise<void> {
     await api.patch(`/api/users/${id}/status`);
+  },
+
+  async activateUser(id: number | string): Promise<void> {
+    await api.patch(`/api/users/${id}/status`);
+  },
+
+  async deactivateUser(id: number | string): Promise<void> {
+    await api.patch(`/api/users/${id}/status`);
+  },
+
+  async deleteUser(id: number | string): Promise<void> {
+    await api.delete(`/api/users/${id}`);
   },
 
   async delete(id: number | string): Promise<void> {

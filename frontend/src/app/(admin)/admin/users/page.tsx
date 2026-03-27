@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
         role: roleFilter !== "ALL" ? roleFilter : undefined,
         search: search || undefined,
       })
-      .then((res) => setUsers(res.data))
+     .then((users) => setUsers(users))
       .catch(() => setUsers([]))
       .finally(() => setIsLoading(false));
   };

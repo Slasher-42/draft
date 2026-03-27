@@ -34,13 +34,11 @@ export default function UserDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isActing, setIsActing] = useState(false);
 
-  useEffect(() => {
-    userService
-      .getUserById(id as string)
-      .then((res) => setUser(res.data))
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false));
-  }, [id]);
+ userService
+  .getUserById(id as string)
+  .then((user) => setUser(user))
+  .catch(() => setUser(null))
+  .finally(() => setIsLoading(false));
 
   const handleActivate = async () => {
     setIsActing(true);
