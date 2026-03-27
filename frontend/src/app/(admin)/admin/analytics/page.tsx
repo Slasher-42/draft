@@ -1,241 +1,160 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminService } from "@/services/adminService";
-import { AnalyticsData } from "@/types/admin";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import { Loader2, ClipboardList, CheckCircle2, TrendingUp, Clock, XCircle, BarChart2, Lock } from "lucide-react";
+
+const execApi = axios.create({ baseURL: "http://localhost:8082", timeout: 30000 });
+execApi.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+interface LiveStats {
+  totalExecutions: number;
+  totalPending: number;
+  totalApproved: number;
+  totalRejected: number;
+  totalMatched: number;
+  totalStartupExecs: number;
+  totalInvestorExecs: number;
+}
 
 export default function AdminAnalyticsPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [stats, setStats] = useState<LiveStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    adminService
-      .getDashboardStats()
-      .then((res) => setAnalytics(res.data))
-      .catch(() => setAnalytics(null))
-      .finally(() => setIsLoading(false));
+    Promise.allSettled([
+      execApi.get("/api/executions/startup/all"),
+      execApi.get("/api/executions/investor/all"),
+    ]).then(([startupRes, investorRes]) => {
+      const startups: any[] = startupRes.status === "fulfilled"
+        ? (startupRes.value.data?.data ?? [])
+        : [];
+      const investors: any[] = investorRes.status === "fulfilled"
+        ? (investorRes.value.data?.data ?? [])
+        : [];
+
+      const all = [...startups, ...investors];
+
+      setStats({
+        totalExecutions:    all.length,
+        totalPending:       all.filter(e => e.status === "PENDING").length,
+        totalApproved:      all.filter(e => e.status === "APPROVED").length,
+        totalRejected:      all.filter(e => e.status === "REJECTED").length,
+        totalMatched:       all.filter(e => e.status === "MATCHED").length,
+        totalStartupExecs:  startups.length,
+        totalInvestorExecs: investors.length,
+      });
+    }).finally(() => setIsLoading(false));
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-      </div>
-    );
-  }
+  const statCards = [
+    { label: "Total Executions",  value: stats?.totalExecutions,    icon: ClipboardList,  bg: "bg-[var(--color-primary-50)]",  color: "text-[var(--color-primary)]"   },
+    { label: "Pending",           value: stats?.totalPending,        icon: Clock,          bg: "bg-blue-50",                    color: "text-blue-600"                 },
+    { label: "Approved",          value: stats?.totalApproved,       icon: CheckCircle2,   bg: "bg-green-50",                   color: "text-green-600"                },
+    { label: "Matched",           value: stats?.totalMatched,        icon: TrendingUp,     bg: "bg-emerald-50",                 color: "text-emerald-600"              },
+    { label: "Rejected",          value: stats?.totalRejected,       icon: XCircle,        bg: "bg-red-50",                     color: "text-red-500"                  },
+    { label: "Startup Execs",     value: stats?.totalStartupExecs,   icon: ClipboardList,  bg: "bg-blue-50",                    color: "text-blue-700"                 },
+    { label: "Investor Execs",    value: stats?.totalInvestorExecs,  icon: ClipboardList,  bg: "bg-purple-50",                  color: "text-purple-700"               },
+  ];
 
-  const pieData = analytics
-    ? [
-        {
-          name: "Highly Ready",
-          value: analytics.classificationDistribution.highlyReady,
-          color: "#2FA572",
-        },
-        {
-          name: "Moderately Ready",
-          value: analytics.classificationDistribution.moderatelyReady,
-          color: "#F59E0B",
-        },
-        {
-          name: "Not Ready",
-          value: analytics.classificationDistribution.notReady,
-          color: "#EF4444",
-        },
-      ]
-    : [];
+  const futureCharts = [
+    {
+      title: "Average Readiness Score by Industry",
+      description: "Available after Service 3 — AI Assessment Engine — is integrated. Will show average scores per industry across all evaluated startup executions.",
+      service: "Service 3",
+    },
+    {
+      title: "Readiness Classification Distribution",
+      description: "Available after Service 3 — AI Assessment Engine — is integrated. Will show the split between Highly Ready, Moderately Ready, and Not Ready startups.",
+      service: "Service 3",
+    },
+    {
+      title: "Execution Trend Over Time",
+      description: "Available after Service 6 — Reporting and Notification Service — is integrated. Will show how many executions are submitted per day or week.",
+      service: "Service 6",
+    },
+    {
+      title: "Match Success Rate",
+      description: "Available after Service 5 — Investor Matching Service — is integrated. Will show the percentage of approved startups that successfully get matched to investors.",
+      service: "Service 5",
+    },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          Analytics
-        </h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Analytics</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
           Platform-wide performance metrics and trends
         </p>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Total Executions", value: analytics?.totalExecutions ?? 0 },
-          { label: "Total Approved", value: analytics?.totalApproved ?? 0 },
-          { label: "Total Matched", value: analytics?.totalMatched ?? 0 },
-          {
-            label: "Avg Score",
-            value: analytics?.averageScore
-              ? `${analytics.averageScore.toFixed(1)}/100`
-              : "N/A",
-          },
-        ].map((stat) => (
-          <Card
-            key={stat.label}
-            className="border border-[var(--color-border)]"
-          >
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-[var(--color-primary-800)]">
-                {stat.value}
-              </p>
-              <p className="text-xs text-[var(--color-neutral-500)] mt-1">
-                {stat.label}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Execution trend */}
-      <Card className="border border-[var(--color-border)]">
-        <CardHeader>
-          <CardTitle className="text-base">Execution Trend Over Time</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {analytics?.executionTrend &&
-          analytics.executionTrend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={analytics.executionTrend}>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 12,
-                    borderRadius: 8,
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="var(--color-primary)"
-                  strokeWidth={2}
-                  dot={{ fill: "var(--color-primary)", r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-sm text-[var(--color-neutral-400)]">
-              No trend data available
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-neutral-400)] mb-3">
+              Live — from Service 2
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {statCards.map((s) => (
+                <Card key={s.label} className="border border-[var(--color-border)]">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${s.bg}`}>
+                      <s.icon className={`h-5 w-5 ${s.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold text-[var(--color-primary-800)]">
+                        {s.value ?? 0}
+                      </p>
+                      <p className="text-xs text-[var(--color-neutral-500)]">{s.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
 
-      {/* Score by industry */}
-      <Card className="border border-[var(--color-border)]">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Average Score by Industry
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {analytics?.scoreByIndustry &&
-          analytics.scoreByIndustry.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={analytics.scoreByIndustry}>
-                <XAxis
-                  dataKey="industry"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 12,
-                    borderRadius: 8,
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
-                <Bar
-                  dataKey="avgScore"
-                  fill="var(--color-secondary)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-sm text-[var(--color-neutral-400)]">
-              No industry data available
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-neutral-400)] mb-3">
+              Coming Soon — Pending Service Integration
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {futureCharts.map((chart) => (
+                <Card key={chart.title} className="border border-dashed border-[var(--color-border)] bg-[var(--color-neutral-50)]">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold text-[var(--color-neutral-600)]">
+                        {chart.title}
+                      </CardTitle>
+                      <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-neutral-200)] text-[var(--color-neutral-500)] text-xs font-medium">
+                        <Lock className="h-3 w-3" />
+                        {chart.service}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-28 flex flex-col items-center justify-center gap-2">
+                      <BarChart2 className="h-8 w-8 text-[var(--color-neutral-300)]" />
+                      <p className="text-xs text-[var(--color-neutral-400)] text-center leading-relaxed max-w-xs">
+                        {chart.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Classification distribution */}
-      <Card className="border border-[var(--color-border)]">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Readiness Classification Distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {pieData.some((d) => d.value > 0) ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                  labelLine={false}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} strokeWidth={0} />
-                  ))}
-                </Pie>
-                <Legend
-                  formatter={(value) => (
-                    <span style={{ fontSize: 12 }}>{value}</span>
-                  )}
-                />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 12,
-                    borderRadius: 8,
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-sm text-[var(--color-neutral-400)]">
-              No classification data available
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

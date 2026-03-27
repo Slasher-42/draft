@@ -1,68 +1,96 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminService } from "@/services/adminService";
-import { api } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
+import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2, ClipboardList, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, ClipboardList, Clock, CheckCircle2, XCircle, TrendingUp, AlertCircle } from "lucide-react";
+
+const execApi = axios.create({ baseURL: "http://localhost:8082", timeout: 30000 });
+execApi.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+const STATUS_FILTERS = ["ALL", "PENDING", "MATCHED", "REJECTED", "APPROVED"] as const;
+
+const statusConfig: Record<string, { label: string; icon: any; classes: string }> = {
+  PENDING:  { label: "Pending",  icon: Clock,        classes: "bg-blue-50 text-blue-700 border-blue-200" },
+  MATCHED:  { label: "Matched",  icon: TrendingUp,   classes: "bg-green-50 text-green-700 border-green-200" },
+  REJECTED: { label: "Rejected", icon: XCircle,      classes: "bg-red-50 text-red-700 border-red-200" },
+  APPROVED: { label: "Approved", icon: CheckCircle2, classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+};
 
 export default function AdminExecutionsPage() {
   const [allExecutions, setAllExecutions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   useEffect(() => {
     setIsLoading(true);
+    setFetchError(null);
+
     Promise.allSettled([
-      api.get("/api/executions/startup/all"),
-      api.get("/api/executions/investor/all"),
+      execApi.get("/api/executions/startup/all"),
+      execApi.get("/api/executions/investor/all"),
     ]).then(([startupRes, investorRes]) => {
-      const startups  = startupRes.status  === "fulfilled" ? (startupRes.value.data?.data  ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))  : [];
-      const investors = investorRes.status === "fulfilled" ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" })) : [];
+      const startups = startupRes.status === "fulfilled"
+        ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))
+        : [];
+      const investors = investorRes.status === "fulfilled"
+        ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
+        : [];
+
       const combined = [...startups, ...investors].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+
+      if (combined.length === 0 && startupRes.status === "rejected" && investorRes.status === "rejected") {
+        setFetchError("Could not load executions. Check that the StartupApplicationService (port 8082) is running and your token has ROLE_ADMIN.");
+      }
+
       setAllExecutions(combined);
-    }).catch(() => setAllExecutions([]))
-      .finally(() => setIsLoading(false));
+    }).finally(() => setIsLoading(false));
   }, []);
 
   const executions = statusFilter === "ALL"
     ? allExecutions
     : allExecutions.filter((e) => e.status === statusFilter);
 
-  const statusConfig: Record<string, any> = {
-    PENDING: { label: "Pending", icon: Clock, variant: "pending" },
-    MATCHED: { label: "Matched", icon: CheckCircle2, variant: "success" },
-    REJECTED: { label: "Rejected", icon: XCircle, variant: "destructive" },
-  };
+  const counts = STATUS_FILTERS.reduce((acc, s) => {
+    acc[s] = s === "ALL" ? allExecutions.length : allExecutions.filter(e => e.status === s).length;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          All Executions
-        </h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">All Executions</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
           All startup and investor executions across the platform
         </p>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2">
-        {["ALL", "PENDING", "MATCHED", "REJECTED"].map((s) => (
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
               statusFilter === s
                 ? "bg-[var(--color-primary)] text-white"
                 : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-200)]"
             }`}
           >
             {s}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+              statusFilter === s
+                ? "bg-white/20 text-white"
+                : "bg-[var(--color-neutral-200)] text-[var(--color-neutral-500)]"
+            }`}>
+              {counts[s]}
+            </span>
           </button>
         ))}
       </div>
@@ -71,49 +99,81 @@ export default function AdminExecutionsPage() {
         <div className="flex items-center justify-center h-48">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
         </div>
+      ) : fetchError ? (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="flex items-start gap-3 p-5">
+            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-red-700">Failed to load executions</p>
+              <p className="text-xs text-red-600 mt-1">{fetchError}</p>
+            </div>
+          </CardContent>
+        </Card>
       ) : executions.length === 0 ? (
         <Card className="border-dashed border-2 border-[var(--color-border)]">
-          <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
-            <ClipboardList className="h-10 w-10 text-[var(--color-neutral-400)]" />
-            <p className="text-[var(--color-neutral-500)]">
-              No executions found
+          <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
+            <ClipboardList className="h-10 w-10 text-[var(--color-neutral-300)]" />
+            <p className="text-[var(--color-neutral-500)] text-sm">
+              {statusFilter === "ALL" ? "No executions found." : `No ${statusFilter.toLowerCase()} executions.`}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {executions.map((exec) => {
             const cfg = statusConfig[exec.status] ?? statusConfig.PENDING;
-            const StatusIcon = cfg.icon;
+            const Icon = cfg.icon;
+            const isStartup = exec.type === "STARTUP";
+
             return (
-              <Card
-                key={exec.id}
-                className="border border-[var(--color-border)] hover:shadow-sm transition-shadow"
-              >
+              <Card key={`${exec.type}-${exec.id}`} className="border border-[var(--color-border)] hover:shadow-sm transition-shadow">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <Badge variant={cfg.variant} className="gap-1">
-                          <StatusIcon className="h-3 w-3" />
-                          {cfg.label}
-                        </Badge>
-                        <span className="text-xs text-[var(--color-neutral-400)] bg-[var(--color-neutral-100)] px-2 py-0.5 rounded-full">
-                          {exec.type ?? "STARTUP"}
-                        </span>
-                        <span className="text-xs text-[var(--color-neutral-400)]">
-                          {new Date(exec.createdAt).toLocaleDateString()}
-                        </span>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className={`mt-0.5 px-2 py-0.5 rounded-md text-xs font-bold flex-shrink-0 ${
+                        isStartup ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                      }`}>
+                        {isStartup ? "STARTUP" : "INVESTOR"}
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[var(--color-primary-800)] truncate">
+                          {isStartup
+                            ? (exec.problemStatement ?? `Startup Execution #${exec.id}`)
+                            : (exec.industry ?? exec.preferredIndustry ?? `Investor Execution #${exec.id}`)}
+                        </p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                          <span className="text-xs text-[var(--color-neutral-400)]">ID: {exec.id}</span>
+                          {exec.createdAt && (
+                            <span className="text-xs text-[var(--color-neutral-400)]">
+                              {new Date(exec.createdAt).toLocaleDateString("en-GB", {
+                                day: "numeric", month: "short", year: "numeric",
+                              })}
+                            </span>
+                          )}
+                          {isStartup && exec.fundingNeeded && (
+                            <span className="text-xs text-[var(--color-neutral-400)]">
+                              Funding: ${Number(exec.fundingNeeded).toLocaleString()}
+                            </span>
+                          )}
+                          {!isStartup && exec.investmentBudget && (
+                            <span className="text-xs text-[var(--color-neutral-400)]">
+                              Budget: ${Number(exec.investmentBudget).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        {exec.statusReason && (
+                          <p className="text-xs text-[var(--color-neutral-500)] mt-1 italic truncate">
+                            Reason: {exec.statusReason}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
-                        {exec.businessModel ??
-                          exec.industry ??
-                          "Execution"}
-                      </p>
-                      <p className="text-xs text-[var(--color-neutral-400)]">
-                        User: {exec.userId}
-                      </p>
                     </div>
+
+                    <span className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.classes}`}>
+                      <Icon className="h-3 w-3" />
+                      {cfg.label}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
