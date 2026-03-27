@@ -17,7 +17,6 @@ import {
   DollarSign,
   Briefcase,
   AlertCircle,
-  Building2,
 } from "lucide-react";
 
 const statusConfig = {
@@ -169,7 +168,7 @@ export default function InvestorExecutionsPage() {
                       </div>
 
                       <p className="font-medium text-[var(--color-primary-800)] truncate">
-                        {exec.industry} Investment
+                        {exec.preferredIndustry} Investment
                       </p>
 
                       <div className="flex flex-wrap gap-4 mt-1">
@@ -177,7 +176,7 @@ export default function InvestorExecutionsPage() {
                           Budget: ${exec.investmentBudget?.toLocaleString()}
                         </span>
                         <span className="text-xs text-[var(--color-neutral-500)]">
-                          Industry: {exec.industry}
+                          Industry: {exec.preferredIndustry}
                         </span>
                       </div>
 
@@ -188,38 +187,17 @@ export default function InvestorExecutionsPage() {
                         </p>
                       )}
 
-                      {exec.status === "MATCHED" &&
-                        exec.matchedStartups &&
-                        exec.matchedStartups.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            <p className="text-xs font-medium text-[var(--color-neutral-500)] uppercase tracking-wide">
-                              Matched Startups
-                            </p>
-                            {exec.matchedStartups.map((startup) => (
-                              <div
-                                key={startup.id}
-                                className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-100"
-                              >
-                                <Building2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-green-800 truncate">
-                                    {startup.companyName}
-                                  </p>
-                                  <p className="text-xs text-green-600">
-                                    {startup.industry} · $
-                                    {startup.fundingNeeded?.toLocaleString()}{" "}
-                                    needed
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                      {exec.status === "MATCHED" && (
+                        <p className="mt-2 text-xs text-green-600 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Investment matched successfully
+                        </p>
+                      )}
 
-                      {exec.status === "REJECTED" && exec.reason && (
+                      {exec.status === "REJECTED" && exec.statusReason && (
                         <div className="mt-2 flex items-start gap-1.5 text-xs text-red-500">
                           <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                          <span>{exec.reason}</span>
+                          <span>{exec.statusReason}</span>
                         </div>
                       )}
                     </div>

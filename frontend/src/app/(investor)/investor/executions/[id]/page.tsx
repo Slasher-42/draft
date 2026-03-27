@@ -19,7 +19,6 @@ import {
   XCircle,
   Loader2,
   AlertCircle,
-  Building2,
 } from "lucide-react";
 
 const statusConfig = {
@@ -108,15 +107,15 @@ export default function InvestorExecutionDetailPage() {
         </CardHeader>
         <CardContent className="space-y-5">
           {[
-            { label: "Industry", value: execution.industry },
-            { label: "Reason for Investing", value: execution.reasonForInvesting },
+            { label: "Industry", value: execution.preferredIndustry },
+            { label: "Reason for Investing", value: execution.investmentReason },
             {
               label: "Investment Budget",
               value: `$${execution.investmentBudget?.toLocaleString()}`,
             },
-            { label: "Dream of Success", value: execution.dreamOfSuccess },
-            ...(execution.specificCriteria
-              ? [{ label: "Specific Criteria", value: execution.specificCriteria }]
+            { label: "Expected Return Timeline", value: execution.expectedReturnTimeline },
+            ...(execution.successCriteria
+              ? [{ label: "Success Criteria", value: execution.successCriteria }]
               : []),
             ...(execution.additionalConsiderations
               ? [
@@ -142,46 +141,16 @@ export default function InvestorExecutionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Matched Startups */}
-      {execution.status === "MATCHED" &&
-        execution.matchedStartups &&
-        execution.matchedStartups.length > 0 && (
-          <Card className="border border-[var(--color-border)]">
-            <CardHeader>
-              <CardTitle>Matched Startups</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {execution.matchedStartups.map((startup) => (
-                <div
-                  key={startup.id}
-                  className="p-4 rounded-xl border border-green-100 bg-green-50 space-y-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-green-600" />
-                    <p className="font-semibold text-green-800">
-                      {startup.companyName}
-                    </p>
-                    {startup.classification && (
-                      <Badge variant="success" className="ml-auto text-xs">
-                        {startup.classification.replace(/_/g, " ")}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-green-700">
-                    <span>Industry: {startup.industry}</span>
-                    <span>
-                      Funding: ${startup.fundingNeeded?.toLocaleString()}
-                    </span>
-                    <span>Market: {startup.targetMarket}</span>
-                    {startup.overallScore && (
-                      <span>Score: {startup.overallScore}/100</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+      {execution.status === "MATCHED" && (
+        <Card className="border border-green-200 bg-green-50">
+          <CardContent className="p-5 flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <p className="text-sm text-green-700 font-medium">
+              This investment has been matched successfully.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
