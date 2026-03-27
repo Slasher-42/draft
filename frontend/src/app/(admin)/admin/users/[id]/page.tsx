@@ -44,7 +44,7 @@ export default function UserDetailPage() {
     setIsActing(true);
     try {
       await userService.activateUser(id as string);
-      setUser((prev) => (prev ? { ...prev, isActive: true } : prev));
+      setUser((prev) => (prev ? { ...prev, enabled: true, isActive: true } : prev));
       toast.success("User activated.");
     } catch {
       toast.error("Failed to activate user.");
@@ -57,7 +57,7 @@ export default function UserDetailPage() {
     setIsActing(true);
     try {
       await userService.deactivateUser(id as string);
-      setUser((prev) => (prev ? { ...prev, isActive: false } : prev));
+      setUser((prev) => (prev ? { ...prev, enabled: false, isActive: false } : prev));
       toast.success("User deactivated.");
     } catch {
       toast.error("Failed to deactivate user.");
@@ -130,9 +130,9 @@ export default function UserDetailPage() {
                   {user.role}
                 </span>
                 <Badge
-                  variant={user.isActive ? "success" : "destructive"}
+                  variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}
                 >
-                  {user.isActive ? "Active" : "Inactive"}
+                  {(user.enabled ?? user.isActive) ? "Active" : "Inactive"}
                 </Badge>
               </div>
 
@@ -254,7 +254,7 @@ export default function UserDetailPage() {
           <CardTitle>Account Actions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          {user.isActive ? (
+          {(user.enabled ?? user.isActive) ? (
             <Button
               variant="outline"
               className="gap-2 border-yellow-400 text-yellow-600 hover:bg-yellow-50"

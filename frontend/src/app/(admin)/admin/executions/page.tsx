@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { adminService } from "@/services/adminService";
+import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,30 @@ export default function AdminExecutionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   useEffect(() => {
-    adminService
-      .getAllExecutions({
-        status: statusFilter !== "ALL" ? statusFilter : undefined,
+    setIsLoading(true);
+
+    Promise.allSettled([
+      api.get("/api/executions/startup/all"),
+      api.get("/api/executions/investor/all"),
+    ])
+      .then(([startupRes, investorRes]) => {
+        const startups = startupRes.status === "fulfilled"
+          ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))
+          : [];
+        const investors = investorRes.status === "fulfilled"
+          ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
+          : [];
+
+        let combined = [...startups, ...investors].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        if (statusFilter !== "ALL") {
+          combined = combined.filter((e) => e.status === statusFilter);
+        }
+
+        setExecutions(combined);
       })
-      .then((res) => setExecutions(res.data))
       .catch(() => setExecutions([]))
       .finally(() => setIsLoading(false));
   }, [statusFilter]);

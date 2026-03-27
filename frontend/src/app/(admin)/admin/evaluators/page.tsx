@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminService } from "@/services/adminService";
+import { userService } from "@/services/userService";
 import { User } from "@/types/user";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,9 @@ export default function AdminEvaluatorsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    adminService
-      .getEvaluators()
-      .then((res) => setEvaluators(res.data))
+    userService
+      .getAllUsers({ role: "EVALUATOR" })
+      .then((data) => setEvaluators(data))
       .catch(() => setEvaluators([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -64,10 +64,10 @@ export default function AdminEvaluatorsPage() {
                         {ev.fullName}
                       </p>
                       <Badge
-                        variant={ev.isActive ? "success" : "destructive"}
+                        variant={(ev.enabled ?? ev.isActive) ? "success" : "destructive"}
                         className="text-xs"
                       >
-                        {ev.isActive ? "Active" : "Inactive"}
+                        {(ev.enabled ?? ev.isActive) ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">

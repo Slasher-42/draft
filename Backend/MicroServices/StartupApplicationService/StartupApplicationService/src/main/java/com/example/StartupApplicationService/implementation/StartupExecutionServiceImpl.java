@@ -43,6 +43,14 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
     }
 
     @Override
+    public List<StartupExecutionResponse> getAll() {
+        return startupExecutionRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     public List<StartupExecutionResponse> getAllByUser(Long userId) {
         return startupExecutionRepository.findByUserId(userId)
                 .stream()

@@ -78,7 +78,7 @@ export default function SettingsPage() {
             { label: "Role", value: user?.role ?? "—" },
             {
               label: "Account Status",
-              value: user?.isActive ? "Active" : "Inactive",
+              value: (user?.enabled ?? user?.isActive) ? "Active" : "Inactive",
             },
           ].map((item) => (
             <div

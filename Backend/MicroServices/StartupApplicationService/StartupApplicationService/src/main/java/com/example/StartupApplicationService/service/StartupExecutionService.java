@@ -18,4 +18,6 @@ public interface StartupExecutionService {
     void attachAiSession(Long executionId, String aiSessionId);
 
     void saveAdditionalConsiderations(Long executionId, String additionalConsiderations);
+
+    List<StartupExecutionResponse> getAll();
 }

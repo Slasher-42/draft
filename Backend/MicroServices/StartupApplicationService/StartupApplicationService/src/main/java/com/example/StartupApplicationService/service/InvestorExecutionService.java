@@ -18,4 +18,6 @@ public interface InvestorExecutionService {
     void attachAiSession(Long executionId, String aiSessionId);
 
     void saveAdditionalConsiderations(Long executionId, String additionalConsiderations);
+
+    List<InvestorExecutionResponse> getAll();
 }

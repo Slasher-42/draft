@@ -38,6 +38,14 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
     }
 
     @Override
+    public List<InvestorExecutionResponse> getAll() {
+        return investorExecutionRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     public List<InvestorExecutionResponse> getAllByUser(Long userId) {
         return investorExecutionRepository.findByUserId(userId)
                 .stream()

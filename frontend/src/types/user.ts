@@ -7,7 +7,8 @@ export interface User {
   phoneNumber?: string;
   profilePictureUrl?: string;
   role: UserRole;
-  isActive: boolean;
+  enabled: boolean;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   startupProfile?: StartupProfile;

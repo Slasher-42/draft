@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,6 +56,13 @@ public class InvestorExecutionController {
         Long userId = (Long) authentication.getPrincipal();
         InvestorExecutionResponse response = investorExecutionService.update(id, userId, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Execution updated successfully", response));
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<InvestorExecutionResponse>>> getAllForAdmin() {
+        List<InvestorExecutionResponse> executions = investorExecutionService.getAll();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));
     }
 
     @PatchMapping("/{id}/ai-session")

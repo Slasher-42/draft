@@ -32,12 +32,19 @@ import {
 export default function AdminDashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     adminService
       .getDashboardStats()
-      .then((res) => setAnalytics(res.data))
-      .catch(() => setAnalytics(null))
+      .then((res) => {
+        const payload = res.data?.data ?? res.data;
+        setAnalytics(payload);
+      })
+      .catch(() => {
+        setError(true);
+        setAnalytics(null);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -45,6 +52,18 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+      </div>
+    );
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <p className="text-sm text-red-500 font-medium">Failed to load dashboard data.</p>
+        <p className="text-xs text-[var(--color-neutral-400)]">
+          The analytics endpoint <code>/api/admin/analytics</code> is not available yet.
+          Please implement it in your backend.
+        </p>
       </div>
     );
   }

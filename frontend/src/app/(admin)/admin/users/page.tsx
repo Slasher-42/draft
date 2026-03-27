@@ -180,10 +180,10 @@ export default function AdminUsersPage() {
                           {user.role}
                         </span>
                         <Badge
-                          variant={user.isActive ? "success" : "destructive"}
+                          variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}
                           className="text-xs"
                         >
-                          {user.isActive ? "Active" : "Inactive"}
+                          {(user.enabled ?? user.isActive) ? "Active" : "Inactive"}
                         </Badge>
                       </div>
                       <p className="text-xs text-[var(--color-neutral-400)] truncate">
@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
-                    {user.isActive ? (
+                    {(user.enabled ?? user.isActive) ? (
                       <Button
                         variant="ghost"
                         size="icon"

@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       ...userData,
       role: userData.role?.replace("ROLE_", "") as UserRole,
+      isActive: userData.enabled,
     });
   } catch {
     localStorage.removeItem("token");

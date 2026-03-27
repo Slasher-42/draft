@@ -1,8 +1,44 @@
 import { api } from "@/lib/api";
 
 export const adminService = {
-  getDashboardStats: () =>
-    api.get("/api/admin/analytics"),
+  getDashboardStats: async () => {
+    const [startupsRes, investorsRes, evaluatorsRes] = await Promise.allSettled([
+      api.get("/api/users?role=STARTUP"),
+      api.get("/api/users?role=INVESTOR"),
+      api.get("/api/users?role=EVALUATOR"),
+    ]);
+
+    const startups = startupsRes.status === "fulfilled"
+      ? (startupsRes.value.data?.data ?? []) : [];
+    const investors = investorsRes.status === "fulfilled"
+      ? (investorsRes.value.data?.data ?? []) : [];
+    const evaluators = evaluatorsRes.status === "fulfilled"
+      ? (evaluatorsRes.value.data?.data ?? []) : [];
+
+    return {
+      data: {
+        data: {
+          totalExecutions: startups.length + investors.length,
+          totalApproved: 0,
+          totalRejected: 0,
+          totalMatched: 0,
+          totalPending: 0,
+          averageScore: 0,
+          scoreByIndustry: [],
+          executionTrend: [],
+          classificationDistribution: {
+            highlyReady: 0,
+            moderatelyReady: 0,
+            notReady: 0,
+          },
+          totalUsers: startups.length + investors.length + evaluators.length,
+          totalStartups: startups.length,
+          totalInvestors: investors.length,
+          totalEvaluators: evaluators.length,
+        }
+      }
+    };
+  },
 
   getAuditLogs: (params?: {
     userId?: string;
