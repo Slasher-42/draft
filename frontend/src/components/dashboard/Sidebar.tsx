@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -21,7 +22,6 @@ import {
   Settings,
   User,
   LogOut,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -112,8 +112,8 @@ export function Sidebar() {
         >
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-[var(--color-secondary)] flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="h-4 w-4 text-white" />
+              <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0">
+                <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
               </div>
               <div className="leading-tight">
                 <p className="font-bold text-white text-xs tracking-widest uppercase">
@@ -127,8 +127,8 @@ export function Sidebar() {
           )}
 
           {collapsed && (
-            <div className="h-8 w-8 rounded-lg bg-[var(--color-secondary)] flex items-center justify-center mx-auto">
-              <TrendingUp className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-lg overflow-hidden mx-auto">
+              <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
             </div>
           )}
 

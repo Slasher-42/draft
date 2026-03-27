@@ -1,7 +1,7 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -34,11 +34,8 @@ export default function AuthLayout({
         {/* Logo */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div
-              className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: "#2FA572" }}
-            >
-              <TrendingUp className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 rounded-xl overflow-hidden flex-shrink-0">
+              <Image src="/logo.png" alt="RG Partners Logo" width={40} height={40} className="object-cover w-full h-full" />
             </div>
             <div>
               <p className="font-bold text-white text-lg tracking-wide">
@@ -87,11 +84,8 @@ export default function AuthLayout({
       <div className="flex-1 flex flex-col justify-center items-center px-6 py-12">
         {/* Mobile logo */}
         <div className="flex lg:hidden items-center gap-2 mb-8">
-          <div
-            className="h-9 w-9 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: "#0B5B47" }}
-          >
-            <TrendingUp className="h-5 w-5 text-white" />
+          <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0">
+            <Image src="/logo.png" alt="RG Partners Logo" width={36} height={36} className="object-cover w-full h-full" />
           </div>
           <span
             className="font-bold text-lg"
