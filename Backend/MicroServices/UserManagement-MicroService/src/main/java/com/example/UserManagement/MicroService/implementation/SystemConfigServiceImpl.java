@@ -36,6 +36,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         config.setWeightMarketPotential(request.getWeightMarketPotential());
         config.setWeightBusinessViability(request.getWeightBusinessViability());
         config.setMinimumPassingScore(request.getMinimumPassingScore());
+        if (request.getHeroVideoUrl() != null) {
+            config.setHeroVideoUrl(request.getHeroVideoUrl());
+        }
+        return systemConfigRepository.save(config);
+    }
+
+    @Override
+    public SystemConfig updateHeroVideo(String videoUrl) {
+        SystemConfig config = getConfig();
+        config.setHeroVideoUrl(videoUrl);
         return systemConfigRepository.save(config);
     }
 }

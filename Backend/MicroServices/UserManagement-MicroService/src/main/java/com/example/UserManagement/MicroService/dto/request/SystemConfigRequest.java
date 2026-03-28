@@ -27,4 +27,6 @@ public class SystemConfigRequest {
 
     @NotNull
     private Double minimumPassingScore;
+
+    private String heroVideoUrl;
 }

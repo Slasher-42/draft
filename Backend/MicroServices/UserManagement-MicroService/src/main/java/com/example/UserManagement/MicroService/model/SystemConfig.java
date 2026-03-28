@@ -40,6 +40,9 @@ public class SystemConfig {
     @Column(nullable = false)
     private Double minimumPassingScore = 60.0;
 
+    @Column(length = 1024)
+    private String heroVideoUrl;
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

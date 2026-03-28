@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "react-toastify";
-import { Loader2, Save, Clock, BarChart2, ShieldCheck } from "lucide-react";
+import { Loader2, Save, Clock, BarChart2, ShieldCheck, Video, Upload, Trash2, Play } from "lucide-react";
 
 interface SystemConfig {
   id?: number;
@@ -18,6 +18,7 @@ interface SystemConfig {
   weightBusinessViability: number;
   minimumPassingScore: number;
   updatedAt?: string;
+  heroVideoUrl?: string | null;
 }
 
 const INTERVAL_UNITS = ["MINUTES", "HOURS", "DAYS"];
@@ -33,6 +34,18 @@ export default function AdminSettingsPage() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isRemovingVideo, setIsRemovingVideo] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     api.get("/api/config")
@@ -63,6 +76,57 @@ export default function AdminSettingsPage() {
       toast.error(msg);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFileSelect = (file: File) => {
+    const validTypes = ["video/mp4", "video/webm", "video/ogg"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload an MP4, WebM, or OGG video file.");
+      return;
+    }
+    if (file.size > 150 * 1024 * 1024) {
+      toast.error("Video must be smaller than 150 MB.");
+      return;
+    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleUploadVideo = async () => {
+    if (!selectedFile) return;
+    setIsUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      const res = await api.post("/api/config/hero-video", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const updated = res.data?.data ?? res.data;
+      setConfig((prev) => prev ? { ...prev, heroVideoUrl: updated.heroVideoUrl } : prev);
+      setSelectedFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      toast.success("Hero video uploaded successfully.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to upload video.");
+    } finally {
+      setIsUploadingVideo(false);
+    }
+  };
+
+  const handleRemoveVideo = async () => {
+    setIsRemovingVideo(true);
+    try {
+      await api.delete("/api/config/hero-video");
+      setConfig((prev) => prev ? { ...prev, heroVideoUrl: null } : prev);
+      toast.success("Hero video removed.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to remove video.");
+    } finally {
+      setIsRemovingVideo(false);
     }
   };
 
@@ -102,6 +166,103 @@ export default function AdminSettingsPage() {
           Configure system-wide rules for assessment and notifications
         </p>
       </div>
+
+      {/* Hero background video */}
+      <Card className="border border-[var(--color-border)]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Video className="h-5 w-5 text-[var(--color-secondary)]" />
+            Hero Background Video
+          </CardTitle>
+          <CardDescription>
+            Upload a video that plays as the background on all authentication pages.
+            Recommended: MP4, 1920×1080, under 50 MB, loopable.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+
+          {config.heroVideoUrl && !selectedFile && (
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">Current Video</p>
+              <div className="relative rounded-xl overflow-hidden border border-[var(--color-border)] bg-black aspect-video">
+                <video
+                  key={config.heroVideoUrl}
+                  src={config.heroVideoUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-black/40 rounded-full p-3">
+                    <Play className="h-6 w-6 text-white" fill="white" />
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-red-300 text-red-500 hover:bg-red-50 hover:border-red-400"
+                onClick={handleRemoveVideo}
+                disabled={isRemovingVideo}
+              >
+                {isRemovingVideo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Remove Video
+              </Button>
+            </div>
+          )}
+
+          {!selectedFile && (
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                isDragging
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary-50)]"
+                  : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] hover:bg-[var(--color-neutral-50)]"
+              }`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files?.[0]; if (f) handleFileSelect(f); }}
+            >
+              <Upload className="h-8 w-8 mx-auto mb-3 text-[var(--color-neutral-400)]" />
+              <p className="text-sm font-medium text-[var(--color-neutral-700)]">
+                {config.heroVideoUrl ? "Replace video" : "Upload a background video"}
+              </p>
+              <p className="text-xs text-[var(--color-neutral-400)] mt-1">
+                Drag & drop or click to browse · MP4, WebM, OGG · Max 150 MB
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/mp4,video/webm,video/ogg"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
+              />
+            </div>
+          )}
+
+          {selectedFile && previewUrl && (
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">
+                Preview — {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
+              </p>
+              <div className="rounded-xl overflow-hidden border border-[var(--color-primary-200)] bg-black aspect-video">
+                <video src={previewUrl} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+              </div>
+              <div className="flex gap-2">
+                <Button className="gap-2 flex-1" onClick={handleUploadVideo} disabled={isUploadingVideo}>
+                  {isUploadingVideo ? <><Loader2 className="h-4 w-4 animate-spin" />Uploading…</> : <><Upload className="h-4 w-4" />Upload Video</>}
+                </Button>
+                <Button variant="outline" onClick={() => { setSelectedFile(null); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+        </CardContent>
+      </Card>
 
       {/* Update interval */}
       <Card className="border border-[var(--color-border)]">

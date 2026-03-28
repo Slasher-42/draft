@@ -51,6 +51,22 @@ public class S3Service {
         return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
     }
 
+    public String uploadHeroVideo(MultipartFile file) throws IOException {
+        String extension = getExtension(file.getOriginalFilename());
+        String key = "hero-videos/" + UUID.randomUUID() + extension;
+
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .contentType(file.getContentType())
+                .acl(software.amazon.awssdk.services.s3.model.ObjectCannedACL.PUBLIC_READ)
+                .build();
+
+        s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+    }
+
     public void deleteByUrl(String url) {
         if (url == null || url.isBlank()) return;
         String key = url.substring(url.indexOf(".amazonaws.com/") + ".amazonaws.com/".length());

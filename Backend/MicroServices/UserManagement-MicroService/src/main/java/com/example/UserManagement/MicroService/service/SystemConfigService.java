@@ -6,4 +6,5 @@ import com.example.UserManagement.MicroService.model.SystemConfig;
 public interface SystemConfigService {
     SystemConfig getConfig();
     SystemConfig updateConfig(SystemConfigRequest request);
+    SystemConfig updateHeroVideo(String videoUrl);
 }

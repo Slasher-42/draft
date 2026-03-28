@@ -1,13 +1,38 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { api } from "@/lib/api";
+
+function useHeroVideoUrl() {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  useEffect(() => {
+    api
+      .get("/api/config")
+      .then((res) => {
+        const data = res.data?.data ?? res.data;
+        setVideoUrl(data?.heroVideoUrl ?? null);
+      })
+      .catch(() => setVideoUrl(null));
+  }, []);
+  return videoUrl;
+}
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const videoUrl = useHeroVideoUrl();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current && videoUrl) {
+      videoRef.current.load();
+    }
+  }, [videoUrl]);
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#F8FAFC" }}>
       {/* Left panel */}
@@ -15,6 +40,31 @@ export default function AuthLayout({
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
         style={{ backgroundColor: "#05342A" }}
       >
+        {videoUrl && (
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0, opacity: 0.35 }}
+          >
+            <source src={videoUrl} />
+          </video>
+        )}
+
+        {videoUrl && (
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 1,
+              background:
+                "linear-gradient(to bottom, rgba(3,40,28,0.55) 0%, rgba(3,40,28,0.40) 60%, rgba(3,40,28,0.70) 100%)",
+            }}
+          />
+        )}
+
         {/* Background circles */}
         <div
           className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
