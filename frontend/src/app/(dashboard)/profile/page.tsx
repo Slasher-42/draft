@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [specialization, setSpecialization] = useState("");
 
   const [savedSnapshot, setSavedSnapshot] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const hasChanges = useMemo(() => {
     const current: Record<string, string> = {
@@ -144,6 +145,53 @@ export default function ProfilePage() {
     loadProfile();
   }, [user?.id, user?.role]);
 
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+
+    if (!fullName.trim()) e.fullName = "Full name is required.";
+    else if (fullName.trim().length < 2) e.fullName = "Full name must be at least 2 characters.";
+
+    if (phoneNumber && !/^\+?[\d\s\-()\\.]{7,15}$/.test(phoneNumber))
+      e.phoneNumber = "Enter a valid phone number.";
+
+    if (user?.role === "STARTUP") {
+      if (!companyName.trim()) e.companyName = "Company name is required.";
+      if (!industry) e.industry = "Please select an industry.";
+      if (!country.trim()) e.country = "Country is required.";
+      if (!city.trim()) e.city = "City is required.";
+      if (website.trim() && !/^https?:\/\/.+\..+/.test(website.trim()))
+        e.website = "Must be a valid URL starting with http:// or https://";
+      if (teamSize && (isNaN(Number(teamSize)) || Number(teamSize) < 1))
+        e.teamSize = "Team size must be a positive number.";
+      if (foundedYear) {
+        const yr = Number(foundedYear);
+        const now = new Date().getFullYear();
+        if (isNaN(yr) || yr < 1900 || yr > now)
+          e.foundedYear = `Founded year must be between 1900 and ${now}.`;
+      }
+      if (fundingNeeded && (isNaN(Number(fundingNeeded)) || Number(fundingNeeded) < 0))
+        e.fundingNeeded = "Enter a valid positive number.";
+    }
+
+    if (user?.role === "INVESTOR") {
+      if (!organizationName.trim()) e.organizationName = "Organization name is required.";
+      if (!preferredIndustry) e.preferredIndustry = "Please select a preferred industry.";
+      if (!investmentBudget || isNaN(Number(investmentBudget)) || Number(investmentBudget) <= 0)
+        e.investmentBudget = "Enter a valid budget greater than 0.";
+      if (!country.trim()) e.country = "Country is required.";
+      if (!city.trim()) e.city = "City is required.";
+    }
+
+    if (user?.role === "EVALUATOR") {
+      if (!department.trim()) e.department = "Department is required.";
+      if (!country.trim()) e.country = "Country is required.";
+      if (!city.trim()) e.city = "City is required.";
+    }
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
@@ -160,6 +208,7 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
+    if (!validate()) return;
     if (!user?.id) return;
     setIsSaving(true);
     try {
@@ -293,7 +342,8 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="fullName">Full Name</Label>
-            <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+            <Input id="fullName" value={fullName} onChange={(e) => { setFullName(e.target.value); setErrors((p) => ({ ...p, fullName: "" })); }} placeholder="Your full name" className={errors.fullName ? "border-red-500" : ""} />
+            {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email Address</Label>
@@ -302,7 +352,8 @@ export default function ProfilePage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="phoneNumber">Phone Number</Label>
-            <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+250 7XX XXX XXX" />
+            <Input id="phoneNumber" value={phoneNumber} onChange={(e) => { setPhoneNumber(e.target.value); setErrors((p) => ({ ...p, phoneNumber: "" })); }} placeholder="+250 7XX XXX XXX" className={errors.phoneNumber ? "border-red-500" : ""} />
+            {errors.phoneNumber && <p className="text-xs text-red-500 mt-1">{errors.phoneNumber}</p>}
           </div>
         </CardContent>
       </Card>
@@ -319,12 +370,13 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Your company name" />
+              <Input id="companyName" value={companyName} onChange={(e) => { setCompanyName(e.target.value); setErrors((p) => ({ ...p, companyName: "" })); }} placeholder="Your company name" className={errors.companyName ? "border-red-500" : ""} />
+              {errors.companyName && <p className="text-xs text-red-500 mt-1">{errors.companyName}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="industry">Industry</Label>
-                <Select value={industry} onValueChange={setIndustry}>
+                <Select value={industry} onValueChange={(v) => { setIndustry(v); setErrors((p) => ({ ...p, industry: "" })); }}>
                   <SelectTrigger id="industry">
                     <SelectValue placeholder="Select your industry" />
                   </SelectTrigger>
@@ -343,13 +395,15 @@ export default function ProfilePage() {
                     <SelectItem value="OTHER">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.industry && <p className="text-xs text-red-500 mt-1">{errors.industry}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="website">
                   <Globe className="h-3.5 w-3.5 inline mr-1" />
                   Website
                 </Label>
-                <Input id="website" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://yoursite.com" />
+                <Input id="website" value={website} onChange={(e) => { setWebsite(e.target.value); setErrors((p) => ({ ...p, website: "" })); }} placeholder="https://yoursite.com" className={errors.website ? "border-red-500" : ""} />
+                {errors.website && <p className="text-xs text-red-500 mt-1">{errors.website}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -358,11 +412,13 @@ export default function ProfilePage() {
                   <MapPin className="h-3.5 w-3.5 inline mr-1" />
                   Country
                 </Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Rwanda" />
+                <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
+                {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="city">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kigali" />
+                <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
+                {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -371,14 +427,16 @@ export default function ProfilePage() {
                   <Users className="h-3.5 w-3.5 inline mr-1" />
                   Team Size
                 </Label>
-                <Input id="teamSize" type="number" value={teamSize} onChange={(e) => setTeamSize(e.target.value)} placeholder="5" />
+                <Input id="teamSize" type="number" value={teamSize} onChange={(e) => { setTeamSize(e.target.value); setErrors((p) => ({ ...p, teamSize: "" })); }} placeholder="5" className={errors.teamSize ? "border-red-500" : ""} />
+                {errors.teamSize && <p className="text-xs text-red-500 mt-1">{errors.teamSize}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="foundedYear">
                   <Calendar className="h-3.5 w-3.5 inline mr-1" />
                   Founded Year
                 </Label>
-                <Input id="foundedYear" type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2022" />
+                <Input id="foundedYear" type="number" value={foundedYear} onChange={(e) => { setFoundedYear(e.target.value); setErrors((p) => ({ ...p, foundedYear: "" })); }} placeholder="2022" className={errors.foundedYear ? "border-red-500" : ""} />
+                {errors.foundedYear && <p className="text-xs text-red-500 mt-1">{errors.foundedYear}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
@@ -388,11 +446,12 @@ export default function ProfilePage() {
                 <Input
                   id="fundingNeeded"
                   type="number"
-                  className="pl-7"
                   value={fundingNeeded}
-                  onChange={(e) => setFundingNeeded(e.target.value)}
+                  onChange={(e) => { setFundingNeeded(e.target.value); setErrors((p) => ({ ...p, fundingNeeded: "" })); }}
                   placeholder="e.g. 500000"
+                  className={`pl-7${errors.fundingNeeded ? " border-red-500" : ""}`}
                 />
+                {errors.fundingNeeded && <p className="text-xs text-red-500 mt-1">{errors.fundingNeeded}</p>}
               </div>
             </div>
           </CardContent>
@@ -411,11 +470,12 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="organizationName">Organization Name</Label>
-              <Input id="organizationName" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} placeholder="Your organization or fund name" />
+              <Input id="organizationName" value={organizationName} onChange={(e) => { setOrganizationName(e.target.value); setErrors((p) => ({ ...p, organizationName: "" })); }} placeholder="Your organization or fund name" className={errors.organizationName ? "border-red-500" : ""} />
+              {errors.organizationName && <p className="text-xs text-red-500 mt-1">{errors.organizationName}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="preferredIndustry">Preferred Industry</Label>
-              <Select value={preferredIndustry} onValueChange={setPreferredIndustry}>
+              <Select value={preferredIndustry} onValueChange={(v) => { setPreferredIndustry(v); setErrors((p) => ({ ...p, preferredIndustry: "" })); }}>
                 <SelectTrigger id="preferredIndustry">
                   <SelectValue placeholder="Select your industry" />
                 </SelectTrigger>
@@ -434,6 +494,7 @@ export default function ProfilePage() {
                   <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.preferredIndustry && <p className="text-xs text-red-500 mt-1">{errors.preferredIndustry}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="investmentBudget">Investment Budget (USD)</Label>
@@ -441,18 +502,22 @@ export default function ProfilePage() {
                 id="investmentBudget"
                 type="number"
                 value={investmentBudget}
-                onChange={(e) => setInvestmentBudget(e.target.value)}
+                onChange={(e) => { setInvestmentBudget(e.target.value); setErrors((p) => ({ ...p, investmentBudget: "" })); }}
                 placeholder="e.g. 500000"
+                className={errors.investmentBudget ? "border-red-500" : ""}
               />
+              {errors.investmentBudget && <p className="text-xs text-red-500 mt-1">{errors.investmentBudget}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="country">Country</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Rwanda" />
+                <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
+                {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="city">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kigali" />
+                <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
+                {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
             </div>
           </CardContent>
@@ -471,7 +536,8 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="department">Department</Label>
-              <Input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Investment Analysis" />
+              <Input id="department" value={department} onChange={(e) => { setDepartment(e.target.value); setErrors((p) => ({ ...p, department: "" })); }} placeholder="e.g. Investment Analysis" className={errors.department ? "border-red-500" : ""} />
+              {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="specialization">Specialization</Label>
@@ -480,11 +546,13 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="country">Country</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Rwanda" />
+                <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
+                {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="city">City</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kigali" />
+                <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
+                {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
             </div>
           </CardContent>
