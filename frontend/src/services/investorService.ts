@@ -26,4 +26,14 @@ export const investorService = {
 
   updateExecution: (id: string, data: any) =>
     startupServiceApi.put(`/api/executions/investor/${id}`, data),
+
+  attachAiSession: (executionId: string, aiSessionId: string) =>
+    startupServiceApi.patch(
+      `/api/executions/investor/${executionId}/ai-session?aiSessionId=${encodeURIComponent(aiSessionId)}`
+    ),
+
+  saveConsiderations: (executionId: string, additionalConsiderations: string) =>
+    startupServiceApi.patch(
+      `/api/executions/investor/${executionId}/considerations?additionalConsiderations=${encodeURIComponent(additionalConsiderations)}`
+    ),
 };

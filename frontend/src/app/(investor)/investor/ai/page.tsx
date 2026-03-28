@@ -223,11 +223,11 @@ function InvestorAIConversation() {
           formData: {
             executionId: execution.id,
             userId: Number(user.id),
-            preferredIndustry: execution.industry,
-            investmentReason: execution.reasonForInvesting,
+            preferredIndustry: execution.preferredIndustry,
+            investmentReason: execution.investmentReason,
             investmentBudget: execution.investmentBudget,
-            expectedReturnTimeline: execution.dreamOfSuccess,
-            successCriteria: execution.specificCriteria ?? "",
+            expectedReturnTimeline: execution.expectedReturnTimeline,
+            successCriteria: execution.successCriteria ?? "",
           },
         });
 
@@ -336,6 +336,13 @@ function InvestorAIConversation() {
         additionalConsiderations: additionalText || null,
       });
       const closing = finishRes.data.message;
+
+      await investorService.attachAiSession(String(executionId), sessionId);
+
+      if (additionalText?.trim()) {
+        await investorService.saveConsiderations(String(executionId), additionalText.trim());
+      }
+
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
       setAwaitingAdditional(false);
       setIsDone(true);
