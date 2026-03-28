@@ -26,9 +26,10 @@ public class StartupProfileRequest {
     private Integer teamSize;
 
     @Pattern(
-            regexp = "^(https?://)?.+\\..+",
+            regexp = "^(https?://)?([a-zA-Z0-9.-]+)(:\\d+)?(/.*)?$",
             message = "Enter a valid website URL"
     )
+    @Size(max = 200, message = "Website URL is too long")
     private String website;
 
     @Size(max = 100, message = "Country name is too long")

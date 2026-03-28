@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "react-toastify";
 import { Loader2, Save, User, Building2, MapPin, Globe, Users, Calendar, Camera } from "lucide-react";
@@ -25,11 +26,41 @@ export default function ProfilePage() {
   const [website, setWebsite] = useState("");
   const [teamSize, setTeamSize] = useState("");
   const [foundedYear, setFoundedYear] = useState("");
+  const [fundingNeeded, setFundingNeeded] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [preferredIndustry, setPreferredIndustry] = useState("");
   const [investmentBudget, setInvestmentBudget] = useState<string>("");
   const [department, setDepartment] = useState("");
   const [specialization, setSpecialization] = useState("");
+
+  const [savedSnapshot, setSavedSnapshot] = useState<Record<string, string>>({});
+
+  const hasChanges = useMemo(() => {
+    const current: Record<string, string> = {
+      fullName,
+      phoneNumber,
+      companyName,
+      industry,
+      country,
+      city,
+      website,
+      teamSize,
+      foundedYear,
+      fundingNeeded,
+      organizationName,
+      preferredIndustry,
+      investmentBudget,
+      department,
+      specialization,
+    };
+    return Object.keys(current).some((k) => current[k] !== (savedSnapshot[k] ?? ""));
+  }, [
+    fullName, phoneNumber,
+    companyName, industry, country, city, website, teamSize, foundedYear, fundingNeeded,
+    organizationName, preferredIndustry, investmentBudget,
+    department, specialization,
+    savedSnapshot,
+  ]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -41,9 +72,13 @@ export default function ProfilePage() {
         setFullName(userData.fullName ?? "");
         setPhoneNumber(userData.phoneNumber ?? "");
 
+        let sp: any = null;
+        let ip: any = null;
+        let ep: any = null;
+
         if (user.role === "STARTUP") {
           try {
-            const sp = await userService.getStartupProfile(user.id);
+            sp = await userService.getStartupProfile(user.id);
             setCompanyName(sp.companyName ?? "");
             setIndustry(sp.industry ?? "");
             setCountry(sp.country ?? "");
@@ -51,41 +86,54 @@ export default function ProfilePage() {
             setWebsite(sp.website ?? "");
             setTeamSize(sp.teamSize?.toString() ?? "");
             setFoundedYear(sp.foundedYear?.toString() ?? "");
+            setFundingNeeded(sp.fundingNeeded?.toString() ?? "");
           } catch (err: any) {
-            if (err.response?.status !== 404) {
-              toast.error("Failed to load startup profile.");
-            }
+            if (err.response?.status !== 404) toast.error("Failed to load startup profile.");
           }
         }
 
         if (user.role === "INVESTOR") {
           try {
-            const ip = await userService.getInvestorProfile(user.id);
+            ip = await userService.getInvestorProfile(user.id);
             setOrganizationName(ip.organizationName ?? "");
             setPreferredIndustry(ip.preferredIndustry ?? "");
             setInvestmentBudget(ip.investmentBudget?.toString() ?? "");
             setCountry(ip.country ?? "");
             setCity(ip.city ?? "");
           } catch (err: any) {
-            if (err.response?.status !== 404) {
-              toast.error("Failed to load investor profile.");
-            }
+            if (err.response?.status !== 404) toast.error("Failed to load investor profile.");
           }
         }
 
         if (user.role === "EVALUATOR") {
           try {
-            const ep = await userService.getEvaluatorProfile(user.id);
+            ep = await userService.getEvaluatorProfile(user.id);
             setDepartment(ep.department ?? "");
             setSpecialization(ep.specialization ?? "");
             setCountry(ep.country ?? "");
             setCity(ep.city ?? "");
           } catch (err: any) {
-            if (err.response?.status !== 404) {
-              toast.error("Failed to load evaluator profile.");
-            }
+            if (err.response?.status !== 404) toast.error("Failed to load evaluator profile.");
           }
         }
+
+        setSavedSnapshot({
+          fullName:          userData.fullName              ?? "",
+          phoneNumber:       userData.phoneNumber           ?? "",
+          companyName:       sp?.companyName                ?? "",
+          industry:          sp?.industry                   ?? "",
+          country:           sp?.country ?? ip?.country ?? ep?.country ?? "",
+          city:              sp?.city    ?? ip?.city    ?? ep?.city    ?? "",
+          website:           sp?.website                    ?? "",
+          teamSize:          sp?.teamSize?.toString()       ?? "",
+          foundedYear:       sp?.foundedYear?.toString()    ?? "",
+          fundingNeeded:     sp?.fundingNeeded?.toString()  ?? "",
+          organizationName:  ip?.organizationName           ?? "",
+          preferredIndustry: ip?.preferredIndustry          ?? "",
+          investmentBudget:  ip?.investmentBudget?.toString() ?? "",
+          department:        ep?.department                 ?? "",
+          specialization:    ep?.specialization             ?? "",
+        });
       } catch {
         toast.error("Failed to load profile.");
       } finally {
@@ -123,9 +171,10 @@ export default function ProfilePage() {
           industry,
           country,
           city,
-          website,
+          website: website.trim() || null,
           teamSize: teamSize ? Number(teamSize) : undefined,
           foundedYear: foundedYear ? Number(foundedYear) : undefined,
+          fundingNeeded: fundingNeeded ? Number(fundingNeeded) : 0,
         });
       } else if (user.role === "INVESTOR") {
         await userService.saveInvestorProfile(user.id, {
@@ -146,6 +195,23 @@ export default function ProfilePage() {
 
       updateUser({ fullName, phoneNumber });
       toast.success("Profile updated successfully.");
+      setSavedSnapshot({
+        fullName,
+        phoneNumber,
+        companyName,
+        industry,
+        country,
+        city,
+        website,
+        teamSize,
+        foundedYear,
+        fundingNeeded,
+        organizationName,
+        preferredIndustry,
+        investmentBudget,
+        department,
+        specialization,
+      });
     } catch {
       toast.error("Failed to update profile.");
     } finally {
@@ -258,7 +324,25 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="industry">Industry</Label>
-                <Input id="industry" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="e.g. Fintech" />
+                <Select value={industry} onValueChange={setIndustry}>
+                  <SelectTrigger id="industry">
+                    <SelectValue placeholder="Select your industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TECHNOLOGY">Technology</SelectItem>
+                    <SelectItem value="HEALTHCARE">Healthcare</SelectItem>
+                    <SelectItem value="FINANCE">Finance</SelectItem>
+                    <SelectItem value="EDUCATION">Education</SelectItem>
+                    <SelectItem value="AGRICULTURE">Agriculture</SelectItem>
+                    <SelectItem value="ENERGY">Energy</SelectItem>
+                    <SelectItem value="REAL_ESTATE">Real Estate</SelectItem>
+                    <SelectItem value="MANUFACTURING">Manufacturing</SelectItem>
+                    <SelectItem value="RETAIL">Retail</SelectItem>
+                    <SelectItem value="TRANSPORTATION">Transportation</SelectItem>
+                    <SelectItem value="ENTERTAINMENT">Entertainment</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="website">
@@ -297,6 +381,20 @@ export default function ProfilePage() {
                 <Input id="foundedYear" type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2022" />
               </div>
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="fundingNeeded">Funding Needed (USD)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
+                <Input
+                  id="fundingNeeded"
+                  type="number"
+                  className="pl-7"
+                  value={fundingNeeded}
+                  onChange={(e) => setFundingNeeded(e.target.value)}
+                  placeholder="e.g. 500000"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -317,26 +415,25 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="preferredIndustry">Preferred Industry</Label>
-              <select
-                id="preferredIndustry"
-                value={preferredIndustry}
-                onChange={(e) => setPreferredIndustry(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="">Select industry</option>
-                <option value="TECHNOLOGY">Technology</option>
-                <option value="HEALTHCARE">Healthcare</option>
-                <option value="FINANCE">Finance</option>
-                <option value="EDUCATION">Education</option>
-                <option value="AGRICULTURE">Agriculture</option>
-                <option value="ENERGY">Energy</option>
-                <option value="REAL_ESTATE">Real Estate</option>
-                <option value="MANUFACTURING">Manufacturing</option>
-                <option value="RETAIL">Retail</option>
-                <option value="TRANSPORTATION">Transportation</option>
-                <option value="ENTERTAINMENT">Entertainment</option>
-                <option value="OTHER">Other</option>
-              </select>
+              <Select value={preferredIndustry} onValueChange={setPreferredIndustry}>
+                <SelectTrigger id="preferredIndustry">
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TECHNOLOGY">Technology</SelectItem>
+                  <SelectItem value="HEALTHCARE">Healthcare</SelectItem>
+                  <SelectItem value="FINANCE">Finance</SelectItem>
+                  <SelectItem value="EDUCATION">Education</SelectItem>
+                  <SelectItem value="AGRICULTURE">Agriculture</SelectItem>
+                  <SelectItem value="ENERGY">Energy</SelectItem>
+                  <SelectItem value="REAL_ESTATE">Real Estate</SelectItem>
+                  <SelectItem value="MANUFACTURING">Manufacturing</SelectItem>
+                  <SelectItem value="RETAIL">Retail</SelectItem>
+                  <SelectItem value="TRANSPORTATION">Transportation</SelectItem>
+                  <SelectItem value="ENTERTAINMENT">Entertainment</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="investmentBudget">Investment Budget (USD)</Label>
@@ -394,7 +491,11 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      <Button className="w-full gap-2" onClick={handleSave} disabled={isSaving}>
+      <Button
+        className="w-full gap-2 transition-all"
+        onClick={handleSave}
+        disabled={isSaving || !hasChanges}
+      >
         {isSaving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -706,7 +706,7 @@ function InvestorAIConversation() {
                 <button
                   className="gold-btn"
                   style={{ marginTop: 16 }}
-                  onClick={() => router.push("/investor/dashboard")}
+                  onClick={() => router.push("/investor/executions")}
                 >
                   Return to Dashboard →
                 </button>

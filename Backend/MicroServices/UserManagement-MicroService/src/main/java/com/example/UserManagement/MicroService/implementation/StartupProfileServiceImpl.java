@@ -34,7 +34,11 @@ public class StartupProfileServiceImpl implements StartupProfileService {
         profile.setDescription(request.getDescription());
         profile.setFoundedYear(request.getFoundedYear());
         profile.setTeamSize(request.getTeamSize());
-        profile.setWebsite(request.getWebsite());
+        profile.setWebsite(
+            (request.getWebsite() != null && !request.getWebsite().isBlank())
+                ? request.getWebsite()
+                : null
+        );
         profile.setCountry(request.getCountry());
         profile.setCity(request.getCity());
         profile.setFundingNeeded(request.getFundingNeeded());

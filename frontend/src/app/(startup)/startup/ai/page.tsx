@@ -369,6 +369,7 @@ function AIConversationPage() {
   };
 
   const submitExecution = async () => {
+    if (!sessionId) return;
     setIsSubmitting(true);
     try {
       const finishRes = await aiService.finishSession({
@@ -376,6 +377,13 @@ function AIConversationPage() {
         additionalConsiderations: additionalText || null,
       });
       const closing = finishRes.data.message;
+
+      await startupService.attachAiSession(String(executionId), sessionId);
+
+      if (additionalText?.trim()) {
+        await startupService.saveConsiderations(String(executionId), additionalText.trim());
+      }
+
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
       setAwaitingAdditional(false);
       setIsDone(true);

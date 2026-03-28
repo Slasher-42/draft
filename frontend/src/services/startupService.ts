@@ -26,4 +26,10 @@ export const startupService = {
 
   updateExecution: (id: string, data: any) =>
     startupServiceApi.put(`/api/executions/startup/${id}`, data),
+
+  attachAiSession: (executionId: string, aiSessionId: string) =>
+    startupServiceApi.patch(`/api/executions/startup/${executionId}/ai-session?aiSessionId=${encodeURIComponent(aiSessionId)}`),
+
+  saveConsiderations: (executionId: string, additionalConsiderations: string) =>
+    startupServiceApi.patch(`/api/executions/startup/${executionId}/considerations?additionalConsiderations=${encodeURIComponent(additionalConsiderations)}`),
 };

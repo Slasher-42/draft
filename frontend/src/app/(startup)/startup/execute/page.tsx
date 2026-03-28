@@ -31,7 +31,8 @@ const schema = z.object({
   businessModel: z.string().min(20, "Describe your business model"),
   targetMarket: z.string().min(10, "Describe your target market"),
   teamDetails: z.string().min(20, "Describe your team"),
-  financialDetails: z.string().min(20, "Describe your financials"),
+  annualRevenue: z.number().min(0, "Enter your annual revenue (0 if pre-revenue)"),
+  monthlyBurnRate: z.number().min(0, "Enter your monthly burn rate (0 if none)"),
   fundingNeeded: z.number().min(1, "Enter the funding amount"),
 });
 
@@ -65,8 +66,8 @@ export default function StartupExecutePage() {
         businessModel: data.businessModel,
         targetMarket: data.targetMarket,
         teamDetails: data.teamDetails,
-        annualRevenue: 0,
-        monthlyBurnRate: 0,
+        annualRevenue: data.annualRevenue,
+        monthlyBurnRate: data.monthlyBurnRate,
         fundingNeeded: data.fundingNeeded,
       });
 
@@ -169,14 +170,31 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Financial Details</Label>
-              <Textarea
-                placeholder="Current revenue, burn rate, projections…"
-                rows={3}
-                className={errors.financialDetails ? "border-red-500" : ""}
-                {...register("financialDetails")}
-              />
-              {errors.financialDetails && <p className="text-xs text-red-500">{errors.financialDetails.message}</p>}
+              <Label>Annual Revenue (USD)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
+                <Input
+                  type="number"
+                  placeholder="0 if pre-revenue"
+                  className={`pl-7 ${errors.annualRevenue ? "border-red-500" : ""}`}
+                  {...register("annualRevenue", { valueAsNumber: true })}
+                />
+              </div>
+              {errors.annualRevenue && <p className="text-xs text-red-500">{errors.annualRevenue.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Monthly Burn Rate (USD)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
+                <Input
+                  type="number"
+                  placeholder="0 if no burn"
+                  className={`pl-7 ${errors.monthlyBurnRate ? "border-red-500" : ""}`}
+                  {...register("monthlyBurnRate", { valueAsNumber: true })}
+                />
+              </div>
+              {errors.monthlyBurnRate && <p className="text-xs text-red-500">{errors.monthlyBurnRate.message}</p>}
             </div>
 
             <div className="space-y-1.5">
