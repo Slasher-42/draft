@@ -59,7 +59,6 @@ public class S3Service {
                 .bucket(bucketName)
                 .key(key)
                 .contentType(file.getContentType())
-                .acl(software.amazon.awssdk.services.s3.model.ObjectCannedACL.PUBLIC_READ)
                 .build();
 
         s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
