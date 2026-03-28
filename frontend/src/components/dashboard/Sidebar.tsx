@@ -97,7 +97,7 @@ export function Sidebar() {
 
       <motion.aside
         className="fixed md:relative z-40 h-full flex flex-col"
-        style={{ backgroundColor: "#05342A", borderRight: "1px solid #074835" }}
+        style={{ backgroundColor: "#052654", borderRight: "1px solid #07366A" }}
         initial={false}
         animate={{
           width: collapsed ? 64 : 256,
@@ -108,7 +108,7 @@ export function Sidebar() {
         {/* Logo */}
         <div
           className="flex items-center justify-between p-4 min-h-[64px]"
-          style={{ borderBottom: "1px solid #074835" }}
+          style={{ borderBottom: "1px solid #07366A" }}
         >
           {!collapsed && (
             <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export function Sidebar() {
                 <p className="font-bold text-white text-xs tracking-widest uppercase">
                   RG Partners
                 </p>
-                <p className="text-[10px]" style={{ color: "#73CFA3" }}>
+                <p className="text-[10px]" style={{ color: "#73A8CF" }}>
                   Investment Readiness
                 </p>
               </div>
@@ -146,10 +146,10 @@ export function Sidebar() {
 
         {/* Role badge */}
         {!collapsed && user?.role && (
-          <div className="px-4 py-2" style={{ borderBottom: "1px solid #074835" }}>
+          <div className="px-4 py-2" style={{ borderBottom: "1px solid #07366A" }}>
             <span
               className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#073528", color: "#73CFA3" }}
+              style={{ backgroundColor: "#072452", color: "#73A8CF" }}
             >
               {user.role}
             </span>
@@ -182,7 +182,7 @@ export function Sidebar() {
                     onMouseEnter={(e) => {
                       if (!isActive)
                         (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "#074835";
+                          "#07366A";
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive)
@@ -207,7 +207,7 @@ export function Sidebar() {
         </nav>
 
         {/* User footer */}
-        <div className="p-3" style={{ borderTop: "1px solid #074835" }}>
+        <div className="p-3" style={{ borderTop: "1px solid #07366A" }}>
           {!collapsed ? (
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center flex-shrink-0">
@@ -219,7 +219,7 @@ export function Sidebar() {
                 <p className="text-xs font-medium text-white truncate">
                   {user?.fullName || "User"}
                 </p>
-                <p className="text-[11px] truncate" style={{ color: "#73CFA3" }}>
+                <p className="text-[11px] truncate" style={{ color: "#73A8CF" }}>
                   {user?.email}
                 </p>
               </div>

@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
         {
           name: "Highly Ready",
           value: analytics.classificationDistribution.highlyReady,
-          color: "#2FA572",
+          color: "#2F72A5",
         },
         {
           name: "Moderately Ready",

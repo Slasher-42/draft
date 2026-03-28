@@ -38,7 +38,7 @@ export default function AuthLayout({
       {/* Left panel */}
       <div
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
-        style={{ backgroundColor: "#05342A" }}
+        style={{ backgroundColor: "#052654" }}
       >
         {videoUrl && (
           <video
@@ -69,14 +69,14 @@ export default function AuthLayout({
         <div
           className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
           style={{
-            backgroundColor: "#2FA572",
+            backgroundColor: "#2F72A5",
             transform: "translate(30%, -30%)",
           }}
         />
         <div
           className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10"
           style={{
-            backgroundColor: "#2FA572",
+            backgroundColor: "#2F72A5",
             transform: "translate(-30%, 30%)",
           }}
         />
@@ -91,7 +91,7 @@ export default function AuthLayout({
               <p className="font-bold text-white text-lg tracking-wide">
                 RG PARTNERS
               </p>
-              <p className="text-xs" style={{ color: "#73CFA3" }}>
+              <p className="text-xs" style={{ color: "#73A8CF" }}>
                 Kigali, Rwanda
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function AuthLayout({
             <br />
             Readiness Assessment
           </h1>
-          <p className="text-base leading-relaxed" style={{ color: "#A2DFC2" }}>
+          <p className="text-base leading-relaxed" style={{ color: "#A2C3DF" }}>
             Connecting promising startups with the right investors through
             intelligent assessment and matching.
           </p>
@@ -118,11 +118,11 @@ export default function AuthLayout({
             <div key={stat.label} className="text-center">
               <p
                 className="text-2xl font-bold"
-                style={{ color: "#73CFA3" }}
+                style={{ color: "#73A8CF" }}
               >
                 {stat.value}
               </p>
-              <p className="text-xs mt-1" style={{ color: "#A2DFC2" }}>
+              <p className="text-xs mt-1" style={{ color: "#A2C3DF" }}>
                 {stat.label}
               </p>
             </div>
@@ -139,7 +139,7 @@ export default function AuthLayout({
           </div>
           <span
             className="font-bold text-lg"
-            style={{ color: "#05342A" }}
+            style={{ color: "#052654" }}
           >
             RG Partners
           </span>
