@@ -36,16 +36,6 @@ function TwoFAForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [resending, setResending] = useState(false);
 
-  useEffect(() => {
-    if (email) {
-      api
-        .post(`/api/auth/2fa/send?email=${encodeURIComponent(email)}`)
-        .catch(() => {
-          toast.error("Failed to send verification code. Please try resending.");
-        });
-    }
-  }, [email]);
-
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
