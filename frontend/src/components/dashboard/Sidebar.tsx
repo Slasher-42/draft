@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -223,22 +224,28 @@ export function Sidebar() {
                   {user?.email}
                 </p>
               </div>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <button
+                  onClick={logout}
+                  className="text-white/40 hover:text-white transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <ThemeToggle />
               <button
                 onClick={logout}
-                className="text-white/40 hover:text-white transition-colors"
+                className="flex items-center justify-center w-full text-white/40 hover:text-white transition-colors py-1"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
               </button>
             </div>
-          ) : (
-            <button
-              onClick={logout}
-              className="flex items-center justify-center w-full text-white/40 hover:text-white transition-colors py-1"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
           )}
         </div>
       </motion.aside>

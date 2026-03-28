@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Bell } from "lucide-react";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 const pageTitles: Record<string, string> = {
   "/startup/executions": "My Executions",
@@ -52,6 +53,7 @@ export function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <button className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-[var(--color-neutral-100)] transition-colors">
           <Bell className="h-5 w-5 text-[var(--color-neutral-500)]" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--color-secondary)]" />
