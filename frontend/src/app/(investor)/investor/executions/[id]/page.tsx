@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { useParams, useRouter } from "next/navigation";
 import { investorService } from "@/services/investorService";
 import { InvestorExecution } from "@/types/execution";
@@ -32,6 +33,22 @@ export default function InvestorExecutionDetailPage() {
   const router = useRouter();
   const [execution, setExecution] = useState<InvestorExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      await investorService.withdrawExecution(id as string);
+      toast.success("Execution withdrawn successfully.");
+      router.push("/investor/executions");
+    } catch {
+      toast.error("Failed to withdraw execution. Please try again.");
+    } finally {
+      setIsWithdrawing(false);
+      setShowConfirm(false);
+    }
+  };
 
   useEffect(() => {
     investorService
@@ -148,6 +165,53 @@ export default function InvestorExecutionDetailPage() {
             <p className="text-sm text-green-700 font-medium">
               This investment has been matched successfully.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Withdraw */}
+      {!showConfirm ? (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 gap-2"
+            onClick={() => setShowConfirm(true)}
+          >
+            <XCircle className="h-4 w-4" />
+            Withdraw Execution
+          </Button>
+        </div>
+      ) : (
+        <Card className="border border-red-200 bg-red-50">
+          <CardContent className="p-5 space-y-3">
+            <p className="text-sm font-semibold text-red-700">
+              Are you sure you want to withdraw this execution?
+            </p>
+            <p className="text-xs text-red-500">
+              This action is permanent and cannot be undone. The execution will be deleted from the system.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConfirm(false)}
+                disabled={isWithdrawing}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                onClick={handleWithdraw}
+                disabled={isWithdrawing}
+              >
+                {isWithdrawing ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" />Withdrawing…</>
+                ) : (
+                  "Yes, Withdraw"
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -32,4 +32,7 @@ export const startupService = {
 
   saveConsiderations: (executionId: string, additionalConsiderations: string) =>
     startupServiceApi.patch(`/api/executions/startup/${executionId}/considerations?additionalConsiderations=${encodeURIComponent(additionalConsiderations)}`),
+
+  withdrawExecution: (id: string) =>
+    startupServiceApi.delete(`/api/executions/startup/${id}`),
 };

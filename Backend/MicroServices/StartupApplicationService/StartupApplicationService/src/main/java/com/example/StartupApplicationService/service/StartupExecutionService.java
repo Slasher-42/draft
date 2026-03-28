@@ -20,4 +20,6 @@ public interface StartupExecutionService {
     void saveAdditionalConsiderations(Long executionId, String additionalConsiderations);
 
     List<StartupExecutionResponse> getAll();
+
+    void withdraw(Long id, Long userId);
 }

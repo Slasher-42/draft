@@ -20,4 +20,6 @@ public interface InvestorExecutionService {
     void saveAdditionalConsiderations(Long executionId, String additionalConsiderations);
 
     List<InvestorExecutionResponse> getAll();
+
+    void withdraw(Long id, Long userId);
 }

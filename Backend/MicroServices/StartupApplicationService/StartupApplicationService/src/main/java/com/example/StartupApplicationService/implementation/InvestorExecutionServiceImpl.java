@@ -96,6 +96,16 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
         investorExecutionRepository.save(execution);
     }
 
+    @Override
+    public void withdraw(Long id, Long userId) {
+        InvestorExecution execution = investorExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        if (!execution.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Execution not found with id: " + id);
+        }
+        investorExecutionRepository.delete(execution);
+    }
+
     private InvestorExecutionResponse toResponse(InvestorExecution e) {
         InvestorExecutionResponse response = new InvestorExecutionResponse();
         response.setId(e.getId());

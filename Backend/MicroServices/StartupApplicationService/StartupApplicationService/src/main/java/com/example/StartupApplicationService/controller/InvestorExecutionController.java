@@ -65,6 +65,15 @@ public class InvestorExecutionController {
         return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> withdraw(
+            Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = (Long) authentication.getPrincipal();
+        investorExecutionService.withdraw(id, userId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Execution withdrawn successfully", null));
+    }
+
     @PatchMapping("/{id}/ai-session")
     public ResponseEntity<ApiResponse<Void>> attachAiSession(
             @PathVariable Long id,

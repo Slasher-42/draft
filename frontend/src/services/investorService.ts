@@ -36,4 +36,7 @@ export const investorService = {
     startupServiceApi.patch(
       `/api/executions/investor/${executionId}/considerations?additionalConsiderations=${encodeURIComponent(additionalConsiderations)}`
     ),
+
+  withdrawExecution: (id: string) =>
+    startupServiceApi.delete(`/api/executions/investor/${id}`),
 };

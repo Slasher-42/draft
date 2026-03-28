@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import Link from "next/link";
 import { investorService } from "@/services/investorService";
 import { InvestorExecution } from "@/types/execution";
@@ -40,6 +41,20 @@ const statusConfig = {
 export default function InvestorExecutionsPage() {
   const [executions, setExecutions] = useState<InvestorExecution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
+
+  const handleWithdraw = async (id: number) => {
+    setWithdrawingId(id);
+    try {
+      await investorService.withdrawExecution(String(id));
+      setExecutions((prev) => prev.filter((e) => e.id !== id));
+      toast.success("Execution withdrawn successfully.");
+    } catch {
+      toast.error("Failed to withdraw. Please try again.");
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
 
   useEffect(() => {
     investorService
@@ -202,16 +217,28 @@ export default function InvestorExecutionsPage() {
                       )}
                     </div>
 
-                    <Link href={`/investor/executions/${exec.id}`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Link href={`/investor/executions/${exec.id}`}>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          <Eye className="h-3.5 w-3.5" />
+                          View
+                        </Button>
+                      </Link>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-1.5 flex-shrink-0"
+                        className="gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                        onClick={() => handleWithdraw(exec.id)}
+                        disabled={withdrawingId === exec.id}
                       >
-                        <Eye className="h-3.5 w-3.5" />
-                        View
+                        {withdrawingId === exec.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <XCircle className="h-3.5 w-3.5" />
+                        )}
+                        Withdraw
                       </Button>
-                    </Link>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

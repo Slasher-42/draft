@@ -105,6 +105,16 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         startupExecutionRepository.save(execution);
     }
 
+    @Override
+    public void withdraw(Long id, Long userId) {
+        StartupExecution execution = startupExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        if (!execution.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Execution not found with id: " + id);
+        }
+        startupExecutionRepository.delete(execution);
+    }
+
     private String resolveFundingRange(CompanySize size) {
         return switch (size) {
             case MICRO      -> "$10,000 – $100,000";
