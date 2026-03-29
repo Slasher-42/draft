@@ -85,8 +85,10 @@ public class StartupExecutionController {
     @PatchMapping("/{id}/considerations")
     public ResponseEntity<ApiResponse<Void>> saveConsiderations(
             @PathVariable Long id,
-            @RequestParam String additionalConsiderations) {
-        startupExecutionService.saveAdditionalConsiderations(id, additionalConsiderations);
+            @RequestParam String additionalConsiderations,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+        startupExecutionService.saveAdditionalConsiderations(id, additionalConsiderations, token);
         return ResponseEntity.ok(new ApiResponse<>(true, "Considerations saved successfully", null));
     }
 }

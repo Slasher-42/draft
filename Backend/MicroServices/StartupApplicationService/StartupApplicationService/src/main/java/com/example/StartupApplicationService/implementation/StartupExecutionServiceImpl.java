@@ -107,7 +107,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
     }
 
     @Override
-    public void saveAdditionalConsiderations(Long executionId, String additionalConsiderations) {
+    public void saveAdditionalConsiderations(Long executionId, String additionalConsiderations, String authToken) {
         StartupExecution execution = startupExecutionRepository.findById(executionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + executionId));
         execution.setAdditionalConsiderations(additionalConsiderations);
@@ -143,6 +143,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
                     .post()
                     .uri(aiAssessmentUrl + "/api/assessment/score")
                     .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + authToken)
                     .bodyValue(scoreRequest)
                     .retrieve()
                     .bodyToMono(Map.class)

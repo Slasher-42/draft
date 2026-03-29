@@ -17,7 +17,7 @@ public interface StartupExecutionService {
 
     void attachAiSession(Long executionId, String aiSessionId);
 
-    void saveAdditionalConsiderations(Long executionId, String additionalConsiderations);
+    void saveAdditionalConsiderations(Long executionId, String additionalConsiderations, String authToken);
 
     List<StartupExecutionResponse> getAll();
 

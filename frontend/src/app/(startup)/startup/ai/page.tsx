@@ -380,9 +380,10 @@ function AIConversationPage() {
 
       await startupService.attachAiSession(String(executionId), sessionId);
 
-      if (additionalText?.trim()) {
-        await startupService.saveConsiderations(String(executionId), additionalText.trim());
-      }
+      await startupService.saveConsiderations(
+        String(executionId),
+        additionalText?.trim() || "No additional considerations provided."
+      );
 
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
       setAwaitingAdditional(false);
