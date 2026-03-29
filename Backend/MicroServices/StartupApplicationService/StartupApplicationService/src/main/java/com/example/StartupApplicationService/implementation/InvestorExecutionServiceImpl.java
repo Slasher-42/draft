@@ -97,6 +97,15 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
     }
 
     @Override
+    public void updateStatusInternal(Long id, String status) {
+        InvestorExecution execution = investorExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        execution.setStatus(ExecutionStatus.valueOf(status));
+        execution.setStatusUpdatedAt(LocalDateTime.now());
+        investorExecutionRepository.save(execution);
+    }
+
+    @Override
     public void withdraw(Long id, Long userId) {
         InvestorExecution execution = investorExecutionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));

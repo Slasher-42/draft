@@ -91,4 +91,19 @@ public class StartupExecutionController {
         startupExecutionService.saveAdditionalConsiderations(id, additionalConsiderations, token);
         return ResponseEntity.ok(new ApiResponse<>(true, "Considerations saved successfully", null));
     }
+
+    @GetMapping("/internal/{id}")
+    public ResponseEntity<ApiResponse<StartupExecutionResponse>> getByIdInternal(
+            @PathVariable Long id) {
+        StartupExecutionResponse response = startupExecutionService.getByIdInternal(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Execution fetched successfully", response));
+    }
+
+    @PatchMapping("/internal/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> updateStatusInternal(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        startupExecutionService.updateStatusInternal(id, status);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Status updated successfully", null));
+    }
 }

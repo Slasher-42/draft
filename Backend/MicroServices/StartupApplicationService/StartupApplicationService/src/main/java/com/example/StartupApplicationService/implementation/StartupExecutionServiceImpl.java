@@ -158,6 +158,22 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
     }
 
     @Override
+    public StartupExecutionResponse getByIdInternal(Long id) {
+        StartupExecution execution = startupExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        return toResponse(execution);
+    }
+
+    @Override
+    public void updateStatusInternal(Long id, String status) {
+        StartupExecution execution = startupExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        execution.setStatus(ExecutionStatus.valueOf(status));
+        execution.setStatusUpdatedAt(LocalDateTime.now());
+        startupExecutionRepository.save(execution);
+    }
+
+    @Override
     public void withdraw(Long id, Long userId) {
         StartupExecution execution = startupExecutionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));

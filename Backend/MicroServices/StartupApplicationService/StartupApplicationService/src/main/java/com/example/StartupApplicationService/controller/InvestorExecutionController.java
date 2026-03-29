@@ -89,4 +89,12 @@ public class InvestorExecutionController {
         investorExecutionService.saveAdditionalConsiderations(id, additionalConsiderations);
         return ResponseEntity.ok(new ApiResponse<>(true, "Considerations saved successfully", null));
     }
+
+    @PatchMapping("/internal/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> updateStatusInternal(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        investorExecutionService.updateStatusInternal(id, status);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Status updated successfully", null));
+    }
 }

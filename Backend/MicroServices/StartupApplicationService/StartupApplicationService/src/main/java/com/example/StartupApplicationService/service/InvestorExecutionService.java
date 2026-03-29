@@ -22,4 +22,6 @@ public interface InvestorExecutionService {
     List<InvestorExecutionResponse> getAll();
 
     void withdraw(Long id, Long userId);
+
+    void updateStatusInternal(Long id, String status);
 }

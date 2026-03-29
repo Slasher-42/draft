@@ -22,4 +22,8 @@ public interface StartupExecutionService {
     List<StartupExecutionResponse> getAll();
 
     void withdraw(Long id, Long userId);
+
+    StartupExecutionResponse getByIdInternal(Long id);
+
+    void updateStatusInternal(Long id, String status);
 }
