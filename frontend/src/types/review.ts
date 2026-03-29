@@ -23,17 +23,23 @@ export interface EvaluatorReview {
   id: string;
   executionId: string;
   evaluatorId: string;
-  evaluatorName?: string;
-  score: AssessmentScore;
+  startupUserId: string;
+  financialHealth: number;
+  teamStrength: number;
+  marketPotential: number;
+  businessViability: number;
+  overallScore: number;
+  classification: Classification;
+  aiReasoning: string;
+  companySize: string;
+  problemStatement: string;
+  businessModel: string;
+  targetMarket: string;
+  fundingNeeded: number;
   decision?: ReviewDecision;
   reason?: string;
+  status: string;
+  decidedAt?: string;
   createdAt: string;
   updatedAt: string;
-  startupInfo?: {
-    companySize: string;
-    businessModel: string;
-    targetMarket: string;
-    fundingNeeded: number;
-    problemStatement: string;
-  };
 }

@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { evaluatorService } from "@/services/evaluatorService";
 import { EvaluatorReview, ReviewDecision } from "@/types/review";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea, Label } from "@/components/ui/input";
 import {
   Card,
@@ -38,9 +37,10 @@ export default function ReviewDetailPage() {
     evaluatorService
       .getReviewById(id as string)
       .then((res) => {
-        setReview(res.data);
-        if (res.data.decision) setDecision(res.data.decision);
-        if (res.data.reason) setReason(res.data.reason);
+        const data = res.data.data;
+        setReview(data);
+        if (data.decision) setDecision(data.decision);
+        if (data.reason) setReason(data.reason);
       })
       .catch(() => setReview(null))
       .finally(() => setIsLoading(false));
@@ -136,11 +136,11 @@ export default function ReviewDetailPage() {
             </div>
             <div
               className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${
-                classificationColors[review.score.classification] ??
+                classificationColors[review.classification] ??
                 "text-[var(--color-neutral-600)] bg-[var(--color-neutral-50)] border-[var(--color-border)]"
               }`}
             >
-              {review.score.classification.replace(/_/g, " ")}
+              {review.classification.replace(/_/g, " ")}
             </div>
           </div>
         </CardHeader>
@@ -152,14 +152,14 @@ export default function ReviewDetailPage() {
             </span>
             <span
               className={`text-3xl font-bold ${
-                review.score.overallScore >= 70
+                review.overallScore >= 70
                   ? "text-green-600"
-                  : review.score.overallScore >= 50
+                  : review.overallScore >= 50
                   ? "text-yellow-600"
                   : "text-red-500"
               }`}
             >
-              {review.score.overallScore}
+              {review.overallScore}
               <span className="text-base font-normal text-[var(--color-neutral-400)]">
                 /100
               </span>
@@ -171,16 +171,16 @@ export default function ReviewDetailPage() {
             {[
               {
                 label: "Financial Health",
-                value: review.score.financialHealth,
+                value: review.financialHealth,
               },
-              { label: "Team Strength", value: review.score.teamStrength },
+              { label: "Team Strength", value: review.teamStrength },
               {
                 label: "Market Potential",
-                value: review.score.marketPotential,
+                value: review.marketPotential,
               },
               {
                 label: "Business Viability",
-                value: review.score.businessViability,
+                value: review.businessViability,
               },
             ].map((dim) => (
               <div
@@ -229,36 +229,35 @@ export default function ReviewDetailPage() {
               AI Reasoning
             </p>
             <p className="text-sm text-[var(--color-primary-800)] leading-relaxed">
-              {review.score.reasoning}
+              {review.aiReasoning}
             </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Startup Info */}
-      {review.startupInfo && (
-        <Card className="border border-[var(--color-border)]">
+      <Card className="border border-[var(--color-border)]">
           <CardHeader>
             <CardTitle>Startup Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { label: "Company Stage", value: review.startupInfo.companySize },
+              { label: "Company Stage", value: review.companySize },
               {
                 label: "Problem Statement",
-                value: review.startupInfo.problemStatement,
+                value: review.problemStatement,
               },
               {
                 label: "Business Model",
-                value: review.startupInfo.businessModel,
+                value: review.businessModel,
               },
               {
                 label: "Target Market",
-                value: review.startupInfo.targetMarket,
+                value: review.targetMarket,
               },
               {
                 label: "Funding Needed",
-                value: `$${review.startupInfo.fundingNeeded?.toLocaleString()}`,
+                value: `$${review.fundingNeeded?.toLocaleString()}`,
               },
             ].map((item) => (
               <div
@@ -275,7 +274,6 @@ export default function ReviewDetailPage() {
             ))}
           </CardContent>
         </Card>
-      )}
 
       {/* Decision Form */}
       <Card className="border border-[var(--color-border)]">

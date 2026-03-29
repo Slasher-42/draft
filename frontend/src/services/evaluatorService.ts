@@ -1,17 +1,31 @@
-import { api } from "@/lib/api";
+import axios from "axios";
+
+const evaluationServiceApi = axios.create({
+  baseURL: "http://localhost:8084",
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
+});
+
+evaluationServiceApi.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const evaluatorService = {
   getReviews: () =>
-    api.get("/api/evaluator/reviews"),
+    evaluationServiceApi.get("/api/evaluator/reviews"),
 
   getReviewById: (id: string) =>
-    api.get(`/api/evaluator/reviews/${id}`),
+    evaluationServiceApi.get(`/api/evaluator/reviews/${id}`),
 
   submitDecision: (id: string, data: {
     decision: "APPROVED" | "REJECTED" | "ESCALATED";
     reason: string;
-  }) => api.post(`/api/evaluator/reviews/${id}/decision`, data),
+  }) => evaluationServiceApi.post(`/api/evaluator/reviews/${id}/decision`, data),
 
   getDashboardStats: () =>
-    api.get("/api/evaluator/dashboard"),
+    evaluationServiceApi.get("/api/evaluator/dashboard"),
 };

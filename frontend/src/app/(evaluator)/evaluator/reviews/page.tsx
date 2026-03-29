@@ -31,7 +31,7 @@ export default function EvaluatorReviewsPage() {
   useEffect(() => {
     evaluatorService
       .getReviews()
-      .then((res) => setReviews(res.data))
+      .then((res) => setReviews(res.data.data ?? []))
       .catch(() => setReviews([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -143,14 +143,14 @@ export default function EvaluatorReviewsPage() {
                         </span>
                         <span
                           className={`text-sm font-bold ${
-                            review.score.overallScore >= 70
+                            review.overallScore >= 70
                               ? "text-green-600"
-                              : review.score.overallScore >= 50
+                              : review.overallScore >= 50
                               ? "text-yellow-600"
                               : "text-red-500"
                           }`}
                         >
-                          {review.score.overallScore}/100
+                          {review.overallScore}/100
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -158,7 +158,7 @@ export default function EvaluatorReviewsPage() {
                           Classification:
                         </span>
                         <span className="text-xs font-medium text-[var(--color-foreground)]">
-                          {review.score.classification.replace(/_/g, " ")}
+                          {review.classification.replace(/_/g, " ")}
                         </span>
                       </div>
                     </div>
@@ -168,19 +168,19 @@ export default function EvaluatorReviewsPage() {
                       {[
                         {
                           label: "Financial",
-                          value: review.score.financialHealth,
+                          value: review.financialHealth,
                         },
                         {
                           label: "Team",
-                          value: review.score.teamStrength,
+                          value: review.teamStrength,
                         },
                         {
                           label: "Market",
-                          value: review.score.marketPotential,
+                          value: review.marketPotential,
                         },
                         {
                           label: "Viability",
-                          value: review.score.businessViability,
+                          value: review.businessViability,
                         },
                       ].map((dim) => (
                         <div

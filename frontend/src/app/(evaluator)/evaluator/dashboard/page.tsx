@@ -30,7 +30,7 @@ export default function EvaluatorDashboardPage() {
   useEffect(() => {
     evaluatorService
       .getDashboardStats()
-      .then((res) => setStats(res.data))
+      .then((res) => setStats(res.data.data))
       .catch(() =>
         setStats({
           totalAssigned: 0,
