@@ -19,31 +19,41 @@ execServiceApi.interceptors.request.use((config) => {
 
 export const adminService = {
   getDashboardStats: async () => {
-    const [startupsRes, investorsRes, evaluatorsRes, startupExecRes, investorExecRes] =
+    const evalServiceApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
+    evalServiceApi.interceptors.request.use((config) => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+
+    const [startupsRes, investorsRes, evaluatorsRes, startupExecRes, investorExecRes, reviewsRes] =
       await Promise.allSettled([
         api.get("/api/users?role=STARTUP"),
         api.get("/api/users?role=INVESTOR"),
         api.get("/api/users?role=EVALUATOR"),
-        execServiceApi.get("/api/executions/startup/all"),   
-        execServiceApi.get("/api/executions/investor/all"),  
+        execServiceApi.get("/api/executions/startup/all"),
+        execServiceApi.get("/api/executions/investor/all"),
+        evalServiceApi.get("/api/evaluator/reviews/all"),
       ]);
 
     const startups   = startupsRes.status   === "fulfilled" ? (startupsRes.value.data?.data   ?? []) : [];
     const investors  = investorsRes.status  === "fulfilled" ? (investorsRes.value.data?.data  ?? []) : [];
     const evaluators = evaluatorsRes.status === "fulfilled" ? (evaluatorsRes.value.data?.data ?? []) : [];
-
     const startupExecs  = startupExecRes.status  === "fulfilled" ? (startupExecRes.value.data?.data  ?? []) : [];
     const investorExecs = investorExecRes.status === "fulfilled" ? (investorExecRes.value.data?.data ?? []) : [];
+    const reviews = reviewsRes.status === "fulfilled" ? (reviewsRes.value.data?.data ?? []) : [];
 
-   
-    if (startupExecRes.status === "rejected") {
-      console.error("[adminService] startup/all failed:", startupExecRes.reason?.response?.status, startupExecRes.reason?.message);
-    }
-    if (investorExecRes.status === "rejected") {
-      console.error("[adminService] investor/all failed:", investorExecRes.reason?.response?.status, investorExecRes.reason?.message);
-    }
+    const reviewStatusMap: Record<number, string> = {};
+    reviews.forEach((r: any) => {
+      if (r.decision) reviewStatusMap[r.executionId] = r.decision;
+    });
 
-    const allExecs = [...startupExecs, ...investorExecs];
+    const mergedStartups = startupExecs.map((e: any) => ({
+      ...e,
+      status: reviewStatusMap[e.id] ?? e.status,
+    }));
+
+    const allExecs = [...mergedStartups, ...investorExecs];
 
     return {
       data: {

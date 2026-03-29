@@ -12,6 +12,13 @@ execApi.interceptors.request.use((config) => {
   return config;
 });
 
+const evalApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
+evalApi.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 interface LiveStats {
   totalExecutions: number;
   totalPending: number;
@@ -30,7 +37,8 @@ export default function AdminAnalyticsPage() {
     Promise.allSettled([
       execApi.get("/api/executions/startup/all"),
       execApi.get("/api/executions/investor/all"),
-    ]).then(([startupRes, investorRes]) => {
+      evalApi.get("/api/evaluator/reviews/all"),
+    ]).then(([startupRes, investorRes, reviewsRes]) => {
       const startups: any[] = startupRes.status === "fulfilled"
         ? (startupRes.value.data?.data ?? [])
         : [];
@@ -38,7 +46,21 @@ export default function AdminAnalyticsPage() {
         ? (investorRes.value.data?.data ?? [])
         : [];
 
-      const all = [...startups, ...investors];
+      const reviews: any[] = reviewsRes.status === "fulfilled"
+        ? (reviewsRes.value.data?.data ?? [])
+        : [];
+
+      const reviewStatusMap: Record<number, string> = {};
+      reviews.forEach((r: any) => {
+        if (r.decision) reviewStatusMap[r.executionId] = r.decision;
+      });
+
+      const mergedStartups = startups.map((e: any) => ({
+        ...e,
+        status: reviewStatusMap[e.id] ?? e.status,
+      }));
+
+      const all = [...mergedStartups, ...investors];
 
       setStats({
         totalExecutions:    all.length,

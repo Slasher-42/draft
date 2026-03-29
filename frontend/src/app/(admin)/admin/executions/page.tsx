@@ -12,6 +12,13 @@ execApi.interceptors.request.use((config) => {
   return config;
 });
 
+const evalApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
+evalApi.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 const STATUS_FILTERS = ["ALL", "PENDING", "MATCHED", "REJECTED", "APPROVED"] as const;
 
 const statusConfig: Record<string, { label: string; icon: any; classes: string }> = {
@@ -34,9 +41,23 @@ export default function AdminExecutionsPage() {
     Promise.allSettled([
       execApi.get("/api/executions/startup/all"),
       execApi.get("/api/executions/investor/all"),
-    ]).then(([startupRes, investorRes]) => {
+      evalApi.get("/api/evaluator/reviews/all"),
+    ]).then(([startupRes, investorRes, reviewsRes]) => {
+      const reviews: any[] = reviewsRes.status === "fulfilled"
+        ? (reviewsRes.value.data?.data ?? [])
+        : [];
+
+      const reviewStatusMap: Record<number, string> = {};
+      reviews.forEach((r: any) => {
+        if (r.decision) reviewStatusMap[r.executionId] = r.decision;
+      });
+
       const startups = startupRes.status === "fulfilled"
-        ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP" }))
+        ? (startupRes.value.data?.data ?? []).map((e: any) => ({
+            ...e,
+            type: "STARTUP",
+            status: reviewStatusMap[e.id] ?? e.status,
+          }))
         : [];
       const investors = investorRes.status === "fulfilled"
         ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
