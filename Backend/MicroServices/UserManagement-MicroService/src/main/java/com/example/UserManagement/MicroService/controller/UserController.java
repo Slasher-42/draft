@@ -88,4 +88,14 @@ public class UserController {
         UserResponse response = userService.uploadProfilePicture(id, file);
         return ResponseEntity.ok(new ApiResponse<>(true, "Profile picture updated", response));
     }
+
+    @GetMapping("/internal/evaluator-ids")
+    public ResponseEntity<List<Long>> getEvaluatorIds() {
+        List<Long> ids = userService.getUsersByRole("EVALUATOR")
+                .stream()
+                .filter(UserResponse::isEnabled)
+                .map(UserResponse::getId)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ids);
+    }
 }

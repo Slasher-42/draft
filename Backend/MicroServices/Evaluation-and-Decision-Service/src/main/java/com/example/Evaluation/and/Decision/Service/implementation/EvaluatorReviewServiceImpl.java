@@ -11,9 +11,12 @@ import com.example.Evaluation.and.Decision.Service.model.EvaluatorReview;
 import com.example.Evaluation.and.Decision.Service.repository.EvaluatorReviewRepository;
 import com.example.Evaluation.and.Decision.Service.service.EvaluatorReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -22,6 +25,10 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
 
     private final EvaluatorReviewRepository reviewRepository;
     private final EvaluationEventPublisher eventPublisher;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${services.user-management.url}")
+    private String userManagementUrl;
 
     @Override
     public EvaluatorReviewResponse getById(Long id) {
@@ -121,6 +128,8 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
         review.setBusinessModel(businessModel);
         review.setTargetMarket(targetMarket);
         review.setFundingNeeded(fundingNeeded);
+        Long assignedEvaluatorId = fetchLeastLoadedEvaluatorId();
+        review.setEvaluatorId(assignedEvaluatorId);
         review.setStatus(DecisionStatus.PENDING);
 
         return toResponse(reviewRepository.save(review));
@@ -129,6 +138,31 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
     @Override
     public long countPendingForEvaluator(Long evaluatorId) {
         return reviewRepository.countByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.PENDING);
+    }
+
+    private Long fetchLeastLoadedEvaluatorId() {
+        try {
+            List<Long> evaluatorIds = webClientBuilder.build()
+                    .get()
+                    .uri(userManagementUrl + "/api/users/internal/evaluator-ids")
+                    .retrieve()
+                    .bodyToFlux(Long.class)
+                    .collectList()
+                    .block();
+
+            if (evaluatorIds == null || evaluatorIds.isEmpty()) {
+                return null;
+            }
+
+            return evaluatorIds.stream()
+                    .min(Comparator.comparingLong(id ->
+                            reviewRepository.countByEvaluatorIdAndStatus(id, DecisionStatus.PENDING)))
+                    .orElse(null);
+
+        } catch (Exception e) {
+            System.err.println("[AutoAssign] Could not fetch evaluator IDs: " + e.getMessage());
+            return null;
+        }
     }
 
     private EvaluatorReviewResponse toResponse(EvaluatorReview r) {

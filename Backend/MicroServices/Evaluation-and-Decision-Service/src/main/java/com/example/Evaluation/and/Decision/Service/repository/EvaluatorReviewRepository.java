@@ -23,4 +23,6 @@ public interface EvaluatorReviewRepository extends JpaRepository<EvaluatorReview
     List<EvaluatorReview> findByDecision(ReviewDecision decision);
 
     long countByEvaluatorIdAndStatus(Long evaluatorId, DecisionStatus status);
+
+    List<EvaluatorReview> findByEvaluatorIdIsNull();
 }
