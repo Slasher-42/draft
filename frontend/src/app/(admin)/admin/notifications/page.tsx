@@ -1,0 +1,167 @@
+"use client";
+
+import { useState } from "react";
+import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { Bell, CheckCheck, Loader2, BellOff } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+const typeColors: Record<string, string> = {
+  STARTUP_APPROVED:  "bg-green-100 text-green-700 border-green-200",
+  STARTUP_REJECTED:  "bg-red-100 text-red-700 border-red-200",
+  STARTUP_ESCALATED: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  MATCH_FOUND:       "bg-blue-100 text-blue-700 border-blue-200",
+  INTERVAL_UPDATE:   "bg-neutral-100 text-neutral-600 border-neutral-200",
+};
+
+const typeLabels: Record<string, string> = {
+  STARTUP_APPROVED:  "Approved",
+  STARTUP_REJECTED:  "Rejected",
+  STARTUP_ESCALATED: "Escalated",
+  MATCH_FOUND:       "Match Found",
+  INTERVAL_UPDATE:   "Update",
+};
+
+const FILTERS = ["ALL", "UNREAD", "STARTUP_APPROVED", "STARTUP_REJECTED", "MATCH_FOUND", "INTERVAL_UPDATE"] as const;
+type Filter = typeof FILTERS[number];
+
+function timeAgo(dateStr: string): string {
+  const diff  = Date.now() - new Date(dateStr).getTime();
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days  = Math.floor(diff / 86_400_000);
+  if (mins < 1)   return "just now";
+  if (mins < 60)  return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
+export default function AdminNotificationsPage() {
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const [filter, setFilter] = useState<Filter>("ALL");
+
+  const filtered = notifications.filter((n) => {
+    if (filter === "ALL")    return true;
+    if (filter === "UNREAD") return !n.read;
+    return n.type === filter;
+  });
+
+  return (
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Notifications</h2>
+          <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
+            All system notifications across every user and execution
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <Button variant="outline" className="gap-2" onClick={markAllAsRead}>
+            <CheckCheck className="h-4 w-4" />
+            Mark all as read ({unreadCount})
+          </Button>
+        )}
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex flex-wrap gap-2">
+        {FILTERS.map((f) => {
+          const count = f === "ALL"
+            ? notifications.length
+            : f === "UNREAD"
+            ? unreadCount
+            : notifications.filter((n) => n.type === f).length;
+
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+                filter === f
+                  ? "bg-[var(--color-primary)] text-white"
+                  : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-200)]"
+              }`}
+            >
+              {typeLabels[f] ?? f}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                filter === f
+                  ? "bg-white/20 text-white"
+                  : "bg-[var(--color-neutral-200)] text-[var(--color-neutral-500)]"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-48 gap-3">
+          <BellOff className="h-10 w-10 text-[var(--color-neutral-300)]" />
+          <p className="text-sm text-[var(--color-neutral-400)]">No notifications found</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((n: Notification) => (
+            <Card
+              key={n.id}
+              onClick={() => { if (!n.read) markAsRead(n.id); }}
+              className={`border cursor-pointer transition-all hover:shadow-sm ${
+                !n.read
+                  ? "border-[var(--color-primary-200)] bg-blue-50/30"
+                  : "border-[var(--color-border)]"
+              }`}
+            >
+              <CardContent className="p-4 flex items-start gap-4">
+
+                {/* Unread dot */}
+                <div className="flex-shrink-0 mt-1">
+                  {!n.read ? (
+                    <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-secondary)] block" />
+                  ) : (
+                    <span className="h-2.5 w-2.5 rounded-full bg-transparent block" />
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      typeColors[n.type] ?? "bg-neutral-100 text-neutral-600 border-neutral-200"
+                    }`}>
+                      {typeLabels[n.type] ?? n.type}
+                    </span>
+                    <span className="text-xs text-[var(--color-neutral-400)]">
+                      User #{n.recipientUserId}
+                    </span>
+                    {n.relatedExecutionId && (
+                      <span className="text-xs text-[var(--color-neutral-400)]">
+                        · Execution #{n.relatedExecutionId}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-[var(--color-neutral-700)] leading-relaxed">
+                    {n.message}
+                  </p>
+                </div>
+
+                {/* Time */}
+                <span className="text-xs text-[var(--color-neutral-400)] flex-shrink-0 mt-0.5">
+                  {timeAgo(n.createdAt)}
+                </span>
+
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
