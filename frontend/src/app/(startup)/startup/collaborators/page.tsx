@@ -24,7 +24,10 @@ export default function StartupCollaboratorsPage() {
           data.map(async (m: any) => {
             try {
               const u = await userService.getById(m.investorUserId);
-              const ip = await userService.getInvestorProfile(m.investorUserId);
+              let ip = null;
+              try {
+                ip = await userService.getInvestorProfile(m.investorUserId);
+              } catch {}
               profileMap[m.investorUserId] = { ...u, investorProfile: ip };
             } catch {}
           })
@@ -171,6 +174,14 @@ export default function StartupCollaboratorsPage() {
                             {[ip.city, ip.country].filter(Boolean).join(", ")}
                           </span>
                         </div>
+                      </div>
+                    )}
+                    {profile?.phoneNumber && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--color-neutral-400)]">Phone</span>
+                        <span className="text-xs font-medium text-[var(--color-foreground)]">
+                          {profile.phoneNumber}
+                        </span>
                       </div>
                     )}
                   </div>

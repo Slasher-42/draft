@@ -24,7 +24,10 @@ export default function InvestorCollaboratorsPage() {
           data.map(async (m: any) => {
             try {
               const u = await userService.getById(m.startupUserId);
-              const sp = await userService.getStartupProfile(m.startupUserId);
+              let sp = null;
+              try {
+                sp = await userService.getStartupProfile(m.startupUserId);
+              } catch {}
               profileMap[m.startupUserId] = { ...u, startupProfile: sp };
             } catch {}
           })
@@ -175,6 +178,14 @@ export default function InvestorCollaboratorsPage() {
                         <span className="text-xs text-[var(--color-neutral-400)]">Founded</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)]">
                           {sp.foundedYear}
+                        </span>
+                      </div>
+                    )}
+                    {profile?.phoneNumber && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-[var(--color-neutral-400)]">Phone</span>
+                        <span className="text-xs font-medium text-[var(--color-foreground)]">
+                          {profile.phoneNumber}
                         </span>
                       </div>
                     )}
