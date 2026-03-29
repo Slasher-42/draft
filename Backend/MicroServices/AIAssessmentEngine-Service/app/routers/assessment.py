@@ -6,7 +6,8 @@ from app.services import scoring_service
 from app.kafka.producer import (
     publish_assessment_completed,
     publish_score_generated,
-    publish_classification_assigned
+    publish_classification_assigned,
+    publish_score_generated_full
 )
 from app.security import get_current_user
 
@@ -32,6 +33,31 @@ async def score_execution(
         publish_assessment_completed(request.execution_id, score.session_id)
         publish_score_generated(request.execution_id, score.overall_score, score.classification.value)
         publish_classification_assigned(request.execution_id, score.classification.value)
+
+        from app.models import AISession, SessionStatus
+        session = db.query(AISession).filter(
+            AISession.execution_id == request.execution_id,
+            AISession.status == SessionStatus.COMPLETED
+        ).first()
+
+        form = session.form_data if session else {}
+
+        publish_score_generated_full(
+            execution_id=request.execution_id,
+            startup_user_id=score.user_id,
+            financial_health=score.financial_health,
+            team_strength=score.team_strength,
+            market_potential=score.market_potential,
+            business_viability=score.business_viability,
+            overall_score=score.overall_score,
+            classification=score.classification.value,
+            ai_reasoning=score.reasoning,
+            company_size=form.get("companySize", ""),
+            problem_statement=form.get("problemStatement", ""),
+            business_model=form.get("businessModel", ""),
+            target_market=form.get("targetMarket", ""),
+            funding_needed=float(form.get("fundingNeeded", 0))
+        )
 
         return ScoreResponse(
             execution_id=score.execution_id,
