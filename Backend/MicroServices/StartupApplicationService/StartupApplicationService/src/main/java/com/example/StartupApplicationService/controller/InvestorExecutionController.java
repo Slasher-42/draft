@@ -59,7 +59,6 @@ public class InvestorExecutionController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<InvestorExecutionResponse>>> getAllForAdmin() {
         List<InvestorExecutionResponse> executions = investorExecutionService.getAll();
         return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));

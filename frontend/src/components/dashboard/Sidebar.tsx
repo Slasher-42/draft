@@ -31,6 +31,7 @@ const startupNav = [
   { name: "My Executions", href: "/startup/executions", icon: ClipboardList },
   { name: "New Execution", href: "/startup/execute", icon: PlusCircle },
   { name: "Profile", href: "/profile", icon: User },
+  { name: "My Collaborators", href: "/startup/collaborators", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -39,6 +40,7 @@ const investorNav = [
   { name: "New Investment", href: "/investor/execute", icon: PlusCircle },
   { name: "Look Up Matches", href: "/investor/executions", icon: Search },
   { name: "Profile", href: "/profile", icon: User },
+  { name: "My Collaborators", href: "/investor/collaborators", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

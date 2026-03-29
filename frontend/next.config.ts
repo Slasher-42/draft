@@ -35,6 +35,10 @@ const nextConfig: NextConfig = {
         source: "/api/evaluator/:path*",
         destination: "http://localhost:8084/api/evaluator/:path*",
       },
+      {
+        source: "/api/matching/:path*",
+        destination: "http://localhost:8085/api/matching/:path*",
+      },
     ];
   },
 };

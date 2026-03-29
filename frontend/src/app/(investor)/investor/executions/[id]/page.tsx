@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useParams, useRouter } from "next/navigation";
 import { investorService } from "@/services/investorService";
+import { matchingService } from "@/services/matchingService";
+import { useAuth } from "@/context/AuthContext";
 import { InvestorExecution } from "@/types/execution";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,10 +33,12 @@ const statusConfig = {
 export default function InvestorExecutionDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [execution, setExecution] = useState<InvestorExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
 
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
@@ -57,6 +61,15 @@ export default function InvestorExecutionDetailPage() {
       .catch(() => setExecution(null))
       .finally(() => setIsLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (execution?.status === "MATCHED" && user?.id) {
+      matchingService
+        .getMatchesForInvestor(user.id)
+        .then((res) => setMatches(res.data.data ?? []))
+        .catch(() => {});
+    }
+  }, [execution, user]);
 
   if (isLoading) {
     return (
@@ -158,13 +171,60 @@ export default function InvestorExecutionDetailPage() {
         </CardContent>
       </Card>
 
-      {execution.status === "MATCHED" && (
-        <Card className="border border-green-200 bg-green-50">
-          <CardContent className="p-5 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <p className="text-sm text-green-700 font-medium">
-              This investment has been matched successfully.
-            </p>
+      {execution.status === "MATCHED" && matches.length > 0 && (
+        <Card className="border border-green-200 bg-green-50/30">
+          <CardHeader>
+            <CardTitle className="text-green-800 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              Matched Startups
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {matches.map((match) => (
+              <div
+                key={match.id}
+                className="bg-white rounded-xl border border-green-100 p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                    Match Score
+                  </span>
+                  <span className="text-sm font-bold text-green-700">
+                    {match.matchScore?.toFixed(1)} / 100
+                  </span>
+                </div>
+                <div className="border-t border-green-100 pt-3">
+                  <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                    Why this match
+                  </p>
+                  <p className="text-sm text-[var(--color-foreground)] leading-relaxed">
+                    {match.matchReason}
+                  </p>
+                </div>
+                <div className="border-t border-green-100 pt-3 grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                      Startup Execution ID
+                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">
+                      #{match.startupExecutionId}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                      Matched On
+                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">
+                      {new Date(match.matchedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

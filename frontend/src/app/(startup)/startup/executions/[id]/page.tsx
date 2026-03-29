@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useParams, useRouter } from "next/navigation";
 import { startupService } from "@/services/startupService";
+import { matchingService } from "@/services/matchingService";
+import { useAuth } from "@/context/AuthContext";
 import { StartupExecution } from "@/types/execution";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,10 +41,12 @@ const companySizeLabels: Record<string, string> = {
 export default function ExecutionDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [execution, setExecution] = useState<StartupExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [matches, setMatches] = useState<any[]>([]);
 
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
@@ -72,6 +76,15 @@ export default function ExecutionDetailPage() {
       .catch(() => setExecution(null))
       .finally(() => setIsLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (execution?.status === "MATCHED" && user?.id) {
+      matchingService
+        .getMatchesForStartup(user.id)
+        .then((res) => setMatches(res.data.data ?? []))
+        .catch(() => {});
+    }
+  }, [execution, user]);
 
   if (isLoading) {
     return (
@@ -214,6 +227,56 @@ const StatusIcon = cfg.icon;
           ))}
         </CardContent>
       </Card>
+      {execution.status === "MATCHED" && matches.length > 0 && (
+        <Card className="border border-green-200 bg-green-50/30">
+          <CardHeader>
+            <CardTitle className="text-green-800 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              Investor Match Found
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {matches
+              .filter((m) => m.startupExecutionId === execution.id)
+              .map((match) => (
+                <div
+                  key={match.id}
+                  className="bg-white rounded-xl border border-green-100 p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                      Match Score
+                    </span>
+                    <span className="text-sm font-bold text-green-700">
+                      {match.matchScore?.toFixed(1)} / 100
+                    </span>
+                  </div>
+                  <div className="border-t border-green-100 pt-3">
+                    <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                      Why this match
+                    </p>
+                    <p className="text-sm text-[var(--color-foreground)] leading-relaxed">
+                      {match.matchReason}
+                    </p>
+                  </div>
+                  <div className="border-t border-green-100 pt-3">
+                    <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                      Matched On
+                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">
+                      {new Date(match.matchedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Withdraw */}
       {!showConfirm ? (
         <div className="flex justify-end">
