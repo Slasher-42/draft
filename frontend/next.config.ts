@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
         source: "/api/ai/:path*",
         destination: "http://localhost:8083/api/ai/:path*",
       },
+      {
+        source: "/api/evaluator/:path*",
+        destination: "http://localhost:8084/api/evaluator/:path*",
+      },
     ];
   },
 };
