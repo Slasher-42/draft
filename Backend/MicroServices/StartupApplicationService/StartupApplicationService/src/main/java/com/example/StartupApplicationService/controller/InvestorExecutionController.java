@@ -64,6 +64,12 @@ public class InvestorExecutionController {
         return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));
     }
 
+    @GetMapping("/internal/all")
+    public ResponseEntity<ApiResponse<List<InvestorExecutionResponse>>> getAllInternal() {
+        List<InvestorExecutionResponse> executions = investorExecutionService.getAll();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> withdraw(
             Authentication authentication,

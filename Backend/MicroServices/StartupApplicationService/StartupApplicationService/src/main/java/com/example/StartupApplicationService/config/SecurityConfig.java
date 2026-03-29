@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/executions/startup/internal/**").permitAll()
                         .requestMatchers("/api/executions/investor/internal/**").permitAll()
+                        .requestMatchers("/api/executions/startup/internal/all").permitAll()
+                        .requestMatchers("/api/executions/investor/internal/all").permitAll()
                         .requestMatchers("/api/executions/startup/all").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/executions/investor/all").permitAll()
                         .requestMatchers("/api/executions/startup/**").hasAnyAuthority("ROLE_STARTUP", "ROLE_ADMIN")

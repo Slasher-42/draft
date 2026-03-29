@@ -92,6 +92,12 @@ public class StartupExecutionController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Considerations saved successfully", null));
     }
 
+    @GetMapping("/internal/all")
+    public ResponseEntity<ApiResponse<List<StartupExecutionResponse>>> getAllInternal() {
+        List<StartupExecutionResponse> executions = startupExecutionService.getAll();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All startup executions fetched", executions));
+    }
+
     @GetMapping("/internal/{id}")
     public ResponseEntity<ApiResponse<StartupExecutionResponse>> getByIdInternal(
             @PathVariable Long id) {
