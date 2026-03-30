@@ -225,7 +225,6 @@ export default function StartupExecutePage() {
               {errors.fundingNeeded && <p className="text-xs text-red-500">{errors.fundingNeeded.message}</p>}
             </div>
 
-            {/* Startup image upload */}
             <div className="space-y-1.5">
               <Label>Startup Image or Logo (optional)</Label>
               <input

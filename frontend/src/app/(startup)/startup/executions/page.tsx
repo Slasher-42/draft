@@ -225,7 +225,6 @@ export default function StartupExecutionsPage() {
                 key={exec.id}
                 className="border border-[var(--color-border)] hover:shadow-md transition-shadow overflow-hidden rounded-2xl"
               >
-                {/* coloured top stripe by status */}
                 <div className={`h-[3px] w-full ${
                   exec.status === "MATCHED"
                     ? "bg-gradient-to-r from-emerald-400 to-green-500"
@@ -237,7 +236,6 @@ export default function StartupExecutionsPage() {
                 <CardContent className="p-0">
                   <div className="flex flex-col sm:flex-row">
 
-                    {/* image panel */}
                     <div className="relative sm:w-48 flex-shrink-0">
                       <div className="relative h-44 sm:h-full min-h-[11rem] bg-gradient-to-br from-slate-100 to-blue-50 overflow-hidden">
                         {exec.imageUrl ? (
@@ -284,7 +282,6 @@ export default function StartupExecutionsPage() {
                       </div>
                     </div>
 
-                    {/* content */}
                     <div className="flex flex-1 flex-col gap-3 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
