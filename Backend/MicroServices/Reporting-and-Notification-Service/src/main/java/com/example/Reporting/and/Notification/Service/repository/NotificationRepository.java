@@ -21,4 +21,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             NotificationType type,
             LocalDateTime after
     );
+
+    List<Notification> findAllByOrderByCreatedAtDesc();
 }

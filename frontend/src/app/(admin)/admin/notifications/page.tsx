@@ -1,7 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useNotifications, Notification } from "@/hooks/useNotifications";
+import { useState, useEffect } from "react";
+import { notificationService } from "@/services/notificationService";
+
+interface Notification {
+  id: number;
+  recipientUserId: number;
+  type: string;
+  message: string;
+  relatedExecutionId: number | null;
+  read: boolean;
+  createdAt: string;
+}
 import { Bell, CheckCheck, Loader2, BellOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +47,33 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function AdminNotificationsPage() {
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    notificationService
+      .getAllForAdmin()
+      .then((res) => setNotifications(res.data?.data ?? []))
+      .catch(() => setNotifications([]))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAsRead = async (id: number) => {
+    try {
+      await notificationService.markAsRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch {}
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {}
+  };
   const [filter, setFilter] = useState<Filter>("ALL");
 
   const filtered = notifications.filter((n) => {

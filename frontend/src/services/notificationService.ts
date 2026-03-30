@@ -18,6 +18,12 @@ export const notificationService = {
   getAll: () =>
     notificationApi.get("/api/notifications/my"),
 
+  getAllForAdmin: () =>
+    notificationApi.get("/api/notifications/all"),
+
+  getAnalytics: () =>
+    notificationApi.get("/api/analytics"),
+
   getUnreadCount: () =>
     notificationApi.get("/api/notifications/my/unread/count"),
 

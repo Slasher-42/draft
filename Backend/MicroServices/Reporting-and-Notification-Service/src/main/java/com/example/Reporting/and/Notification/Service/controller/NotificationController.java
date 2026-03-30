@@ -44,6 +44,13 @@ public class NotificationController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Unread count fetched successfully", count));
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getAllNotifications() {
+        List<NotificationResponse> notifications = notificationService.getAllNotifications();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All notifications fetched successfully", notifications));
+    }
+
     @PatchMapping("/{id}/read")
     @PreAuthorize("hasAnyAuthority('ROLE_STARTUP', 'ROLE_INVESTOR', 'ROLE_EVALUATOR', 'ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<NotificationResponse>> markAsRead(
