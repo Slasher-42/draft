@@ -35,4 +35,12 @@ export const startupService = {
 
   withdrawExecution: (id: string) =>
     startupServiceApi.delete(`/api/executions/startup/${id}`),
+
+  uploadExecutionImage: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return startupServiceApi.patch(`/api/executions/startup/${id}/image`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };

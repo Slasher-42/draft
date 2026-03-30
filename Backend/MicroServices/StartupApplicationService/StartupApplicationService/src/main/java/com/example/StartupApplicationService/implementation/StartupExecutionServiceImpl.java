@@ -8,8 +8,12 @@ import com.example.StartupApplicationService.exception.ResourceNotFoundException
 import com.example.StartupApplicationService.kafka.ExecutionEventPublisher;
 import com.example.StartupApplicationService.model.StartupExecution;
 import com.example.StartupApplicationService.repository.StartupExecutionRepository;
+import com.example.StartupApplicationService.service.S3Service;
 import com.example.StartupApplicationService.service.StartupExecutionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,6 +29,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
     private final StartupExecutionRepository startupExecutionRepository;
     private final ExecutionEventPublisher eventPublisher;
     private final WebClient.Builder webClientBuilder;
+    private final S3Service s3Service;
 
     @Value("${services.user-management.url}")
     private String userManagementUrl;
@@ -208,11 +213,27 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         response.setFundingNeeded(e.getFundingNeeded());
         response.setAiSessionId(e.getAiSessionId());
         response.setAdditionalConsiderations(e.getAdditionalConsiderations());
+        response.setImageUrl(e.getImageUrl());
         response.setStatus(e.getStatus());
         response.setStatusReason(e.getStatusReason());
         response.setStatusUpdatedAt(e.getStatusUpdatedAt());
         response.setCreatedAt(e.getCreatedAt());
         response.setUpdatedAt(e.getUpdatedAt());
         return response;
+    }
+
+    @Override
+    public StartupExecutionResponse uploadImage(Long id, Long userId, MultipartFile file) throws IOException {
+        StartupExecution execution = startupExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        if (!execution.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Execution not found with id: " + id);
+        }
+        if (execution.getImageUrl() != null) {
+            try { s3Service.deleteByUrl(execution.getImageUrl()); } catch (Exception ignored) {}
+        }
+        String url = s3Service.uploadExecutionImage(id, file);
+        execution.setImageUrl(url);
+        return toResponse(startupExecutionRepository.save(execution));
     }
 }

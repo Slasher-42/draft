@@ -59,6 +59,9 @@ public class StartupExecution {
     @Column(columnDefinition = "TEXT")
     private String additionalConsiderations;
 
+    @Column
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ExecutionStatus status = ExecutionStatus.PENDING;

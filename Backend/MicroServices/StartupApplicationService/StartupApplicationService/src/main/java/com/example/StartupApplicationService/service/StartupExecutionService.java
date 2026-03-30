@@ -2,7 +2,9 @@ package com.example.StartupApplicationService.service;
 
 import com.example.StartupApplicationService.dto.request.StartupExecutionRequest;
 import com.example.StartupApplicationService.dto.response.StartupExecutionResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface StartupExecutionService {
@@ -26,4 +28,6 @@ public interface StartupExecutionService {
     StartupExecutionResponse getByIdInternal(Long id);
 
     void updateStatusInternal(Long id, String status);
+
+    StartupExecutionResponse uploadImage(Long id, Long userId, MultipartFile file) throws IOException;
 }

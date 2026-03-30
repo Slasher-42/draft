@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "react-toastify";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Upload } from "lucide-react";
 
 const schema = z.object({
   companySize: z.string().min(1, "Select your company stage"),
@@ -49,6 +49,9 @@ export default function StartupExecutePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -72,6 +75,17 @@ export default function StartupExecutePage() {
       });
 
       const executionId = res.data.data.id;
+
+     
+      if (imageFile) {
+        try {
+          await startupService.uploadExecutionImage(String(executionId), imageFile);
+        } catch {
+        
+          toast.error("Image upload failed, but your execution was saved. You can add the image later.");
+        }
+      }
+
       router.push(`/startup/ai?executionId=${executionId}`);
     } catch {
       toast.error("Failed to submit. Please try again.");
@@ -209,6 +223,52 @@ export default function StartupExecutePage() {
                 />
               </div>
               {errors.fundingNeeded && <p className="text-xs text-red-500">{errors.fundingNeeded.message}</p>}
+            </div>
+
+            {/* Startup image upload */}
+            <div className="space-y-1.5">
+              <Label>Startup Image or Logo (optional)</Label>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+                    toast.error("Please upload a JPG, PNG, or WebP image.");
+                    return;
+                  }
+                  if (f.size > 10 * 1024 * 1024) {
+                    toast.error("Image must be under 10 MB.");
+                    return;
+                  }
+                  setImageFile(f);
+                  setImagePreview(URL.createObjectURL(f));
+                }}
+              />
+              {imagePreview ? (
+                <div className="relative rounded-xl overflow-hidden border border-[var(--color-border)] h-40">
+                  <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center text-xs hover:bg-black/80"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="w-full h-24 rounded-xl border-2 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center gap-2 text-[var(--color-neutral-400)] hover:border-[var(--color-primary-300)] hover:text-[var(--color-primary)] transition-colors"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span className="text-xs">Click to upload a startup image or logo</span>
+                </button>
+              )}
             </div>
 
             <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>

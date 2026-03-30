@@ -16,6 +16,7 @@ export interface StartupExecution {
   fundingNeeded: number;
   aiSessionId?: string;
   additionalConsiderations?: string;
+  imageUrl?: string;
   status: ExecutionStatus;
   statusReason?: string;
   statusUpdatedAt?: string;
