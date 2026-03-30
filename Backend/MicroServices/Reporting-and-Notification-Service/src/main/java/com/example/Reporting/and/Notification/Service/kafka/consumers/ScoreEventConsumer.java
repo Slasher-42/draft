@@ -89,6 +89,14 @@ public class ScoreEventConsumer {
             scoreData.put("executionTrend", trendList);
             summary.setScoreDataJson(objectMapper.writeValueAsString(scoreData));
 
+            if (overallScore >= 75) {
+                summary.setHighlyReady(summary.getHighlyReady() + 1);
+            } else if (overallScore >= 50) {
+                summary.setModeratelyReady(summary.getModeratelyReady() + 1);
+            } else {
+                summary.setNotReady(summary.getNotReady() + 1);
+            }
+
             analyticsRepository.save(summary);
             log.info("[Kafka] Analytics updated — industry={} score={}", industry, overallScore);
 

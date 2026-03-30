@@ -133,6 +133,11 @@ public class NotificationServiceImpl implements NotificationService {
                 .totalEscalated(summary.getTotalEscalated())
                 .scoreByIndustry(industryScores)
                 .executionTrend(trendEntries)
+                .classificationDistribution(new AnalyticsResponse.ClassificationDistribution(
+                        summary.getHighlyReady(),
+                        summary.getModeratelyReady(),
+                        summary.getNotReady()
+                ))
                 .build();
     }
 

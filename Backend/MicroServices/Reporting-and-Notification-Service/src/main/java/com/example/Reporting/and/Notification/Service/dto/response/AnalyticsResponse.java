@@ -21,6 +21,16 @@ public class AnalyticsResponse {
 
     private List<IndustryScore> scoreByIndustry;
     private List<TrendEntry> executionTrend;
+    private ClassificationDistribution classificationDistribution;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ClassificationDistribution {
+        private long highlyReady;
+        private long moderatelyReady;
+        private long notReady;
+    }
 
     @Data
     @AllArgsConstructor
