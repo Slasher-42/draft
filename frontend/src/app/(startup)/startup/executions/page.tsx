@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { startupService } from "@/services/startupService";
+import { matchingService } from "@/services/matchingService";
+import { useAuth } from "@/context/AuthContext";
 import { StartupExecution } from "@/types/execution";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +64,12 @@ function formatCurrency(n: number) {
 }
 
 export default function StartupExecutionsPage() {
+  const { user } = useAuth();
   const [executions, setExecutions] = useState<StartupExecution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
   const [uploadingImageId, setUploadingImageId] = useState<number | null>(null);
+  const [matchCounts, setMatchCounts] = useState<Record<number, number>>({});
 
   const handleImageUpload = async (id: number, file: File) => {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -109,19 +113,34 @@ export default function StartupExecutionsPage() {
       .getExecutions()
       .then((res) => {
         const data = res.data;
+        let list: StartupExecution[] = [];
         if (Array.isArray(data)) {
-          setExecutions(data);
+          list = data;
         } else if (Array.isArray(data?.content)) {
-          setExecutions(data.content);
+          list = data.content;
         } else if (Array.isArray(data?.data)) {
-          setExecutions(data.data);
-        } else {
-          setExecutions([]);
+          list = data.data;
         }
+        setExecutions(list);
       })
       .catch(() => setExecutions([]))
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    matchingService
+      .getMatchesForStartup(Number(user.id))
+      .then((res) => {
+        const matches = res.data?.data ?? [];
+        const counts: Record<number, number> = {};
+        matches.forEach((m: any) => {
+          counts[m.startupExecutionId] = (counts[m.startupExecutionId] ?? 0) + 1;
+        });
+        setMatchCounts(counts);
+      })
+      .catch(() => {});
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
@@ -337,7 +356,9 @@ export default function StartupExecutionsPage() {
                       {exec.status === "MATCHED" && (
                         <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 flex items-center gap-1.5">
                           <Sparkles className="h-3.5 w-3.5 flex-shrink-0" />
-                          A potential investor has been found for your startup!
+                          {matchCounts[exec.id]
+                            ? `${matchCounts[exec.id]} investor${matchCounts[exec.id] > 1 ? "s have" : " has"} been matched to your startup!`
+                            : "A potential investor has been found for your startup!"}
                         </p>
                       )}
                       {exec.status === "PENDING" && (
