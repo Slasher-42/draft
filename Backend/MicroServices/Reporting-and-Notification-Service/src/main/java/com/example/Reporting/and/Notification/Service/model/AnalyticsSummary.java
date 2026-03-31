@@ -34,15 +34,6 @@ public class AnalyticsSummary {
     private long totalEscalated = 0;
 
 
-    @Column(nullable = false)
-    private long highlyReady = 0;
-
-    @Column(nullable = false)
-    private long moderatelyReady = 0;
-
-    @Column(nullable = false)
-    private long notReady = 0;
-
     @Column(columnDefinition = "TEXT")
     private String scoreDataJson;
 

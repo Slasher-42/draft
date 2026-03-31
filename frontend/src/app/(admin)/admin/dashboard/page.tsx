@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { adminService } from "@/services/adminService";
-import { notificationService } from "@/services/notificationService";
 import { AnalyticsData } from "@/types/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,6 @@ import {
 
 export default function AdminDashboardPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [aiAnalytics, setAiAnalytics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -48,10 +46,6 @@ export default function AdminDashboardPage() {
         setAnalytics(null);
       })
       .finally(() => setIsLoading(false));
-
-    notificationService.getAnalytics()
-      .then((res) => setAiAnalytics(res.data?.data ?? null))
-      .catch(() => setAiAnalytics(null));
   }, []);
 
   if (isLoading) {
@@ -74,11 +68,25 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const pieData = [
-    { name: "Highly Ready",     value: analytics?.classificationDistribution?.highlyReady     ?? 0, color: "#2F72A5" },
-    { name: "Moderately Ready", value: analytics?.classificationDistribution?.moderatelyReady ?? 0, color: "#F59E0B" },
-    { name: "Not Ready",        value: analytics?.classificationDistribution?.notReady        ?? 0, color: "#EF4444" },
-  ];
+  const pieData = analytics
+    ? [
+        {
+          name: "Highly Ready",
+          value: analytics.classificationDistribution.highlyReady,
+          color: "#2F72A5",
+        },
+        {
+          name: "Moderately Ready",
+          value: analytics.classificationDistribution.moderatelyReady,
+          color: "#F59E0B",
+        },
+        {
+          name: "Not Ready",
+          value: analytics.classificationDistribution.notReady,
+          color: "#EF4444",
+        },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -163,10 +171,10 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-base">Execution Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            {aiAnalytics?.executionTrend &&
-            aiAnalytics.executionTrend.length > 0 ? (
+            {analytics?.executionTrend &&
+            analytics.executionTrend.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={aiAnalytics.executionTrend}>
+                <BarChart data={analytics.executionTrend}>
                   <XAxis
                     dataKey="date"
                     tick={{ fontSize: 11 }}
