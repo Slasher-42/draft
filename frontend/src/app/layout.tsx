@@ -8,6 +8,11 @@ import "react-toastify/dist/ReactToastify.css";
 export const metadata: Metadata = {
   title: "RG Partners — Investment Readiness Assessment",
   description: "AI-Powered Investment Readiness Assessment System by RG Partners, Kigali Rwanda",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
