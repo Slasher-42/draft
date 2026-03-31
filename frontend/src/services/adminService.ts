@@ -79,10 +79,26 @@ export const adminService = {
   getAuditLogs: (params?: {
     userId?: string;
     actionType?: string;
+    serviceName?: string;
+    outcome?: string;
+    search?: string;
     startDate?: string;
     endDate?: string;
     page?: number;
-  }) => api.get("/api/admin/audit-logs", { params }),
+    size?: number;
+  }) => {
+    const auditApi = axios.create({
+      baseURL: "http://localhost:8087",
+      timeout: 30000,
+      headers: { "Content-Type": "application/json" },
+    });
+    auditApi.interceptors.request.use((config) => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+    return auditApi.get("/api/admin/audit-logs", { params });
+  },
 
   getSystemConfig: () => api.get("/api/admin/config"),
 
