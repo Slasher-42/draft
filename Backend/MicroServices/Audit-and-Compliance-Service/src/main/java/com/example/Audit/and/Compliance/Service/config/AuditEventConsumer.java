@@ -1,4 +1,4 @@
-package com.example.Audit.and.Compliance.Service.kafka;
+package com.example.Audit.and.Compliance.Service.config;
 
 import com.example.Audit.and.Compliance.Service.service.AuditLogService;
 import lombok.RequiredArgsConstructor;

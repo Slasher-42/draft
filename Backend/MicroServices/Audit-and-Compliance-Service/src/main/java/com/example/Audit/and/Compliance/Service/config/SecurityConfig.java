@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -70,7 +70,7 @@ public class SecurityConfig {
                     String email = claims.getSubject();
 
                     org.springframework.security.core.authority.SimpleGrantedAuthority authority =
-                            new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role);
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(role);
 
                     org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication =
                             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(

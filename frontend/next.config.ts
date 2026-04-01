@@ -40,8 +40,8 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:8085/api/matching/:path*",
       },
       {
-        source: "/api/admin/audit-logs",
-        destination: "http://localhost:8087/api/admin/audit-logs",
+        source: "/api/admin/:path*",
+        destination: "http://localhost:8087/api/admin/:path*",
       },
     ];
   },
