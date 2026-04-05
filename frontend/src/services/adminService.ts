@@ -17,6 +17,20 @@ execServiceApi.interceptors.request.use((config) => {
   return config;
 });
 
+const auditServiceApi = axios.create({
+  baseURL: "http://localhost:8087",
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
+});
+
+auditServiceApi.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const adminService = {
   getDashboardStats: async () => {
     const evalServiceApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
@@ -87,7 +101,7 @@ export const adminService = {
     page?: number;
     size?: number;
   }) => {
-    return api.get("/api/admin/audit-logs", { params });
+    return auditServiceApi.get("/api/admin/audit-logs", { params });
   },
 
   getSystemConfig: () => api.get("/api/admin/config"),

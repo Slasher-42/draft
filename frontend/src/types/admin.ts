@@ -12,12 +12,12 @@ export interface SystemConfig {
 export interface AuditLog {
   id: string;
   userId: string;
-  userFullName?: string;
+  userEmail?: string;
   userRole?: string;
   actionType: string;
   affectedResource: string;
   outcome: string;
-  timestamp: string;
+  createdAt: string;
   serviceName: string;
   details?: string;
 }

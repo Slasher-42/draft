@@ -106,7 +106,7 @@ export default function AuditLogsPage() {
                       </div>
                       <p className="text-xs text-[var(--color-neutral-500)]">
                         <span className="font-medium">
-                          {log.userFullName ?? "Unknown"}
+                          {log.userEmail ?? "Unknown"}
                         </span>{" "}
                         ({log.userRole}) · {log.affectedResource}
                       </p>
@@ -118,7 +118,7 @@ export default function AuditLogsPage() {
                     </div>
                   </div>
                   <span className="text-xs text-[var(--color-neutral-400)] flex-shrink-0 whitespace-nowrap">
-                    {new Date(log.timestamp).toLocaleString()}
+                    {new Date(log.createdAt).toLocaleString()}
                   </span>
                 </div>
               </CardContent>
