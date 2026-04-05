@@ -40,6 +40,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        // --- Token validation (isolated try/catch) ---
         try {
             ApiResponse<TokenValidationResponse> validationResult = webClientBuilder.build()
                     .get()
@@ -58,21 +59,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             SimpleGrantedAuthority authority = new SimpleGrantedAuthority(validation.getRole());
-
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             validation.getUserId(),
                             null,
                             List.of(authority)
                     );
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
 
         } catch (Exception e) {
+            // Only catches WebClient / validation errors — not downstream controller exceptions
             logger.error("Token validation failed: " + e.getMessage());
             sendUnauthorized(response, "Token validation failed");
+            return;
         }
+
+        // --- Filter chain continues outside the try block ---
+        // Exceptions from controllers/repositories propagate normally from here
+        filterChain.doFilter(request, response);
     }
 
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {

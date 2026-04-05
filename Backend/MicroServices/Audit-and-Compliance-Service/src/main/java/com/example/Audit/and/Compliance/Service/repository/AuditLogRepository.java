@@ -13,27 +13,47 @@ import java.time.LocalDateTime;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    @Query("""
-            SELECT a FROM AuditLog a
-            WHERE (:userId IS NULL OR a.userId = :userId)
-            AND (:actionType IS NULL OR a.actionType = :actionType)
-            AND (:serviceName IS NULL OR a.serviceName = :serviceName)
-            AND (:outcome IS NULL OR a.outcome = :outcome)
-            AND (:search IS NULL OR LOWER(a.userEmail) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
-                 OR LOWER(a.actionType) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
-                 OR LOWER(a.affectedResource) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
-            AND (:startDate IS NULL OR a.createdAt >= :startDate)
-            AND (:endDate IS NULL OR a.createdAt <= :endDate)
-            ORDER BY a.createdAt DESC
-            """)
+    @Query(
+        value = """
+                SELECT id, action_type, affected_resource, created_at, details,
+                       outcome, service_name, user_email, user_id, user_role
+                FROM audit_logs
+                WHERE (:userId    IS NULL OR user_id      = :userId)
+                  AND (:actionType IS NULL OR action_type  = CAST(:actionType AS TEXT))
+                  AND (:serviceName IS NULL OR service_name = CAST(:serviceName AS TEXT))
+                  AND (:outcome    IS NULL OR outcome      = CAST(:outcome AS TEXT))
+                  AND (CAST(:search AS TEXT) IS NULL
+                       OR LOWER(user_email)       LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
+                       OR LOWER(action_type)      LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
+                       OR LOWER(affected_resource) LIKE LOWER('%' || CAST(:search AS TEXT) || '%'))
+                  AND (:startDate IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
+                  AND (:endDate   IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
+                ORDER BY created_at DESC
+                """,
+        countQuery = """
+                SELECT COUNT(*)
+                FROM audit_logs
+                WHERE (:userId    IS NULL OR user_id      = :userId)
+                  AND (:actionType IS NULL OR action_type  = CAST(:actionType AS TEXT))
+                  AND (:serviceName IS NULL OR service_name = CAST(:serviceName AS TEXT))
+                  AND (:outcome    IS NULL OR outcome      = CAST(:outcome AS TEXT))
+                  AND (CAST(:search AS TEXT) IS NULL
+                       OR LOWER(user_email)       LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
+                       OR LOWER(action_type)      LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
+                       OR LOWER(affected_resource) LIKE LOWER('%' || CAST(:search AS TEXT) || '%'))
+                  AND (:startDate IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
+                  AND (:endDate   IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
+                """,
+        nativeQuery = true
+    )
     Page<AuditLog> findWithFilters(
-            @Param("userId") Long userId,
-            @Param("actionType") String actionType,
+            @Param("userId")      Long userId,
+            @Param("actionType")  String actionType,
             @Param("serviceName") String serviceName,
-            @Param("outcome") String outcome,
-            @Param("search") String search,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            @Param("outcome")     String outcome,
+            @Param("search")      String search,
+            @Param("startDate")   LocalDateTime startDate,
+            @Param("endDate")     LocalDateTime endDate,
             Pageable pageable
     );
 }
