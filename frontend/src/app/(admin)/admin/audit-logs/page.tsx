@@ -18,7 +18,7 @@ export default function AuditLogsPage() {
     setIsLoading(true);
     adminService
       .getAuditLogs(filters)
-      .then((res) => setLogs(res.data))
+      .then((res) => setLogs(res.data.data ?? []))
       .catch(() => setLogs([]))
       .finally(() => setIsLoading(false));
   };

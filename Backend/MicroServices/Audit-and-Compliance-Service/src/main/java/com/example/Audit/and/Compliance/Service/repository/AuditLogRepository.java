@@ -26,8 +26,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
                        OR LOWER(user_email)       LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
                        OR LOWER(action_type)      LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
                        OR LOWER(affected_resource) LIKE LOWER('%' || CAST(:search AS TEXT) || '%'))
-                  AND (:startDate IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
-                  AND (:endDate   IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
+                  AND (CAST(:startDate AS TIMESTAMP) IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
+                  AND (CAST(:endDate   AS TIMESTAMP) IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
                 ORDER BY created_at DESC
                 """,
         countQuery = """
@@ -41,8 +41,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
                        OR LOWER(user_email)       LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
                        OR LOWER(action_type)      LIKE LOWER('%' || CAST(:search AS TEXT) || '%')
                        OR LOWER(affected_resource) LIKE LOWER('%' || CAST(:search AS TEXT) || '%'))
-                  AND (:startDate IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
-                  AND (:endDate   IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
+                  AND (CAST(:startDate AS TIMESTAMP) IS NULL OR created_at >= CAST(:startDate AS TIMESTAMP))
+                  AND (CAST(:endDate   AS TIMESTAMP) IS NULL OR created_at <= CAST(:endDate   AS TIMESTAMP))
                 """,
         nativeQuery = true
     )
