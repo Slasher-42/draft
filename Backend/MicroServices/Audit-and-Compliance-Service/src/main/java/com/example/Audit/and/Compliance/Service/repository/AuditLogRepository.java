@@ -19,9 +19,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             AND (:actionType IS NULL OR a.actionType = :actionType)
             AND (:serviceName IS NULL OR a.serviceName = :serviceName)
             AND (:outcome IS NULL OR a.outcome = :outcome)
-            AND (:search IS NULL OR LOWER(a.userEmail) LIKE LOWER(CONCAT('%', :search, '%'))
-                 OR LOWER(a.actionType) LIKE LOWER(CONCAT('%', :search, '%'))
-                 OR LOWER(a.affectedResource) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND (:search IS NULL OR LOWER(a.userEmail) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                 OR LOWER(a.actionType) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%'))
+                 OR LOWER(a.affectedResource) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')))
             AND (:startDate IS NULL OR a.createdAt >= :startDate)
             AND (:endDate IS NULL OR a.createdAt <= :endDate)
             ORDER BY a.createdAt DESC

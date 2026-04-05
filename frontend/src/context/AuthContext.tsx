@@ -47,10 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: userData.role?.replace("ROLE_", "") as UserRole,
       isActive: userData.enabled,
     });
-  } catch {
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
-    setUser(null);
+  } catch (error: any) {
+    // Only clear session on explicit 401 Unauthorized
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
+      setUser(null);
+    }
+    // For network errors, 500s, etc. — leave the token alone
   } finally {
     setIsLoading(false);
   }
