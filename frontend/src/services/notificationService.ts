@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const notificationApi = axios.create({
-  baseURL: "http://localhost:8086",
-  timeout: 10000,
+  baseURL: "",
+  timeout: 8000,
   headers: { "Content-Type": "application/json" },
 });
 

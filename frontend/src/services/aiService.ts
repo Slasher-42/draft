@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const aiServiceApi = axios.create({
-  baseURL: "http://localhost:8083",
+  baseURL: "",
   timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
@@ -36,5 +36,5 @@ export const aiService = {
     }),
 
   getConfig: () =>
-    axios.get("http://localhost:8081/api/config"),
+    aiServiceApi.get("/api/config"),
 };
