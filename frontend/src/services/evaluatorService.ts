@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const evaluationServiceApi = axios.create({
-  baseURL: "",
-  timeout: 8000,
+  baseURL: "http://localhost:8084",
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
 

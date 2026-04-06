@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const matchingServiceApi = axios.create({
-  baseURL: "",
-  timeout: 8000,
+  baseURL: "http://localhost:8085",
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
 

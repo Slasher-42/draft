@@ -38,37 +38,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const fetchCurrentUser = async () => {
-    try {
-      setIsLoading(true);
-
-      // Use cached user if available — avoids network call on every page
-      const cached = sessionStorage.getItem("currentUser");
-      if (cached) {
-        setUser(JSON.parse(cached));
-        setIsLoading(false);
-        return;
-      }
-
-      const res = await api.get("/api/auth/me");
-      const userData = res.data.data;
-      const user = {
-        ...userData,
-        role: userData.role?.replace("ROLE_", "") as UserRole,
-        isActive: userData.enabled,
-      };
-      setUser(user);
-      sessionStorage.setItem("currentUser", JSON.stringify(user));
-    } catch (error: any) {
-      if (error?.response?.status === 401) {
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("currentUser");
-        delete api.defaults.headers.common["Authorization"];
-        setUser(null);
-      }
-    } finally {
-      setIsLoading(false);
+  try {
+    setIsLoading(true);
+    const res = await api.get("/api/auth/me");
+    const userData = res.data.data;
+    setUser({
+      ...userData,
+      role: userData.role?.replace("ROLE_", "") as UserRole,
+      isActive: userData.enabled,
+    });
+  } catch (error: any) {
+  
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
+      setUser(null);
     }
-  };
+   
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -157,7 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
-    sessionStorage.removeItem("currentUser");
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
     toast.info("You have been logged out.");
@@ -165,12 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = (data: Partial<User>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...data };
-      sessionStorage.setItem("currentUser", JSON.stringify(updated));
-      return updated;
-    });
+    setUser((prev) => (prev ? { ...prev, ...data } : prev));
   };
 
   return (

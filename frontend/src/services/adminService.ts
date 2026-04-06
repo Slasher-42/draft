@@ -4,8 +4,8 @@ import { api } from "@/lib/api";
 
 
 const execServiceApi = axios.create({
-  baseURL: "",
-  timeout: 8000,
+  baseURL: "http://localhost:8082",
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -18,8 +18,8 @@ execServiceApi.interceptors.request.use((config) => {
 });
 
 const auditServiceApi = axios.create({
-  baseURL: "",
-  timeout: 8000,
+  baseURL: "http://localhost:8087",
+  timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -31,17 +31,9 @@ auditServiceApi.interceptors.request.use((config) => {
   return config;
 });
 
-let _dashboardCache: { data: any; ts: number } | null = null;
-const DASHBOARD_TTL = 30_000; // 30 seconds
-
 export const adminService = {
-  clearDashboardCache: () => { _dashboardCache = null; },
-
   getDashboardStats: async () => {
-    if (_dashboardCache && Date.now() - _dashboardCache.ts < DASHBOARD_TTL) {
-      return _dashboardCache.data;
-    }
-    const evalServiceApi = axios.create({ baseURL: "", timeout: 8000 });
+    const evalServiceApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
     evalServiceApi.interceptors.request.use((config) => {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -77,7 +69,7 @@ export const adminService = {
 
     const allExecs = [...mergedStartups, ...investorExecs];
 
-    const result = {
+    return {
       data: {
         data: {
           totalExecutions: allExecs.length,
@@ -96,8 +88,6 @@ export const adminService = {
         }
       }
     };
-    _dashboardCache = { data: result, ts: Date.now() };
-    return result;
   },
 
   getAuditLogs: (params?: {

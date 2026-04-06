@@ -16,14 +16,6 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:8081/api/config",
       },
       {
-        source: "/api/startup/profile/:path*",
-        destination: "http://localhost:8081/api/startup/profile/:path*",
-      },
-      {
-        source: "/api/investor/profile/:path*",
-        destination: "http://localhost:8081/api/investor/profile/:path*",
-      },
-      {
         source: "/api/startup/:path*",
         destination: "http://localhost:8082/api/startup/:path*",
       },
@@ -40,24 +32,12 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:8083/api/ai/:path*",
       },
       {
-        source: "/api/conversation/:path*",
-        destination: "http://localhost:8083/api/conversation/:path*",
-      },
-      {
-        source: "/api/evaluator/profile/:path*",
-        destination: "http://localhost:8081/api/evaluator/profile/:path*",
-      },
-      {
         source: "/api/evaluator/:path*",
         destination: "http://localhost:8084/api/evaluator/:path*",
       },
       {
         source: "/api/matching/:path*",
         destination: "http://localhost:8085/api/matching/:path*",
-      },
-      {
-        source: "/api/notifications/:path*",
-        destination: "http://localhost:8086/api/notifications/:path*",
       },
       {
         source: "/api/admin/:path*",
