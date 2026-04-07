@@ -59,7 +59,6 @@ const adminNav = [
   { name: "Executions", href: "/admin/executions", icon: ClipboardList },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart2 },
   { name: "Audit Logs", href: "/admin/audit-logs", icon: BookOpen },
-  { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "System Settings", href: "/admin/settings", icon: Settings },
 ];
 

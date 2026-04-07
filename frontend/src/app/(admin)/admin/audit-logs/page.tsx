@@ -32,7 +32,7 @@ import {
   FileText,
 } from "lucide-react";
 
-/* ─── helpers ─────────────────────────────────────────────── */
+
 
 function fmt(n: number | undefined | null, prefix = "$") {
   if (n == null) return "—";
@@ -66,7 +66,7 @@ function nowLabel() {
   return new Date().toISOString().slice(0, 19).replace("T", "_").replace(/:/g, "-");
 }
 
-/* ─── CSV export ──────────────────────────────────────────── */
+
 
 function downloadCSV(filename: string, headers: string[], rows: string[][]) {
   const escape = (v: string) =>
@@ -144,7 +144,7 @@ function exportAuditCSV(logs: AuditLog[]) {
   downloadCSV(`audit-logs_${nowLabel()}.csv`, headers, rows);
 }
 
-/* ─── PDF export ──────────────────────────────────────────── */
+
 
 async function exportMatchesPDF(matches: EnrichedMatch[]) {
   const { default: jsPDF } = await import("jspdf");
@@ -157,8 +157,8 @@ async function exportMatchesPDF(matches: EnrichedMatch[]) {
     hour: "2-digit", minute: "2-digit",
   });
 
-  /* Header band */
-  doc.setFillColor(30, 58, 138); // deep blue
+ 
+  doc.setFillColor(30, 58, 138); 
   doc.rect(0, 0, W, 22, "F");
 
   doc.setTextColor(255, 255, 255);
@@ -197,7 +197,7 @@ async function exportMatchesPDF(matches: EnrichedMatch[]) {
     doc.text(s, 14 + i * colW, 31);
   });
 
-  /* Table */
+ 
   autoTable(doc, {
     startY: 38,
     head: [[
@@ -225,7 +225,7 @@ async function exportMatchesPDF(matches: EnrichedMatch[]) {
       8: { halign: "center" },
     },
     didDrawCell: (data: any) => {
-      // Color-code the Score column
+  
       if (data.section === "body" && data.column.index === 7) {
         const score = parseFloat(data.cell.text[0]);
         if (score >= 80) doc.setTextColor(5, 150, 105);
@@ -236,7 +236,7 @@ async function exportMatchesPDF(matches: EnrichedMatch[]) {
       }
     },
     didDrawPage: (data: any) => {
-      /* Footer */
+     
       const pageCount = (doc as any).internal.getNumberOfPages();
       doc.setFontSize(7);
       doc.setTextColor(150);
@@ -267,7 +267,7 @@ async function exportAuditPDF(logs: AuditLog[]) {
   const success = logs.filter((l) => l.outcome === "SUCCESS").length;
   const failure = logs.filter((l) => l.outcome === "FAILURE").length;
 
-  /* Header band */
+  
   doc.setFillColor(30, 58, 138);
   doc.rect(0, 0, W, 22, "F");
 
@@ -283,7 +283,7 @@ async function exportAuditPDF(logs: AuditLog[]) {
   doc.setFontSize(8);
   doc.text(`Generated: ${generatedOn}`, W - 14, 16, { align: "right" });
 
-  /* Summary row */
+ 
   doc.setFillColor(240, 245, 255);
   doc.rect(0, 22, W, 14, "F");
 
@@ -300,7 +300,7 @@ async function exportAuditPDF(logs: AuditLog[]) {
   const colW = W / stats.length;
   stats.forEach((s, i) => doc.text(s, 14 + i * colW, 31));
 
-  /* Table */
+ 
   autoTable(doc, {
     startY: 38,
     head: [["#", "Action Type", "Outcome", "User Email", "Role", "Service", "Affected Resource", "Details", "Timestamp"]],
@@ -349,7 +349,7 @@ async function exportAuditPDF(logs: AuditLog[]) {
   doc.save(`audit-logs_${nowLabel()}.pdf`);
 }
 
-/* ─── Export buttons ──────────────────────────────────────── */
+
 
 function ExportMenu({
   onCSV,
@@ -386,7 +386,7 @@ function ExportMenu({
   );
 }
 
-/* ─── Match detail modal ──────────────────────────────────── */
+
 
 interface EnrichedMatch extends InvestorMatch {
   startup?: StartupExecution;
@@ -539,7 +539,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   );
 }
 
-/* ─── Matches tab ─────────────────────────────────────────── */
+
 
 function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => void }) {
   const s = match.startup;
@@ -750,7 +750,7 @@ function MatchesTab() {
   );
 }
 
-/* ─── Audit Logs tab ──────────────────────────────────────── */
+
 
 function AuditLogsTab() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -850,7 +850,7 @@ function AuditLogsTab() {
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────── */
+
 
 type Tab = "matches" | "audit";
 

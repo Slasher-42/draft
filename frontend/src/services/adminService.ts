@@ -83,6 +83,32 @@ export const adminService = {
 
     const allExecs = [...mergedStartups, ...investorExecs];
 
+
+    const monthCounts: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+      monthCounts[key] = 0;
+    }
+    allExecs.forEach((e: any) => {
+      if (!e.createdAt) return;
+      const d = new Date(e.createdAt);
+      const key = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+      if (key in monthCounts) monthCounts[key] = (monthCounts[key] ?? 0) + 1;
+    });
+    const executionTrend = Object.entries(monthCounts).map(([date, count]) => ({
+      date,
+      count,
+    }));
+
+   
+    const highlyReady    = mergedStartups.filter((e: any) => e.status === "MATCHED").length;
+    const moderatelyReady = mergedStartups.filter((e: any) => e.status === "APPROVED").length;
+    const notReady       = mergedStartups.filter(
+      (e: any) => e.status === "REJECTED" || e.status === "PENDING"
+    ).length;
+
     return {
       data: {
         data: {
@@ -97,8 +123,8 @@ export const adminService = {
           totalEvaluators: evaluators.length,
           averageScore: 0,
           scoreByIndustry: [],
-          executionTrend: [],
-          classificationDistribution: { highlyReady: 0, moderatelyReady: 0, notReady: 0 },
+          executionTrend,
+          classificationDistribution: { highlyReady, moderatelyReady, notReady },
         }
       }
     };
