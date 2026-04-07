@@ -106,6 +106,103 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
+    public void runMatchingForNewInvestor(Long investorExecutionId, Long investorUserId) {
+        try {
+            InvestorExecutionDTO investor = fetchInvestorExecution(investorExecutionId);
+            if (investor == null) {
+                log.error("[Matching] Could not fetch investor execution id={}", investorExecutionId);
+                return;
+            }
+
+            if (!"PENDING".equals(investor.getStatus())) {
+                log.info("[Matching] Investor execution {} is not PENDING, skipping", investorExecutionId);
+                return;
+            }
+
+            List<StartupExecutionDTO> startups = fetchAllStartupExecutions();
+            if (startups == null || startups.isEmpty()) {
+                log.warn("[Matching] No startup executions found");
+                return;
+            }
+
+            List<InvestorMatch> matches = new ArrayList<>();
+
+            for (StartupExecutionDTO startup : startups) {
+                if (matchRepository.existsByStartupExecutionIdAndInvestorExecutionId(
+                        startup.getId(), investorExecutionId)) continue;
+
+                double score = computeMatchScore(startup, investor);
+
+                if (score >= 50.0) {
+                    String reason = buildMatchReason(startup, investor, score);
+
+                    InvestorMatch match = new InvestorMatch();
+                    match.setStartupExecutionId(startup.getId());
+                    match.setStartupUserId(startup.getUserId());
+                    match.setInvestorExecutionId(investorExecutionId);
+                    match.setInvestorUserId(investorUserId);
+                    match.setMatchScore(score);
+                    match.setMatchReason(reason);
+                    match.setStatus(MatchStatus.MATCHED);
+
+                    matches.add(matchRepository.save(match));
+                }
+            }
+
+            if (!matches.isEmpty()) {
+                updateInvestorExecutionStatus(investorExecutionId, "MATCHED");
+
+                for (InvestorMatch match : matches) {
+                    updateStartupExecutionStatus(match.getStartupExecutionId(), "MATCHED");
+
+                    eventPublisher.publishMatchFound(
+                            match.getId(),
+                            match.getStartupExecutionId(),
+                            match.getInvestorExecutionId());
+
+                    eventPublisher.publishMatchPresentedToInvestor(
+                            match.getId(),
+                            match.getInvestorUserId(),
+                            match.getStartupExecutionId());
+
+                    eventPublisher.publishMatchPresentedToStartup(
+                            match.getId(),
+                            match.getStartupUserId(),
+                            match.getInvestorExecutionId());
+                }
+
+                log.info("[Matching] {} match(es) found for investorExecutionId={}", matches.size(), investorExecutionId);
+            } else {
+                log.info("[Matching] No matches found for investorExecutionId={}", investorExecutionId);
+            }
+
+        } catch (Exception e) {
+            log.error("[Matching] Error during matching for investorExecutionId={}: {}", investorExecutionId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void runMatchingForAll() {
+        log.info("[Matching] Starting full catch-up matching run...");
+        try {
+            List<StartupExecutionDTO> startups = fetchAllStartupExecutions();
+            if (startups == null || startups.isEmpty()) {
+                log.warn("[Matching] No startup executions found during full run");
+                return;
+            }
+
+            for (StartupExecutionDTO startup : startups) {
+                if (startup.getId() == null || startup.getUserId() == null) continue;
+                runMatching(startup.getId(), startup.getUserId());
+            }
+
+            log.info("[Matching] Full catch-up run completed for {} startups", startups.size());
+        } catch (Exception e) {
+            log.error("[Matching] Error during full matching run: {}", e.getMessage());
+        }
+    }
+
+    @Override
     public List<MatchResponse> getMatchesForInvestor(Long investorUserId) {
         return matchRepository.findByInvestorUserId(investorUserId)
                 .stream()
@@ -171,6 +268,81 @@ public class MatchingServiceImpl implements MatchingService {
         }
 
         return reason.toString();
+    }
+
+    private List<StartupExecutionDTO> fetchAllStartupExecutions() {
+        try {
+            Map<String, Object> response = webClient.get()
+                    .uri(startupServiceUrl + "/api/executions/startup/internal/all")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+
+            if (response == null || response.get("data") == null) return List.of();
+
+            List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
+            List<StartupExecutionDTO> result = new ArrayList<>();
+
+            for (Map<String, Object> data : dataList) {
+                StartupExecutionDTO dto = new StartupExecutionDTO();
+                dto.setId(toLong(data.get("id")));
+                dto.setUserId(toLong(data.get("userId")));
+                dto.setTargetCompanySize(str(data.get("targetCompanySize")));
+                dto.setProblemStatement(str(data.get("problemStatement")));
+                dto.setBusinessModel(str(data.get("businessModel")));
+                dto.setTargetMarket(str(data.get("targetMarket")));
+                dto.setTeamDetails(str(data.get("teamDetails")));
+                dto.setAnnualRevenue(toDouble(data.get("annualRevenue")));
+                dto.setMonthlyBurnRate(toDouble(data.get("monthlyBurnRate")));
+                dto.setFundingNeeded(toDouble(data.get("fundingNeeded")));
+                dto.setIndustry(str(data.get("industry")));
+                dto.setStatus(str(data.get("status")));
+                result.add(dto);
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("[Matching] Failed to fetch all startup executions: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private InvestorExecutionDTO fetchInvestorExecution(Long executionId) {
+        try {
+            Map<String, Object> response = webClient.get()
+                    .uri(startupServiceUrl + "/api/executions/investor/internal/all")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+
+            if (response == null || response.get("data") == null) return null;
+
+            List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
+
+            for (Map<String, Object> data : dataList) {
+                Long id = toLong(data.get("id"));
+                if (!executionId.equals(id)) continue;
+
+                InvestorExecutionDTO dto = new InvestorExecutionDTO();
+                dto.setId(id);
+                dto.setUserId(toLong(data.get("userId")));
+                dto.setPreferredIndustry(str(data.get("preferredIndustry")));
+                dto.setInvestmentReason(str(data.get("investmentReason")));
+                dto.setInvestmentBudget(toDouble(data.get("investmentBudget")));
+                dto.setExpectedReturnTimeline(str(data.get("expectedReturnTimeline")));
+                dto.setSuccessCriteria(str(data.get("successCriteria")));
+                dto.setAdditionalConsiderations(str(data.get("additionalConsiderations")));
+                dto.setStatus(str(data.get("status")));
+                return dto;
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            log.error("[Matching] Failed to fetch investor execution {}: {}", executionId, e.getMessage());
+            return null;
+        }
     }
 
     private StartupExecutionDTO fetchStartupExecution(Long executionId) {

@@ -7,6 +7,7 @@ export interface StartupExecution {
   userId: number;
   targetCompanySize: CompanySize;
   suggestedFundingRange: string;
+  industry: string;
   problemStatement: string;
   businessModel: string;
   targetMarket: string;
@@ -26,6 +27,7 @@ export interface StartupExecution {
 
 export interface StartupExecutionRequest {
   targetCompanySize: CompanySize;
+  industry: string;
   problemStatement: string;
   businessModel: string;
   targetMarket: string;

@@ -17,6 +17,7 @@ public class StartupExecutionResponse {
     private Long userId;
     private CompanySize targetCompanySize;
     private String suggestedFundingRange;
+    private String industry;
     private String problemStatement;
     private String businessModel;
     private String targetMarket;

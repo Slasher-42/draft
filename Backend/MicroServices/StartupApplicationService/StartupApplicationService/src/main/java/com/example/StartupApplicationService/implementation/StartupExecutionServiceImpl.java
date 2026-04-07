@@ -43,6 +43,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         execution.setUserId(userId);
         execution.setTargetCompanySize(request.getTargetCompanySize());
         execution.setSuggestedFundingRange(resolveFundingRange(request.getTargetCompanySize()));
+        execution.setIndustry(request.getIndustry());
         execution.setProblemStatement(request.getProblemStatement());
         execution.setBusinessModel(request.getBusinessModel());
         execution.setTargetMarket(request.getTargetMarket());
@@ -92,6 +93,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         }
         execution.setTargetCompanySize(request.getTargetCompanySize());
         execution.setSuggestedFundingRange(resolveFundingRange(request.getTargetCompanySize()));
+        execution.setIndustry(request.getIndustry());
         execution.setProblemStatement(request.getProblemStatement());
         execution.setBusinessModel(request.getBusinessModel());
         execution.setTargetMarket(request.getTargetMarket());
@@ -204,6 +206,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         response.setUserId(e.getUserId());
         response.setTargetCompanySize(e.getTargetCompanySize());
         response.setSuggestedFundingRange(e.getSuggestedFundingRange());
+        response.setIndustry(e.getIndustry());
         response.setProblemStatement(e.getProblemStatement());
         response.setBusinessModel(e.getBusinessModel());
         response.setTargetMarket(e.getTargetMarket());

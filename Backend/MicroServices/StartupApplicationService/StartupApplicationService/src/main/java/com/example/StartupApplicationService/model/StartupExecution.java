@@ -32,6 +32,9 @@ public class StartupExecution {
     @Column(nullable = false)
     private String suggestedFundingRange;
 
+    @Column
+    private String industry;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String problemStatement;
 

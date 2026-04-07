@@ -8,6 +8,10 @@ public interface MatchingService {
 
     void runMatching(Long startupExecutionId, Long startupUserId);
 
+    void runMatchingForNewInvestor(Long investorExecutionId, Long investorUserId);
+
+    void runMatchingForAll();
+
     List<MatchResponse> getMatchesForInvestor(Long investorUserId);
 
     List<MatchResponse> getMatchesForStartup(Long startupUserId);

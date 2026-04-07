@@ -16,6 +16,9 @@ public class StartupExecutionRequest {
     @NotNull(message = "Target company size is required")
     private CompanySize targetCompanySize;
 
+    @NotBlank(message = "Industry is required")
+    private String industry;
+
     @NotBlank(message = "Problem statement is required")
     private String problemStatement;
 

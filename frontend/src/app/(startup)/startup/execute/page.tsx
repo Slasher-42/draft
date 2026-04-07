@@ -25,8 +25,15 @@ import {
 import { toast } from "react-toastify";
 import { ChevronRight, Loader2, Upload } from "lucide-react";
 
+const industries = [
+  "FinTech", "HealthTech", "EdTech", "AgriTech", "CleanTech",
+  "E-Commerce", "Logistics", "SaaS", "AI / ML", "Cybersecurity",
+  "Real Estate", "Media & Entertainment", "Gaming", "Retail", "Other",
+];
+
 const schema = z.object({
   companySize: z.string().min(1, "Select your company stage"),
+  industry: z.string().min(1, "Select your industry"),
   problemStatement: z.string().min(30, "Describe the problem in at least 30 characters"),
   businessModel: z.string().min(20, "Describe your business model"),
   targetMarket: z.string().min(10, "Describe your target market"),
@@ -65,6 +72,7 @@ export default function StartupExecutePage() {
     try {
       const res = await startupService.createExecution({
         targetCompanySize: data.companySize,
+        industry: data.industry,
         problemStatement: data.problemStatement,
         businessModel: data.businessModel,
         targetMarket: data.targetMarket,
@@ -138,6 +146,21 @@ export default function StartupExecutePage() {
                   Suggested funding for this stage: ${companySizes.find((s) => s.value === selectedSize)?.suggested?.toLocaleString()}
                 </p>
               )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Industry</Label>
+              <Select onValueChange={(v) => setValue("industry", v)}>
+                <SelectTrigger className={errors.industry ? "border-red-500" : ""}>
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((i) => (
+                    <SelectItem key={i} value={i}>{i}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.industry && <p className="text-xs text-red-500">{errors.industry.message}</p>}
             </div>
 
             <div className="space-y-1.5">
