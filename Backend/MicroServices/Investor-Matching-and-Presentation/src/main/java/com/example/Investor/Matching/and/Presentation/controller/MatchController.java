@@ -29,4 +29,10 @@ public class MatchController {
         List<MatchResponse> matches = matchingService.getMatchesForStartup(startupUserId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Matches fetched successfully", matches));
     }
+
+    @GetMapping("/admin/all")
+    public ResponseEntity<ApiResponse<List<MatchResponse>>> getAllMatches() {
+        List<MatchResponse> matches = matchingService.getAllMatches();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All matches fetched successfully", matches));
+    }
 }

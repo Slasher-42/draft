@@ -38,6 +38,18 @@ export interface AnalyticsData {
   };
 }
 
+export interface InvestorMatch {
+  id: number;
+  startupExecutionId: number;
+  startupUserId: number;
+  investorExecutionId: number;
+  investorUserId: number;
+  matchScore: number;
+  matchReason: string;
+  status: "MATCHED" | "WITHDRAWN";
+  matchedAt: string;
+}
+
 export interface AdminNotification {
   id: string;
   type: string;

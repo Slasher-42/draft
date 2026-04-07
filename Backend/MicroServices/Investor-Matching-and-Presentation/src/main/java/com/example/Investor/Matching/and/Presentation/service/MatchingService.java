@@ -15,4 +15,6 @@ public interface MatchingService {
     List<MatchResponse> getMatchesForInvestor(Long investorUserId);
 
     List<MatchResponse> getMatchesForStartup(Long startupUserId);
+
+    List<MatchResponse> getAllMatches();
 }

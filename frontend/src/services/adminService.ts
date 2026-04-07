@@ -1,6 +1,6 @@
 
 import axios from "axios";
-import { api } from "@/lib/api"; 
+import { api } from "@/lib/api";
 
 
 const execServiceApi = axios.create({
@@ -24,6 +24,20 @@ const auditServiceApi = axios.create({
 });
 
 auditServiceApi.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+const matchingServiceApi = axios.create({
+  baseURL: "http://localhost:8085",
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
+});
+
+matchingServiceApi.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -124,4 +138,13 @@ export const adminService = {
     }),
 
   getNotifications: () => api.get("/api/admin/notifications"),
+
+  getAllMatches: () => matchingServiceApi.get("/api/matching/admin/all"),
+
+  getAllStartupExecutions: () => execServiceApi.get("/api/executions/startup/all"),
+
+  getAllInvestorExecutions: () => execServiceApi.get("/api/executions/investor/all"),
+
+  getAllUsers: (role?: string) =>
+    role ? api.get(`/api/users?role=${role}`) : api.get("/api/users"),
 };

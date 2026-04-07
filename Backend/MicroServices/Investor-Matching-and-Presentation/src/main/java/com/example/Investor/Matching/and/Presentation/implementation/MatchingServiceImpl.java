@@ -218,6 +218,14 @@ public class MatchingServiceImpl implements MatchingService {
                 .toList();
     }
 
+    @Override
+    public List<MatchResponse> getAllMatches() {
+        return matchRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private double computeMatchScore(StartupExecutionDTO startup, InvestorExecutionDTO investor) {
         double score = 0.0;
 
