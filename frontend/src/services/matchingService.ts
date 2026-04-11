@@ -20,4 +20,7 @@ export const matchingService = {
 
   getMatchesForStartup: (startupUserId: number) =>
     matchingServiceApi.get(`/api/matching/startup/${startupUserId}`),
+
+  getAllMatches: () =>
+    matchingServiceApi.get("/api/matching/admin/all"),
 };
