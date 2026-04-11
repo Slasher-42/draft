@@ -29,6 +29,7 @@ import {
   Wallet,
   Video,
   FileText,
+  Home,
 } from "lucide-react";
 
 const startupNav = [
@@ -64,6 +65,7 @@ const evaluatorNav = [
 
 const adminNav = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "Home Controller", href: "/admin/home-controller", icon: Home },
   { name: "User Management", href: "/admin/users", icon: Users },
   { name: "Evaluators", href: "/admin/evaluators", icon: ShieldCheck },
   { name: "Executions", href: "/admin/executions", icon: ClipboardList },
@@ -124,7 +126,7 @@ export function Sidebar() {
           style={{ borderBottom: "1px solid #07366A" }}
         >
           {!collapsed && (
-            <div className="flex items-center gap-2">
+            <Link href="/home" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0">
                 <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
               </div>
@@ -136,7 +138,7 @@ export function Sidebar() {
                   Investment Readiness
                 </p>
               </div>
-            </div>
+            </Link>
           )}
 
           {collapsed && (
