@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
+import { userService } from "@/services/userService";
+import { startupService } from "@/services/startupService";
 import { useAuth } from "@/context/AuthContext";
 import { Account, Transaction, PaymentMethod } from "@/types/followup";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +23,16 @@ import {
   XCircle,
   Clock,
   TrendingUp,
+  Briefcase,
+  Mail,
+  Phone,
+  MapPin,
+  BadgePercent,
+  Globe,
+  Target,
+  Users,
+  DollarSign,
+  Lightbulb,
 } from "lucide-react";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
@@ -41,11 +53,28 @@ const txStatusColor: Record<string, string> = {
   FAILED: "text-red-500",
 };
 
+interface StartupInfo {
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  industry?: string;
+  country?: string;
+  city?: string;
+  website?: string;
+  problemStatement?: string;
+  businessModel?: string;
+  targetMarket?: string;
+  fundingNeeded?: number;
+  suggestedFundingRange?: string;
+  teamDetails?: string;
+}
+
 export default function InvestorAccountPage() {
   const { user } = useAuth();
   const [account, setAccount] = useState<Account | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
+  const [startupInfoMap, setStartupInfoMap] = useState<Record<number, StartupInfo>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   const [showDeposit, setShowDeposit] = useState(false);
@@ -54,24 +83,73 @@ export default function InvestorAccountPage() {
   const [depositing, setDepositing] = useState(false);
 
   const [showInvest, setShowInvest] = useState(false);
-  const [selectedMatchId, setSelectedMatchId] = useState<number | "">("");
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [investAmount, setInvestAmount] = useState("");
   const [investDesc, setInvestDesc] = useState("");
   const [investing, setInvesting] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      followupService.getMyAccount(),
-      followupService.getMyTransactions(),
-      user?.id ? matchingService.getMatchesForInvestor(user.id) : Promise.resolve({ data: { data: [] } }),
-    ])
-      .then(([accRes, txRes, matchRes]) => {
+    if (!user?.id) return;
+    const load = async () => {
+      try {
+        const [accRes, txRes, matchRes] = await Promise.all([
+          followupService.getMyAccount(),
+          followupService.getMyTransactions(),
+          matchingService.getMatchesForInvestor(Number(user.id)),
+        ]);
+        const loadedMatches: any[] = matchRes.data?.data ?? [];
         setAccount(accRes.data?.data);
         setTransactions(txRes.data?.data ?? []);
-        setMatches(matchRes.data?.data ?? []);
-      })
-      .catch(() => toast.error("Failed to load account data"))
-      .finally(() => setIsLoading(false));
+        setMatches(loadedMatches);
+
+        const uniqueMatches = loadedMatches.filter(
+          (m, i, arr) => arr.findIndex((x) => x.startupUserId === m.startupUserId) === i
+        );
+        if (uniqueMatches.length > 0) {
+          const infos = await Promise.allSettled(
+            uniqueMatches.map(async (m) => {
+              const [userResult, execResult] = await Promise.allSettled([
+                userService.getUserById(m.startupUserId),
+                m.startupExecutionId
+                  ? startupService.getExecutionByIdInternal(m.startupExecutionId)
+                  : Promise.resolve(null),
+              ]);
+              const u = userResult.status === "fulfilled" ? userResult.value : null;
+              const exec = execResult.status === "fulfilled" ? execResult.value?.data?.data ?? execResult.value?.data : null;
+              const profile = u?.startupProfile;
+              return {
+                id: m.startupUserId as number,
+                info: {
+                  fullName: profile?.companyName ?? u?.fullName ?? `Startup #${m.startupUserId}`,
+                  email: u?.email ?? "",
+                  phoneNumber: u?.phoneNumber,
+                  industry: exec?.industry ?? profile?.industry,
+                  country: profile?.country,
+                  city: profile?.city,
+                  website: profile?.website,
+                  problemStatement: exec?.problemStatement,
+                  businessModel: exec?.businessModel,
+                  targetMarket: exec?.targetMarket,
+                  fundingNeeded: exec?.fundingNeeded,
+                  suggestedFundingRange: exec?.suggestedFundingRange,
+                  teamDetails: exec?.teamDetails,
+                } as StartupInfo,
+              };
+            })
+          );
+          const map: Record<number, StartupInfo> = {};
+          infos.forEach((r) => {
+            if (r.status === "fulfilled") map[r.value.id] = r.value.info;
+          });
+          setStartupInfoMap(map);
+        }
+      } catch {
+        toast.error("Failed to load account data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
   }, [user?.id]);
 
   const handleDeposit = async () => {
@@ -94,10 +172,10 @@ export default function InvestorAccountPage() {
   const handleInvest = async () => {
     const amount = parseFloat(investAmount);
     if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
-    if (!selectedMatchId) { toast.error("Select a match"); return; }
+    if (!selectedMatchId) { toast.error("Select a startup to invest in"); return; }
     setInvesting(true);
     try {
-      const res = await followupService.invest({ matchId: Number(selectedMatchId), amount, description: investDesc });
+      const res = await followupService.invest({ matchId: selectedMatchId, amount, description: investDesc });
       setTransactions((prev) => [res.data.data, ...prev]);
       const accRes = await followupService.getMyAccount();
       setAccount(accRes.data.data);
@@ -105,7 +183,7 @@ export default function InvestorAccountPage() {
       setShowInvest(false);
       setInvestAmount("");
       setInvestDesc("");
-      setSelectedMatchId("");
+      setSelectedMatchId(null);
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? "Investment failed");
     } finally {
@@ -121,7 +199,13 @@ export default function InvestorAccountPage() {
     );
   }
 
-  const totalSent = transactions.filter((t) => t.fromUserId === user?.id && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
+  const myId = Number(user?.id);
+  const totalSent = transactions
+    .filter((t) => t.fromUserId === myId && t.status === "COMPLETED")
+    .reduce((s, t) => s + t.amount, 0);
+
+  const selectedMatch = matches.find((m) => m.id === selectedMatchId);
+  const selectedStartup = selectedMatch ? startupInfoMap[selectedMatch.startupUserId] : null;
 
   return (
     <div className="space-y-6">
@@ -151,11 +235,11 @@ export default function InvestorAccountPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <Button size="sm" variant="outline" className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                onClick={() => setShowDeposit((v) => !v)}>
+                onClick={() => { setShowDeposit((v) => !v); setShowInvest(false); }}>
                 <ArrowDownToLine className="h-4 w-4" />Deposit
               </Button>
               <Button size="sm" variant="outline" className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                onClick={() => setShowInvest((v) => !v)}>
+                onClick={() => { setShowInvest((v) => !v); setShowDeposit(false); }}>
                 <ArrowUpFromLine className="h-4 w-4" />Invest
               </Button>
             </div>
@@ -230,22 +314,135 @@ export default function InvestorAccountPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-[var(--color-primary-800)]">Invest in a Startup</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Select Match</label>
-              <select
-                value={selectedMatchId}
-                onChange={(e) => setSelectedMatchId(e.target.value ? Number(e.target.value) : "")}
-                className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              >
-                <option value="">— choose a match —</option>
-                {matches.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    Match #{m.id} — Startup #{m.startupUserId} ({Math.round((m.matchScore ?? 0) * 100)}% match)
-                  </option>
-                ))}
-              </select>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-3">
+                Select a matched startup
+              </label>
+              {matches.length === 0 ? (
+                <p className="text-sm text-[var(--color-neutral-400)] py-4 text-center border border-dashed border-[var(--color-border)] rounded-lg">
+                  No matched startups yet
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {matches.map((m) => {
+                    const info = startupInfoMap[m.startupUserId];
+                    const isSelected = selectedMatchId === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedMatchId(isSelected ? null : m.id)}
+                        className={`w-full text-left rounded-xl border p-4 transition-all ${
+                          isSelected
+                            ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)]"
+                            : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] bg-white"
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
+                                <Briefcase className="h-5 w-5 text-[var(--color-primary)]" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-[var(--color-primary-800)] text-sm">
+                                  {info?.fullName ?? `Startup #${m.startupUserId}`}
+                                </p>
+                                {info?.industry && (
+                                  <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)] mt-0.5">
+                                    {info.industry}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-green-50 text-green-700 flex-shrink-0">
+                              <BadgePercent className="h-3 w-3" />
+                              {Math.round((m.matchScore ?? 0) * 100)}% match
+                            </span>
+                          </div>
+
+                          {info?.problemStatement && (
+                            <div className="flex gap-2">
+                              <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Problem they solve</p>
+                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.problemStatement}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {info?.businessModel && (
+                            <div className="flex gap-2">
+                              <Briefcase className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Business model</p>
+                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.businessModel}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {info?.targetMarket && (
+                            <div className="flex gap-2">
+                              <Target className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Target market</p>
+                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-1">{info.targetMarket}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1 border-t border-[var(--color-border)]">
+                            {info?.fundingNeeded && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)] font-medium">
+                                <DollarSign className="h-3 w-3 text-green-600" />
+                                Seeking ${info.fundingNeeded.toLocaleString()}
+                                {info.suggestedFundingRange && (
+                                  <span className="text-[var(--color-neutral-400)] font-normal">({info.suggestedFundingRange})</span>
+                                )}
+                              </span>
+                            )}
+                            {info?.teamDetails && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-500)]">
+                                <Users className="h-3 w-3" />{info.teamDetails}
+                              </span>
+                            )}
+                            {info?.email && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                                <Mail className="h-3 w-3" />{info.email}
+                              </span>
+                            )}
+                            {info?.phoneNumber && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                                <Phone className="h-3 w-3" />{info.phoneNumber}
+                              </span>
+                            )}
+                            {(info?.city || info?.country) && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                                <MapPin className="h-3 w-3" />
+                                {[info.city, info.country].filter(Boolean).join(", ")}
+                              </span>
+                            )}
+                            {info?.website && (
+                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                                <Globe className="h-3 w-3" />{info.website}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+
+            {selectedMatchId && selectedStartup && (
+              <div className="rounded-lg bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] p-3 text-sm text-[var(--color-primary-800)]">
+                Investing in <span className="font-semibold">{selectedStartup.fullName}</span>
+                {selectedStartup.industry && <span className="text-[var(--color-neutral-500)]"> · {selectedStartup.industry}</span>}
+              </div>
+            )}
+
             <div>
               <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Amount (USD)</label>
               <input
@@ -262,7 +459,7 @@ export default function InvestorAccountPage() {
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Description (optional)</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Note (optional)</label>
               <input
                 type="text"
                 placeholder="e.g. Seed round investment"
@@ -272,11 +469,11 @@ export default function InvestorAccountPage() {
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleInvest} disabled={investing} className="gap-2">
+              <Button onClick={handleInvest} disabled={investing || !selectedMatchId} className="gap-2">
                 {investing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpFromLine className="h-4 w-4" />}
                 Transfer Investment
               </Button>
-              <Button variant="outline" onClick={() => setShowInvest(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setShowInvest(false); setSelectedMatchId(null); }}>Cancel</Button>
             </div>
           </CardContent>
         </Card>
@@ -292,8 +489,11 @@ export default function InvestorAccountPage() {
           ) : (
             <div className="space-y-2">
               {transactions.map((tx) => {
-                const isSent = tx.fromUserId === user?.id;
+                const isSent = tx.fromUserId === myId;
                 const StatusIcon = txStatusIcon[tx.status] ?? Clock;
+                const counterpartId = isSent ? tx.toUserId : tx.fromUserId;
+                const counterpartInfo = startupInfoMap[counterpartId];
+                const counterpartName = counterpartInfo?.fullName ?? (isSent ? `Startup #${tx.toUserId}` : `Investor #${tx.fromUserId}`);
                 return (
                   <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
                     <div className="flex items-center gap-3">
@@ -304,7 +504,7 @@ export default function InvestorAccountPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[var(--color-primary-800)]">
-                          {isSent ? `To startup #${tx.toUserId}` : `From investor #${tx.fromUserId}`}
+                          {isSent ? `To ${counterpartName}` : `From ${counterpartName}`}
                         </p>
                         <p className="text-xs text-[var(--color-neutral-400)]">
                           {tx.description ?? `Match #${tx.matchId}`} · {new Date(tx.createdAt).toLocaleDateString()}
