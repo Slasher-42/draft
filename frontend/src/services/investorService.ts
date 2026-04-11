@@ -37,6 +37,9 @@ export const investorService = {
       `/api/executions/investor/${executionId}/considerations?additionalConsiderations=${encodeURIComponent(additionalConsiderations)}`
     ),
 
+  getExecutionByIdInternal: (id: number | string) =>
+    startupServiceApi.get(`/api/executions/investor/internal/${id}`),
+
   withdrawExecution: (id: string) =>
     startupServiceApi.delete(`/api/executions/investor/${id}`),
 };

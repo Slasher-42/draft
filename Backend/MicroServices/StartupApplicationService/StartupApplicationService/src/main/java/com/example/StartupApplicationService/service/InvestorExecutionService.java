@@ -23,5 +23,7 @@ public interface InvestorExecutionService {
 
     void withdraw(Long id, Long userId);
 
+    InvestorExecutionResponse getByIdInternal(Long id);
+
     void updateStatusInternal(Long id, String status);
 }

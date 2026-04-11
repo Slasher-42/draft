@@ -70,6 +70,12 @@ public class InvestorExecutionController {
         return ResponseEntity.ok(new ApiResponse<>(true, "All investor executions fetched", executions));
     }
 
+    @GetMapping("/internal/{id}")
+    public ResponseEntity<ApiResponse<InvestorExecutionResponse>> getByIdInternal(@PathVariable Long id) {
+        InvestorExecutionResponse response = investorExecutionService.getByIdInternal(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Execution fetched successfully", response));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> withdraw(
             Authentication authentication,
