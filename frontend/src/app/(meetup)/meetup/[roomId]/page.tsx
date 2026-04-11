@@ -48,6 +48,8 @@ export default function MeetupRoomPage() {
   const makingOfferRef = useRef(false);
   const ignoreOfferRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
+  const politeRef = useRef(false);
+  const tracksAddedRef = useRef(false);
 
   const [connected, setConnected] = useState(false);
   const [remoteConnected, setRemoteConnected] = useState(false);
@@ -60,9 +62,17 @@ export default function MeetupRoomPage() {
     if (!stompRef.current?.connected || !user) return;
     stompRef.current.publish({
       destination: `/app/signal/${roomId}`,
-      body: JSON.stringify({ ...msg, roomId, from: user.id }),
+      body: JSON.stringify({ ...msg, roomId, from: Number(user.id) }),
     });
   }, [roomId, user]);
+
+  const addLocalTracks = useCallback(() => {
+    const pc = peerRef.current;
+    const stream = localStreamRef.current;
+    if (!pc || !stream || tracksAddedRef.current) return;
+    tracksAddedRef.current = true;
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+  }, []);
 
   const createPeer = useCallback(() => {
     const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -103,13 +113,11 @@ export default function MeetupRoomPage() {
   }, [sendSignal]);
 
   const handleSignal = useCallback(async (msg: SignalMessage) => {
-    if (!user || msg.from === user.id) return;
+    if (!user || msg.from === Number(user.id)) return;
 
     if (msg.type === "join") {
-      if (!peerRef.current) return;
-      localStreamRef.current?.getTracks().forEach((track) => {
-        peerRef.current!.addTrack(track, localStreamRef.current!);
-      });
+      politeRef.current = Number(user.id) < msg.from;
+      addLocalTracks();
       return;
     }
 
@@ -124,20 +132,22 @@ export default function MeetupRoomPage() {
 
     if (msg.type === "offer" && msg.sdp) {
       const offerDesc = JSON.parse(msg.sdp) as RTCSessionDescriptionInit;
-      const offerCollision =
-        makingOfferRef.current || pc.signalingState !== "stable";
-      ignoreOfferRef.current = offerCollision;
+      const offerCollision = makingOfferRef.current || pc.signalingState !== "stable";
+      ignoreOfferRef.current = !politeRef.current && offerCollision;
       if (ignoreOfferRef.current) return;
 
-      isSettingRemoteRef.current = true;
-      await pc.setRemoteDescription(offerDesc);
-      isSettingRemoteRef.current = false;
+      if (offerCollision) {
+        await Promise.all([
+          pc.setLocalDescription({ type: "rollback" }),
+          pc.setRemoteDescription(offerDesc),
+        ]);
+      } else {
+        isSettingRemoteRef.current = true;
+        await pc.setRemoteDescription(offerDesc);
+        isSettingRemoteRef.current = false;
+      }
 
-      localStreamRef.current?.getTracks().forEach((track) => {
-        if (!pc.getSenders().find((s) => s.track === track)) {
-          pc.addTrack(track, localStreamRef.current!);
-        }
-      });
+      addLocalTracks();
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
@@ -154,7 +164,7 @@ export default function MeetupRoomPage() {
       } catch {
       }
     }
-  }, [user, sendSignal]);
+  }, [user, sendSignal, addLocalTracks]);
 
   useEffect(() => {
     if (!user || !roomId) return;
@@ -211,10 +221,6 @@ export default function MeetupRoomPage() {
           });
 
           sendSignal({ type: "join" });
-
-          stream.getTracks().forEach((track) => {
-            pc.addTrack(track, stream);
-          });
         },
         onDisconnect: () => {
           if (mounted) setConnected(false);
