@@ -29,6 +29,7 @@ import {
   Building2,
   ChevronDown,
   ChevronUp,
+  Banknote,
 } from "lucide-react";
 
 const txStatusIcon: Record<string, React.ElementType> = {
@@ -63,6 +64,10 @@ export default function StartupAccountPage() {
   const [investorInfoMap, setInvestorInfoMap] = useState<Record<number, InvestorInfo>>({});
   const [expandedTx, setExpandedTx] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSettle, setShowSettle] = useState(false);
+  const [settleAmount, setSettleAmount] = useState("");
+  const [settleAccountNumber, setSettleAccountNumber] = useState("");
+  const [settling, setSettling] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -131,6 +136,31 @@ export default function StartupAccountPage() {
     load();
   }, [user?.id]);
 
+  const handleSettle = async () => {
+    const amount = parseFloat(settleAmount);
+    if (!settleAccountNumber.trim()) { toast.error("Account number is required"); return; }
+    if (isNaN(amount) || amount <= 0) { toast.error("Enter a valid amount"); return; }
+    if (amount > (account?.balance ?? 0)) { toast.error("Amount exceeds available balance"); return; }
+    setSettling(true);
+    try {
+      await followupService.settle({ amount, accountNumber: settleAccountNumber.trim() });
+      toast.success("Settlement processed successfully");
+      setShowSettle(false);
+      setSettleAmount("");
+      setSettleAccountNumber("");
+      const [accRes, txRes] = await Promise.all([
+        followupService.getMyAccount(),
+        followupService.getMyTransactions(),
+      ]);
+      setAccount(accRes.data?.data);
+      setTransactions(txRes.data?.data ?? []);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Settlement failed");
+    } finally {
+      setSettling(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -169,6 +199,15 @@ export default function StartupAccountPage() {
                 <Wallet className="h-6 w-6 text-white" />
               </div>
             </div>
+            <div className="mt-4">
+              <button
+                onClick={() => setShowSettle((v) => !v)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors"
+              >
+                <Banknote className="h-4 w-4" />
+                {showSettle ? "Cancel" : "Settle Funds"}
+              </button>
+            </div>
           </CardContent>
         </Card>
 
@@ -201,6 +240,51 @@ export default function StartupAccountPage() {
         </div>
       </div>
 
+      {showSettle && (
+        <Card className="border border-[var(--color-border)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-[var(--color-primary-800)] flex items-center gap-2">
+              <Banknote className="h-4 w-4" /> Settle Funds to Your Account
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-[var(--color-neutral-500)]">
+              Available: <span className="font-semibold text-green-600">${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+            </p>
+            <div>
+              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">Account Number</label>
+              <input
+                type="text"
+                value={settleAccountNumber}
+                onChange={(e) => setSettleAccountNumber(e.target.value)}
+                placeholder="Enter your bank account number"
+                className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">Amount (USD)</label>
+              <input
+                type="number"
+                value={settleAmount}
+                onChange={(e) => setSettleAmount(e.target.value)}
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <button
+              onClick={handleSettle}
+              disabled={settling}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-800)] text-white text-sm font-medium transition-colors disabled:opacity-60"
+            >
+              {settling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
+              {settling ? "Processing..." : "Confirm Settlement"}
+            </button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border border-[var(--color-border)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-[var(--color-primary-800)]">Transaction History</CardTitle>
@@ -212,6 +296,7 @@ export default function StartupAccountPage() {
             <div className="space-y-2">
               {transactions.map((tx) => {
                 const isReceived = tx.toUserId === myId;
+                const isSettlement = tx.fromUserId === myId && tx.toUserId === 0;
                 const StatusIcon = txStatusIcon[tx.status] ?? Clock;
                 const investorId = tx.fromUserId;
                 const info = investorInfoMap[investorId];
@@ -224,15 +309,19 @@ export default function StartupAccountPage() {
                       onClick={() => setExpandedTx(isExpanded ? null : tx.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${isReceived ? "bg-green-50" : "bg-red-50"}`}>
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${isReceived ? "bg-green-50" : isSettlement ? "bg-amber-50" : "bg-red-50"}`}>
                           {isReceived
                             ? <ArrowDownToLine className="h-4 w-4 text-green-600" />
+                            : isSettlement
+                            ? <Banknote className="h-4 w-4 text-amber-600" />
                             : <ArrowUpFromLine className="h-4 w-4 text-red-500" />}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-[var(--color-primary-800)]">
                             {isReceived
                               ? `Investment from ${info?.fullName ?? `Investor #${tx.fromUserId}`}`
+                              : isSettlement
+                              ? "Settlement Withdrawal"
                               : `To ${info?.fullName ?? `Startup #${tx.toUserId}`}`}
                           </p>
                           <p className="text-xs text-[var(--color-neutral-400)]">

@@ -384,11 +384,11 @@ export default function HomePage() {
     }
   }, [heroVideoUrl]);
 
-  // Fetch users (works if token is present; silently skips if not logged in)
+  // Fetch users — uses the public endpoint so any role (or no auth) can see them
   useEffect(() => {
     Promise.all([
-      publicGet("/api/users?role=INVESTOR"),
-      publicGet("/api/users?role=STARTUP"),
+      publicGet("/api/users/public?role=INVESTOR"),
+      publicGet("/api/users/public?role=STARTUP"),
     ]).then(([investorsJson, startupsJson]) => {
       setInvestors(investorsJson?.data ?? []);
       setStartups(startupsJson?.data ?? []);

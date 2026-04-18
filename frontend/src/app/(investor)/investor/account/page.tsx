@@ -79,6 +79,7 @@ export default function InvestorAccountPage() {
 
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositAccountNumber, setDepositAccountNumber] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   const [depositing, setDepositing] = useState(false);
 
@@ -155,13 +156,15 @@ export default function InvestorAccountPage() {
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
+    if (!depositAccountNumber.trim()) { toast.error("Enter your account number"); return; }
     setDepositing(true);
     try {
-      const res = await followupService.deposit({ amount, paymentMethod: selectedMethod });
+      const res = await followupService.deposit({ amount, paymentMethod: selectedMethod, accountNumber: depositAccountNumber.trim() });
       setAccount(res.data.data);
       toast.success("Deposit successful");
       setShowDeposit(false);
       setDepositAmount("");
+      setDepositAccountNumber("");
     } catch {
       toast.error("Deposit failed");
     } finally {
@@ -267,6 +270,16 @@ export default function InvestorAccountPage() {
             <CardTitle className="text-base text-[var(--color-primary-800)]">Add Funds</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Account Number</label>
+              <input
+                type="text"
+                placeholder="e.g. 1234567890"
+                value={depositAccountNumber}
+                onChange={(e) => setDepositAccountNumber(e.target.value)}
+                className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
             <div>
               <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Amount (USD)</label>
               <input
@@ -493,7 +506,10 @@ export default function InvestorAccountPage() {
                 const StatusIcon = txStatusIcon[tx.status] ?? Clock;
                 const counterpartId = isSent ? tx.toUserId : tx.fromUserId;
                 const counterpartInfo = startupInfoMap[counterpartId];
-                const counterpartName = counterpartInfo?.fullName ?? (isSent ? `Startup #${tx.toUserId}` : `Investor #${tx.fromUserId}`);
+                const isSettlement = isSent && tx.toUserId === 0;
+                const counterpartName = isSettlement
+                  ? (tx.description ?? "Settlement")
+                  : counterpartInfo?.fullName ?? (isSent ? `Startup #${tx.toUserId}` : `Investor #${tx.fromUserId}`);
                 return (
                   <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] last:border-0">
                     <div className="flex items-center gap-3">
@@ -504,10 +520,10 @@ export default function InvestorAccountPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[var(--color-primary-800)]">
-                          {isSent ? `To ${counterpartName}` : `From ${counterpartName}`}
+                          {isSettlement ? counterpartName : isSent ? `To ${counterpartName}` : `From ${counterpartName}`}
                         </p>
                         <p className="text-xs text-[var(--color-neutral-400)]">
-                          {tx.description ?? `Match #${tx.matchId}`} · {new Date(tx.createdAt).toLocaleDateString()}
+                          {isSettlement ? new Date(tx.createdAt).toLocaleDateString() : `${tx.description ?? `Match #${tx.matchId}`} · ${new Date(tx.createdAt).toLocaleDateString()}`}
                         </p>
                       </div>
                     </div>

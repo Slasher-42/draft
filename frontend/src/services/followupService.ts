@@ -64,8 +64,11 @@ export const followupService = {
   getMyAccount: () =>
     followupApi.get("/api/followup/accounts/me"),
 
-  deposit: (payload: { amount: number; paymentMethod: string }) =>
+  deposit: (payload: { amount: number; paymentMethod: string; accountNumber: string }) =>
     followupApi.post("/api/followup/accounts/deposit", payload),
+
+  settle: (payload: { amount: number; accountNumber: string }) =>
+    followupApi.post("/api/followup/accounts/settle", payload),
 
   invest: (payload: { matchId: number; amount: number; description?: string }) =>
     followupApi.post("/api/followup/accounts/invest", payload),

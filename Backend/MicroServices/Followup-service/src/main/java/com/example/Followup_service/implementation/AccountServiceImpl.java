@@ -2,6 +2,7 @@ package com.example.Followup_service.implementation;
 
 import com.example.Followup_service.dto.request.DepositRequest;
 import com.example.Followup_service.dto.request.InvestRequest;
+import com.example.Followup_service.dto.request.SettleRequest;
 import com.example.Followup_service.dto.response.AccountResponse;
 import com.example.Followup_service.dto.response.TransactionResponse;
 import com.example.Followup_service.enums.TransactionStatus;
@@ -98,6 +99,30 @@ public class AccountServiceImpl implements AccountService {
         tx.setAmount(request.getAmount());
         tx.setDescription(request.getDescription() != null ? request.getDescription()
                 : "Investment transfer for match " + request.getMatchId());
+        tx.setStatus(TransactionStatus.COMPLETED);
+
+        return toTxResponse(transactionRepository.save(tx));
+    }
+
+    @Override
+    @Transactional
+    public TransactionResponse settle(Long investorUserId, SettleRequest request) {
+        Account account = accountRepository.findByUserId(investorUserId)
+                .orElseThrow(() -> new BadRequestException("Account not found"));
+
+        if (account.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new BadRequestException("Insufficient balance. Available: " + account.getBalance());
+        }
+
+        account.setBalance(account.getBalance().subtract(request.getAmount()));
+        accountRepository.save(account);
+
+        Transaction tx = new Transaction();
+        tx.setFromUserId(investorUserId);
+        tx.setToUserId(0L);
+        tx.setMatchId(0L);
+        tx.setAmount(request.getAmount());
+        tx.setDescription("Settlement to account " + request.getAccountNumber());
         tx.setStatus(TransactionStatus.COMPLETED);
 
         return toTxResponse(transactionRepository.save(tx));

@@ -94,6 +94,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/api/config").permitAll()
                         .requestMatchers("/api/users/internal/evaluator-ids").permitAll()
+                        .requestMatchers("/api/users/public").permitAll()
                         .anyRequest().authenticated())
                 .addFilter(jwtAuthenticationFilter)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -49,6 +49,15 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched successfully", users));
     }
 
+    @GetMapping("/public")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getPublicUsers(
+            @RequestParam(required = false) String role) {
+        List<UserResponse> users = (role != null && !role.isBlank())
+                ? userService.getUsersByRole(role)
+                : userService.getAllUsers();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched successfully", users));
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,

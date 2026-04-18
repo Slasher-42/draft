@@ -2,6 +2,7 @@ package com.example.Followup_service.controller;
 
 import com.example.Followup_service.dto.request.DepositRequest;
 import com.example.Followup_service.dto.request.InvestRequest;
+import com.example.Followup_service.dto.request.SettleRequest;
 import com.example.Followup_service.dto.response.AccountResponse;
 import com.example.Followup_service.dto.response.ApiResponse;
 import com.example.Followup_service.dto.response.TransactionResponse;
@@ -50,6 +51,16 @@ public class AccountController {
         Long investorUserId = (Long) auth.getPrincipal();
         return ResponseEntity.ok(new ApiResponse<>(true, "Investment transferred successfully",
                 accountService.invest(investorUserId, request)));
+    }
+
+    @PostMapping("/settle")
+    @PreAuthorize("hasAuthority('ROLE_STARTUP')")
+    public ResponseEntity<ApiResponse<TransactionResponse>> settle(
+            Authentication auth,
+            @Valid @RequestBody SettleRequest request) {
+        Long userId = (Long) auth.getPrincipal();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Settlement processed successfully",
+                accountService.settle(userId, request)));
     }
 
     @GetMapping("/transactions")

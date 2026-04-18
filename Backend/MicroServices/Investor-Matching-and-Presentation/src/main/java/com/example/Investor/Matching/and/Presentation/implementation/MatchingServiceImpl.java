@@ -35,6 +35,9 @@ public class MatchingServiceImpl implements MatchingService {
     @Override
     public void runMatching(Long startupExecutionId, Long startupUserId) {
         try {
+
+            updateStartupExecutionStatus(startupExecutionId, "APPROVED");
+
             StartupExecutionDTO startup = fetchStartupExecution(startupExecutionId);
             if (startup == null) {
                 log.error("[Matching] Could not fetch startup execution id={}", startupExecutionId);
@@ -128,6 +131,9 @@ public class MatchingServiceImpl implements MatchingService {
             List<InvestorMatch> matches = new ArrayList<>();
 
             for (StartupExecutionDTO startup : startups) {
+                // Only match against startups that have been approved by an evaluator
+                if (!"APPROVED".equals(startup.getStatus())) continue;
+
                 if (matchRepository.existsByStartupExecutionIdAndInvestorExecutionId(
                         startup.getId(), investorExecutionId)) continue;
 
@@ -193,6 +199,8 @@ public class MatchingServiceImpl implements MatchingService {
 
             for (StartupExecutionDTO startup : startups) {
                 if (startup.getId() == null || startup.getUserId() == null) continue;
+                // Only re-run matching for approved startups that haven't matched yet
+                if (!"APPROVED".equals(startup.getStatus())) continue;
                 runMatching(startup.getId(), startup.getUserId());
             }
 
