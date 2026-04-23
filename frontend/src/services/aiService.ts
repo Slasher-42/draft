@@ -35,6 +35,23 @@ export const aiService = {
       additional_considerations: data.additionalConsiderations,
     }),
 
+  triggerScoring: (data: {
+    executionId: number;
+    weightFinancialHealth: number;
+    weightTeamStrength: number;
+    weightMarketPotential: number;
+    weightBusinessViability: number;
+    minimumPassingScore: number;
+  }) =>
+    aiServiceApi.post("/api/assessment/score", {
+      execution_id: data.executionId,
+      weight_financial_health: data.weightFinancialHealth,
+      weight_team_strength: data.weightTeamStrength,
+      weight_market_potential: data.weightMarketPotential,
+      weight_business_viability: data.weightBusinessViability,
+      minimum_passing_score: data.minimumPassingScore,
+    }),
+
   getConfig: () =>
     axios.get("http://localhost:8081/api/config"),
 };

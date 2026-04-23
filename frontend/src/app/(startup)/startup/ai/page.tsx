@@ -385,6 +385,21 @@ function AIConversationPage() {
         additionalText?.trim() || "No additional considerations provided."
       );
 
+      try {
+        const configRes = await aiService.getConfig();
+        const cfg = configRes.data?.data ?? {};
+        await aiService.triggerScoring({
+          executionId,
+          weightFinancialHealth: cfg.weightFinancialHealth ?? 25,
+          weightTeamStrength: cfg.weightTeamStrength ?? 25,
+          weightMarketPotential: cfg.weightMarketPotential ?? 25,
+          weightBusinessViability: cfg.weightBusinessViability ?? 25,
+          minimumPassingScore: cfg.minimumPassingScore ?? 60,
+        });
+      } catch {
+        toast.warn("Assessment submitted but scoring could not be triggered. Please contact support.");
+      }
+
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
       setAwaitingAdditional(false);
       setIsDone(true);
