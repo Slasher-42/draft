@@ -43,7 +43,7 @@ export const startupService = {
     const formData = new FormData();
     formData.append("file", file);
     return startupServiceApi.patch(`/api/executions/startup/${id}/image`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": null as any },
     });
   },
 };

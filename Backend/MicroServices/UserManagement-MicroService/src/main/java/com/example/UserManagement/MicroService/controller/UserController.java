@@ -98,6 +98,12 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Profile picture updated", response));
     }
 
+    @GetMapping("/internal/{id}/name")
+    public ResponseEntity<String> getUserNameInternal(@PathVariable Long id) {
+        UserResponse user = userService.getUserById(id);
+        return ResponseEntity.ok(user.getFullName() != null ? user.getFullName() : "");
+    }
+
     @GetMapping("/internal/evaluator-ids")
     public ResponseEntity<List<Long>> getEvaluatorIds() {
         List<Long> ids = userService.getUsersByRole("EVALUATOR")

@@ -34,6 +34,7 @@ const industries = [
 const schema = z.object({
   companySize: z.string().min(1, "Select your company stage"),
   industry: z.string().min(1, "Select your industry"),
+  location: z.string().min(2, "Enter your startup's location (city, country)"),
   problemStatement: z.string().min(30, "Describe the problem in at least 30 characters"),
   businessModel: z.string().min(20, "Describe your business model"),
   targetMarket: z.string().min(10, "Describe your target market"),
@@ -73,6 +74,7 @@ export default function StartupExecutePage() {
       const res = await startupService.createExecution({
         targetCompanySize: data.companySize,
         industry: data.industry,
+        location: data.location,
         problemStatement: data.problemStatement,
         businessModel: data.businessModel,
         targetMarket: data.targetMarket,
@@ -161,6 +163,16 @@ export default function StartupExecutePage() {
                 </SelectContent>
               </Select>
               {errors.industry && <p className="text-xs text-red-500">{errors.industry.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Location</Label>
+              <Input
+                placeholder="e.g. Nairobi, Kenya · Lagos, Nigeria · London, UK"
+                className={errors.location ? "border-red-500" : ""}
+                {...register("location")}
+              />
+              {errors.location && <p className="text-xs text-red-500">{errors.location.message}</p>}
             </div>
 
             <div className="space-y-1.5">

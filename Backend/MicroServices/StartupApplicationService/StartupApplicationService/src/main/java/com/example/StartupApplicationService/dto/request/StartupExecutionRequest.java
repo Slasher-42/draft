@@ -42,4 +42,6 @@ public class StartupExecutionRequest {
     @NotNull(message = "Funding needed is required")
     @PositiveOrZero(message = "Funding needed must be zero or greater")
     private Double fundingNeeded;
+
+    private String location;
 }

@@ -61,6 +61,22 @@ public class EvaluatorReviewController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Decision submitted successfully", review));
     }
 
+    @GetMapping("/reviews/escalated")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getEscalatedReviews() {
+        List<EvaluatorReviewResponse> reviews = reviewService.getEscalatedReviews();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Escalated reviews fetched successfully", reviews));
+    }
+
+    @PostMapping("/reviews/{id}/admin-decision")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<EvaluatorReviewResponse>> submitAdminDecision(
+            @PathVariable Long id,
+            @Valid @RequestBody DecisionRequest request) {
+        EvaluatorReviewResponse review = reviewService.submitAdminDecision(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Admin decision submitted successfully", review));
+    }
+
     @PatchMapping("/reviews/{id}/assign")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<EvaluatorReviewResponse>> assignEvaluator(

@@ -253,6 +253,7 @@ function AIConversationPage() {
             executionId: execution.id,
             userId: Number(user.id),
             targetCompanySize: execution.targetCompanySize,
+            location: execution.location,
             problemStatement: execution.problemStatement,
             businessModel: execution.businessModel,
             targetMarket: execution.targetMarket,

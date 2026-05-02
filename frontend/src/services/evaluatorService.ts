@@ -28,4 +28,10 @@ export const evaluatorService = {
 
   getDashboardStats: () =>
     evaluationServiceApi.get("/api/evaluator/dashboard"),
+
+  getEscalatedReviews: () =>
+    evaluationServiceApi.get("/api/evaluator/reviews/escalated"),
+
+  submitAdminDecision: (id: string, data: { decision: "APPROVED" | "REJECTED"; reason: string }) =>
+    evaluationServiceApi.post(`/api/evaluator/reviews/${id}/admin-decision`, data),
 };

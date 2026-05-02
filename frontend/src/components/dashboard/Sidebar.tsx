@@ -19,7 +19,6 @@ import {
   ShieldCheck,
   BarChart2,
   BookOpen,
-  Bell,
   Settings,
   User,
   LogOut,
@@ -30,6 +29,7 @@ import {
   Video,
   FileText,
   Home,
+  AlertTriangle,
 } from "lucide-react";
 
 const startupNav = [
@@ -69,6 +69,7 @@ const adminNav = [
   { name: "User Management", href: "/admin/users", icon: Users },
   { name: "Evaluators", href: "/admin/evaluators", icon: ShieldCheck },
   { name: "Executions", href: "/admin/executions", icon: ClipboardList },
+  { name: "Escalations", href: "/admin/escalations", icon: AlertTriangle },
   { name: "Follow Up", href: "/admin/followup", icon: Handshake },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart2 },
   { name: "Audit Logs", href: "/admin/audit-logs", icon: BookOpen },

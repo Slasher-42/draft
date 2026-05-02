@@ -27,6 +27,7 @@ public class StartupExecutionResponse {
     private Double fundingNeeded;
     private String aiSessionId;
     private String additionalConsiderations;
+    private String location;
     private String imageUrl;
     private ExecutionStatus status;
     private String statusReason;

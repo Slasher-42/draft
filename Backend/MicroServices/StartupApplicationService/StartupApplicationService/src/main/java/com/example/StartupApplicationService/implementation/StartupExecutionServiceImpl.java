@@ -11,16 +11,12 @@ import com.example.StartupApplicationService.repository.StartupExecutionReposito
 import com.example.StartupApplicationService.service.S3Service;
 import com.example.StartupApplicationService.service.StartupExecutionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +24,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
 
     private final StartupExecutionRepository startupExecutionRepository;
     private final ExecutionEventPublisher eventPublisher;
-    private final WebClient.Builder webClientBuilder;
     private final S3Service s3Service;
-
-    @Value("${services.user-management.url}")
-    private String userManagementUrl;
-
-    @Value("${services.ai-assessment.url}")
-    private String aiAssessmentUrl;
 
     @Override
     public StartupExecutionResponse submit(Long userId, StartupExecutionRequest request) {
@@ -51,6 +40,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         execution.setAnnualRevenue(request.getAnnualRevenue());
         execution.setMonthlyBurnRate(request.getMonthlyBurnRate());
         execution.setFundingNeeded(request.getFundingNeeded());
+        execution.setLocation(request.getLocation());
         execution.setStatus(ExecutionStatus.PENDING);
 
         StartupExecution saved = startupExecutionRepository.save(execution);
@@ -101,6 +91,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         execution.setAnnualRevenue(request.getAnnualRevenue());
         execution.setMonthlyBurnRate(request.getMonthlyBurnRate());
         execution.setFundingNeeded(request.getFundingNeeded());
+        execution.setLocation(request.getLocation());
 
         return toResponse(startupExecutionRepository.save(execution));
     }
@@ -120,48 +111,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         execution.setAdditionalConsiderations(additionalConsiderations);
         execution.setStatusUpdatedAt(LocalDateTime.now());
         startupExecutionRepository.save(execution);
-
-        try {
-            Map<String, Object> configData = webClientBuilder.build()
-                    .get()
-                    .uri(userManagementUrl + "/api/config")
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
-            Map<String, Object> data = (Map<String, Object>) ((Map<String, Object>) configData).get("data");
-
-            double weightFinancialHealth   = ((Number) data.get("weightFinancialHealth")).doubleValue();
-            double weightTeamStrength      = ((Number) data.get("weightTeamStrength")).doubleValue();
-            double weightMarketPotential   = ((Number) data.get("weightMarketPotential")).doubleValue();
-            double weightBusinessViability = ((Number) data.get("weightBusinessViability")).doubleValue();
-            double minimumPassingScore     = ((Number) data.get("minimumPassingScore")).doubleValue();
-
-            Map<String, Object> scoreRequest = Map.of(
-                    "execution_id",              executionId,
-                    "weight_financial_health",   weightFinancialHealth,
-                    "weight_team_strength",      weightTeamStrength,
-                    "weight_market_potential",   weightMarketPotential,
-                    "weight_business_viability", weightBusinessViability,
-                    "minimum_passing_score",     minimumPassingScore
-            );
-
-            webClientBuilder.build()
-                    .post()
-                    .uri(aiAssessmentUrl + "/api/assessment/score")
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + authToken)
-                    .bodyValue(scoreRequest)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .subscribe(
-                            response -> System.out.println("[Assessment] Score triggered for executionId=" + executionId),
-                            error -> System.err.println("[Assessment] Failed to trigger score: " + error.getMessage())
-                    );
-
-        } catch (Exception e) {
-            System.err.println("[Assessment] Error fetching config or triggering score: " + e.getMessage());
-        }
+        // Scoring is triggered by the frontend after this call returns.
     }
 
     @Override
@@ -216,6 +166,7 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         response.setFundingNeeded(e.getFundingNeeded());
         response.setAiSessionId(e.getAiSessionId());
         response.setAdditionalConsiderations(e.getAdditionalConsiderations());
+        response.setLocation(e.getLocation());
         response.setImageUrl(e.getImageUrl());
         response.setStatus(e.getStatus());
         response.setStatusReason(e.getStatusReason());

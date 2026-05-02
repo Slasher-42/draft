@@ -89,6 +89,38 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
     }
 
     @Override
+    public List<EvaluatorReviewResponse> getEscalatedReviews() {
+        return reviewRepository.findByDecision(com.example.Evaluation.and.Decision.Service.enums.ReviewDecision.ESCALATED)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    public EvaluatorReviewResponse submitAdminDecision(Long id, DecisionRequest request) {
+        EvaluatorReview review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
+
+        review.setDecision(request.getDecision());
+        review.setReason(request.getReason());
+        review.setDecidedAt(LocalDateTime.now());
+        EvaluatorReview saved = reviewRepository.save(review);
+
+        switch (request.getDecision()) {
+            case APPROVED -> eventPublisher.publishStartupApproved(
+                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+            case REJECTED -> eventPublisher.publishStartupRejected(
+                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+            default -> {}
+        }
+
+        eventPublisher.publishEvaluationCompleted(
+                saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+
+        return toResponse(saved);
+    }
+
+    @Override
     public EvaluatorReviewResponse assignEvaluator(Long id, AssignEvaluatorRequest request) {
         EvaluatorReview review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));

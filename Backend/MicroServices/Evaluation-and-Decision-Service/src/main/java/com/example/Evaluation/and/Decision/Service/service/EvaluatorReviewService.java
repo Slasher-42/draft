@@ -16,6 +16,10 @@ public interface EvaluatorReviewService {
 
     EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, DecisionRequest request);
 
+    List<EvaluatorReviewResponse> getEscalatedReviews();
+
+    EvaluatorReviewResponse submitAdminDecision(Long id, DecisionRequest request);
+
     EvaluatorReviewResponse assignEvaluator(Long id, AssignEvaluatorRequest request);
 
     EvaluatorReviewResponse createReviewFromScore(

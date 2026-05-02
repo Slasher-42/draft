@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
+import { api } from "@/lib/api";
 import { Meetup, Contract } from "@/types/followup";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export default function AdminFollowUpPage() {
   const [meetups, setMeetups] = useState<Meetup[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userNames, setUserNames] = useState<Record<number, string>>({});
 
   const [schedulingMatchId, setSchedulingMatchId] = useState<number | null>(null);
   const [scheduleForm, setScheduleForm] = useState<{ investorUserId: number; startupUserId: number; scheduledAt: string; adminNotes: string } | null>(null);
@@ -70,9 +72,29 @@ export default function AdminFollowUpPage() {
           followupService.getAllMeetups(),
           followupService.getAllContracts(),
         ]);
-        setMatches(matchRes.data?.data ?? []);
-        setMeetups(meetupRes.data?.data ?? []);
-        setContracts(contractRes.data?.data ?? []);
+        const matchData = matchRes.data?.data ?? [];
+        const meetupData = meetupRes.data?.data ?? [];
+        const contractData = contractRes.data?.data ?? [];
+        setMatches(matchData);
+        setMeetups(meetupData);
+        setContracts(contractData);
+
+        const ids = new Set<number>();
+        matchData.forEach((m: any) => { if (m.investorUserId) ids.add(m.investorUserId); if (m.startupUserId) ids.add(m.startupUserId); });
+        meetupData.forEach((m: any) => { if (m.investorUserId) ids.add(m.investorUserId); if (m.startupUserId) ids.add(m.startupUserId); });
+        contractData.forEach((c: any) => { if (c.investorUserId) ids.add(c.investorUserId); if (c.startupUserId) ids.add(c.startupUserId); });
+
+        const names: Record<number, string> = {};
+        await Promise.all([...ids].map(async (id) => {
+          try {
+            const res = await api.get(`/api/users/${id}`);
+            const fullName = res.data?.data?.fullName;
+            names[id] = fullName || `#${id}`;
+          } catch {
+            names[id] = `#${id}`;
+          }
+        }));
+        setUserNames(names);
       } catch {
         toast.error("Failed to load follow-up data");
       } finally {
@@ -205,8 +227,9 @@ export default function AdminFollowUpPage() {
                             </span>
                           </div>
                           <p className="text-sm text-[var(--color-neutral-600)]">
-                            Investor <span className="font-medium text-[var(--color-primary-700)]">#{m.investorUserId}</span>
-                            {" "}→ Startup <span className="font-medium text-[var(--color-primary-700)]">#{m.startupUserId}</span>
+                            <span className="font-medium text-[var(--color-primary-700)]">{userNames[m.investorUserId] ?? `#${m.investorUserId}`}</span>
+                            <span className="text-[var(--color-neutral-400)] mx-1.5">→</span>
+                            <span className="font-medium text-[var(--color-primary-700)]">{userNames[m.startupUserId] ?? `#${m.startupUserId}`}</span>
                           </p>
                           {m.matchReason && (
                             <p className="text-xs text-[var(--color-neutral-400)] line-clamp-2">{m.matchReason}</p>
@@ -227,7 +250,9 @@ export default function AdminFollowUpPage() {
 
                       {schedulingMatchId === m.id && scheduleForm && (
                         <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-3">
-                          <p className="text-sm font-medium text-[var(--color-primary-800)]">Schedule Meetup</p>
+                          <p className="text-sm font-medium text-[var(--color-primary-800)]">
+                            Schedule Meetup — {userNames[m.investorUserId] ?? `Investor #${m.investorUserId}`} &amp; {userNames[m.startupUserId] ?? `Startup #${m.startupUserId}`}
+                          </p>
                           <input
                             type="datetime-local"
                             value={scheduleForm.scheduledAt}
@@ -274,8 +299,9 @@ export default function AdminFollowUpPage() {
                               <span className="text-xs text-[var(--color-neutral-400)]">Room: {m.roomId.slice(0, 8)}…</span>
                             </div>
                             <p className="text-sm text-[var(--color-neutral-600)]">
-                              Investor <span className="font-medium">#{m.investorUserId}</span>
-                              {" "}↔ Startup <span className="font-medium">#{m.startupUserId}</span>
+                              <span className="font-medium">{userNames[m.investorUserId] ?? `#${m.investorUserId}`}</span>
+                              <span className="text-[var(--color-neutral-400)] mx-1.5">↔</span>
+                              <span className="font-medium">{userNames[m.startupUserId] ?? `#${m.startupUserId}`}</span>
                             </p>
                             <p className="text-xs text-[var(--color-neutral-400)]">
                               {new Date(m.scheduledAt).toLocaleString()}
@@ -355,8 +381,9 @@ export default function AdminFollowUpPage() {
                               <span className="text-xs text-[var(--color-neutral-400)]">Contract #{c.id}</span>
                             </div>
                             <p className="text-sm text-[var(--color-neutral-600)]">
-                              Investor <span className="font-medium">#{c.investorUserId}</span>
-                              {" "}↔ Startup <span className="font-medium">#{c.startupUserId}</span>
+                              <span className="font-medium">{userNames[c.investorUserId] ?? `#${c.investorUserId}`}</span>
+                              <span className="text-[var(--color-neutral-400)] mx-1.5">↔</span>
+                              <span className="font-medium">{userNames[c.startupUserId] ?? `#${c.startupUserId}`}</span>
                             </p>
                             <div className="flex gap-4 text-xs text-[var(--color-neutral-400)]">
                               <span>Investor sig: {c.investorSignature ?? "—"}</span>

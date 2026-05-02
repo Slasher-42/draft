@@ -63,6 +63,9 @@ public class StartupExecution {
     private String additionalConsiderations;
 
     @Column
+    private String location;
+
+    @Column
     private String imageUrl;
 
     @Enumerated(EnumType.STRING)

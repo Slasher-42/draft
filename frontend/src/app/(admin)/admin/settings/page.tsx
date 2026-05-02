@@ -101,7 +101,7 @@ export default function AdminSettingsPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       const res = await api.post("/api/config/hero-video", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": null as any },
       });
       const updated = res.data?.data ?? res.data;
       setConfig((prev) => prev ? { ...prev, heroVideoUrl: updated.heroVideoUrl } : prev);

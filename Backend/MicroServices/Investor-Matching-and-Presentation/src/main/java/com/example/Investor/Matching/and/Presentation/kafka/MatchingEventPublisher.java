@@ -22,16 +22,20 @@ public class MatchingEventPublisher {
                 matchId + ":" + startupExecutionId + ":" + investorExecutionId);
     }
 
-    public void publishMatchPresentedToInvestor(Long matchId, Long investorUserId, Long startupExecutionId) {
+    public void publishMatchPresentedToInvestor(Long matchId, Long investorUserId, Long startupExecutionId,
+                                                Long startupUserId, String industry) {
+        String safeIndustry = (industry != null ? industry : "").replace(":", "-");
         send(KafkaTopicConfig.TOPIC_MATCH_PRESENTED_TO_INVESTOR,
                 String.valueOf(matchId),
-                matchId + ":" + investorUserId + ":" + startupExecutionId);
+                matchId + ":" + investorUserId + ":" + startupExecutionId + ":" + startupUserId + ":" + safeIndustry);
     }
 
-    public void publishMatchPresentedToStartup(Long matchId, Long startupUserId, Long investorExecutionId) {
+    public void publishMatchPresentedToStartup(Long matchId, Long startupUserId, Long investorExecutionId,
+                                               Long investorUserId, String industry) {
+        String safeIndustry = (industry != null ? industry : "").replace(":", "-");
         send(KafkaTopicConfig.TOPIC_MATCH_PRESENTED_TO_STARTUP,
                 String.valueOf(matchId),
-                matchId + ":" + startupUserId + ":" + investorExecutionId);
+                matchId + ":" + startupUserId + ":" + investorExecutionId + ":" + investorUserId + ":" + safeIndustry);
     }
 
     private void send(String topic, String key, String message) {

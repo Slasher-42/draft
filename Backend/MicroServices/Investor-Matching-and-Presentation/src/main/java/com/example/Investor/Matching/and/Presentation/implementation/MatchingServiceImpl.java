@@ -90,12 +90,16 @@ public class MatchingServiceImpl implements MatchingService {
                     eventPublisher.publishMatchPresentedToInvestor(
                             match.getId(),
                             match.getInvestorUserId(),
-                            match.getStartupExecutionId());
+                            match.getStartupExecutionId(),
+                            match.getStartupUserId(),
+                            startup.getIndustry());
 
                     eventPublisher.publishMatchPresentedToStartup(
                             match.getId(),
                             match.getStartupUserId(),
-                            match.getInvestorExecutionId());
+                            match.getInvestorExecutionId(),
+                            match.getInvestorUserId(),
+                            startup.getIndustry());
                 }
 
                 log.info("[Matching] {} match(es) found for startupExecutionId={}", matches.size(), startupExecutionId);
@@ -158,8 +162,17 @@ public class MatchingServiceImpl implements MatchingService {
             if (!matches.isEmpty()) {
                 updateInvestorExecutionStatus(investorExecutionId, "MATCHED");
 
+                java.util.Map<Long, String> startupIndustryMap = startups.stream()
+                        .filter(s -> s.getId() != null)
+                        .collect(java.util.stream.Collectors.toMap(
+                                StartupExecutionDTO::getId,
+                                s -> s.getIndustry() != null ? s.getIndustry() : "",
+                                (a, b) -> a));
+
                 for (InvestorMatch match : matches) {
                     updateStartupExecutionStatus(match.getStartupExecutionId(), "MATCHED");
+
+                    String industry = startupIndustryMap.getOrDefault(match.getStartupExecutionId(), "");
 
                     eventPublisher.publishMatchFound(
                             match.getId(),
@@ -169,12 +182,16 @@ public class MatchingServiceImpl implements MatchingService {
                     eventPublisher.publishMatchPresentedToInvestor(
                             match.getId(),
                             match.getInvestorUserId(),
-                            match.getStartupExecutionId());
+                            match.getStartupExecutionId(),
+                            match.getStartupUserId(),
+                            industry);
 
                     eventPublisher.publishMatchPresentedToStartup(
                             match.getId(),
                             match.getStartupUserId(),
-                            match.getInvestorExecutionId());
+                            match.getInvestorExecutionId(),
+                            match.getInvestorUserId(),
+                            industry);
                 }
 
                 log.info("[Matching] {} match(es) found for investorExecutionId={}", matches.size(), investorExecutionId);
