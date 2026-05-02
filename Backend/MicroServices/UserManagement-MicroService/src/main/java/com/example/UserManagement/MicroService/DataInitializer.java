@@ -34,13 +34,13 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        if (!userRepository.existsByEmail("annickujeneza4@gmail.com")) {
+        if (!userRepository.existsByEmail("cedrickngabo03@gmail.com")) {
             Role adminRole = roleRepository.findByName(RoleType.ADMIN)
                     .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
 
             User admin = new User();
-            admin.setFullName("Annick Ujeneza");
-            admin.setEmail("annickujeneza4@gmail.com");
+            admin.setFullName("Ced Admin");
+            admin.setEmail("cedrickngabo03@gmail.com");
             admin.setPassword(passwordEncoder.encode("Admin@1234"));
             admin.setRole(adminRole);
             admin.setEnabled(true);
