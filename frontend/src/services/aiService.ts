@@ -1,4 +1,5 @@
 import axios from "axios";
+import { api } from "@/lib/api";
 
 const aiServiceApi = axios.create({
   baseURL: "http://localhost:8083",
@@ -53,5 +54,5 @@ export const aiService = {
     }),
 
   getConfig: () =>
-    axios.get("http://localhost:8081/api/config"),
+    api.get("/api/config"),
 };
