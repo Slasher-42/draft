@@ -113,6 +113,11 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
+    public void markStartupRejected(Long executionId) {
+        updateStartupExecutionStatus(executionId, "REJECTED");
+    }
+
+    @Override
     public void runMatchingForNewInvestor(Long investorExecutionId, Long investorUserId) {
         try {
             InvestorExecutionDTO investor = fetchInvestorExecution(investorExecutionId);

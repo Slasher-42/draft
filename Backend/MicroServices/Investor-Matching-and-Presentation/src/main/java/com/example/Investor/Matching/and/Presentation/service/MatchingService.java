@@ -8,6 +8,8 @@ public interface MatchingService {
 
     void runMatching(Long startupExecutionId, Long startupUserId);
 
+    void markStartupRejected(Long executionId);
+
     void runMatchingForNewInvestor(Long investorExecutionId, Long investorUserId);
 
     void runMatchingForAll();
