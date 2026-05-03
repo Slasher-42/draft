@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
@@ -63,32 +64,29 @@ export default function StartupAccountPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [investorInfoMap, setInvestorInfoMap] = useState<Record<number, InvestorInfo>>({});
   const [expandedTx, setExpandedTx] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [showSettle, setShowSettle] = useState(false);
   const [settleAmount, setSettleAmount] = useState("");
   const [settleAccountNumber, setSettleAccountNumber] = useState("");
   const [settling, setSettling] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const load = async () => {
+  const { data: accountData, isLoading } = useQuery({
+    queryKey: ["startup-account", user?.id],
+    queryFn: async () => {
       try {
         const [accRes, txRes, matchRes] = await Promise.all([
           followupService.getMyAccount(),
           followupService.getMyTransactions(),
-          matchingService.getMatchesForStartup(Number(user.id)),
+          matchingService.getMatchesForStartup(Number(user!.id)),
         ]);
 
         const loadedTx: Transaction[] = txRes.data?.data ?? [];
         const loadedMatches: any[] = matchRes.data?.data ?? [];
 
-        setAccount(accRes.data?.data);
-        setTransactions(loadedTx);
-
         const uniqueMatches = loadedMatches.filter(
-          (m, i, arr) => arr.findIndex((x) => x.investorUserId === m.investorUserId) === i
+          (m, i, arr) => arr.findIndex((x: any) => x.investorUserId === m.investorUserId) === i
         );
 
+        let map: Record<number, InvestorInfo> = {};
         if (uniqueMatches.length > 0) {
           const infos = await Promise.allSettled(
             uniqueMatches.map(async (m) => {
@@ -121,20 +119,31 @@ export default function StartupAccountPage() {
               };
             })
           );
-          const map: Record<number, InvestorInfo> = {};
           infos.forEach((r) => {
             if (r.status === "fulfilled") map[r.value.id] = r.value.info;
           });
-          setInvestorInfoMap(map);
         }
+
+        return {
+          account: accRes.data?.data,
+          transactions: loadedTx,
+          investorInfoMap: map,
+        };
       } catch {
         toast.error("Failed to load account data");
-      } finally {
-        setIsLoading(false);
+        throw new Error("Failed to load account data");
       }
-    };
-    load();
-  }, [user?.id]);
+    },
+    enabled: !!user?.id,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!accountData) return;
+    setAccount(accountData.account);
+    setTransactions(accountData.transactions);
+    setInvestorInfoMap(accountData.investorInfoMap);
+  }, [accountData]);
 
   const handleSettle = async () => {
     const amount = parseFloat(settleAmount);

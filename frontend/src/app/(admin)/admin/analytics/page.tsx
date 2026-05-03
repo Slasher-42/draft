@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ClipboardList, CheckCircle2, TrendingUp, Clock, XCircle } from "lucide-react";
@@ -32,54 +33,45 @@ interface LiveStats {
 }
 
 export default function AdminAnalyticsPage() {
-  const [stats, setStats] = useState<LiveStats | null>(null);
-  const [aiAnalytics, setAiAnalytics] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-analytics"],
+    queryFn: async () => {
+      const [[startupRes, investorRes, reviewsRes], analyticsRes] = await Promise.all([
+        Promise.allSettled([
+          execApi.get("/api/executions/startup/all"),
+          execApi.get("/api/executions/investor/all"),
+          evalApi.get("/api/evaluator/reviews/all"),
+        ]),
+        notificationService.getAnalytics().catch(() => null),
+      ]);
 
-  useEffect(() => {
-    Promise.allSettled([
-      execApi.get("/api/executions/startup/all"),
-      execApi.get("/api/executions/investor/all"),
-      evalApi.get("/api/evaluator/reviews/all"),
-    ]).then(([startupRes, investorRes, reviewsRes]) => {
-      const startups: any[] = startupRes.status === "fulfilled"
-        ? (startupRes.value.data?.data ?? [])
-        : [];
-      const investors: any[] = investorRes.status === "fulfilled"
-        ? (investorRes.value.data?.data ?? [])
-        : [];
-
-      const reviews: any[] = reviewsRes.status === "fulfilled"
-        ? (reviewsRes.value.data?.data ?? [])
-        : [];
+      const startups: any[] = startupRes.status === "fulfilled" ? (startupRes.value.data?.data ?? []) : [];
+      const investors: any[] = investorRes.status === "fulfilled" ? (investorRes.value.data?.data ?? []) : [];
+      const reviews: any[] = reviewsRes.status === "fulfilled" ? (reviewsRes.value.data?.data ?? []) : [];
 
       const reviewStatusMap: Record<number, string> = {};
-      reviews.forEach((r: any) => {
-        if (r.decision) reviewStatusMap[r.executionId] = r.decision;
-      });
+      reviews.forEach((r: any) => { if (r.decision) reviewStatusMap[r.executionId] = r.decision; });
 
-      const mergedStartups = startups.map((e: any) => ({
-        ...e,
-        status: reviewStatusMap[e.id] ?? e.status,
-      }));
-
+      const mergedStartups = startups.map((e: any) => ({ ...e, status: reviewStatusMap[e.id] ?? e.status }));
       const all = [...mergedStartups, ...investors];
 
-      setStats({
-        totalExecutions:    all.length,
-        totalPending:       all.filter(e => e.status === "PENDING").length,
-        totalApproved:      all.filter(e => e.status === "APPROVED").length,
-        totalRejected:      all.filter(e => e.status === "REJECTED").length,
-        totalMatched:       all.filter(e => e.status === "MATCHED").length,
-        totalStartupExecs:  startups.length,
-        totalInvestorExecs: investors.length,
-      });
-    }).finally(() => setIsLoading(false));
+      return {
+        stats: {
+          totalExecutions:    all.length,
+          totalPending:       all.filter(e => e.status === "PENDING").length,
+          totalApproved:      all.filter(e => e.status === "APPROVED").length,
+          totalRejected:      all.filter(e => e.status === "REJECTED").length,
+          totalMatched:       all.filter(e => e.status === "MATCHED").length,
+          totalStartupExecs:  startups.length,
+          totalInvestorExecs: investors.length,
+        } as LiveStats,
+        aiAnalytics: (analyticsRes as any)?.data?.data ?? null,
+      };
+    },
+  });
 
-    notificationService.getAnalytics()
-      .then((res) => setAiAnalytics(res.data?.data ?? null))
-      .catch(() => setAiAnalytics(null));
-  }, []);
+  const stats = data?.stats ?? null;
+  const aiAnalytics = data?.aiAnalytics ?? null;
 
   const statCards = [
     { label: "Total Executions",  value: stats?.totalExecutions,    icon: ClipboardList,  bg: "bg-[var(--color-primary-50)]",  color: "text-[var(--color-primary)]"   },

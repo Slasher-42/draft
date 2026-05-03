@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { notificationService } from "@/services/notificationService";
 
 interface Notification {
@@ -48,16 +49,16 @@ function timeAgo(dateStr: string): string {
 
 export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setIsLoading(true);
-    notificationService
-      .getAllForAdmin()
-      .then((res) => setNotifications(res.data?.data ?? []))
-      .catch(() => setNotifications([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { isLoading } = useQuery({
+    queryKey: ["admin-notifications"],
+    queryFn: async () => {
+      const res = await notificationService.getAllForAdmin();
+      const data = res.data?.data ?? [];
+      setNotifications(data);
+      return data;
+    },
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

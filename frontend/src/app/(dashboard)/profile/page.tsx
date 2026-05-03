@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ export default function ProfilePage() {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
 
   const [fullName, setFullName] = useState("");
@@ -63,87 +63,86 @@ export default function ProfilePage() {
     savedSnapshot,
   ]);
 
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const loadProfile = async () => {
-      setIsLoading(true);
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ["profile", user?.id, user?.role],
+    queryFn: async () => {
       try {
-        const userData = await userService.getById(user.id);
-        setFullName(userData.fullName ?? "");
-        setPhoneNumber(userData.phoneNumber ?? "");
-
+        const userData = await userService.getById(user!.id);
         let sp: any = null;
         let ip: any = null;
         let ep: any = null;
 
-        if (user.role === "STARTUP") {
-          try {
-            sp = await userService.getStartupProfile(user.id);
-            setCompanyName(sp.companyName ?? "");
-            setIndustry(sp.industry ?? "");
-            setCountry(sp.country ?? "");
-            setCity(sp.city ?? "");
-            setWebsite(sp.website ?? "");
-            setTeamSize(sp.teamSize?.toString() ?? "");
-            setFoundedYear(sp.foundedYear?.toString() ?? "");
-            setFundingNeeded(sp.fundingNeeded?.toString() ?? "");
-          } catch (err: any) {
-            if (err.response?.status !== 404) toast.error("Failed to load startup profile.");
-          }
+        if (user!.role === "STARTUP") {
+          try { sp = await userService.getStartupProfile(user!.id); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load startup profile."); }
         }
-
-        if (user.role === "INVESTOR") {
-          try {
-            ip = await userService.getInvestorProfile(user.id);
-            setOrganizationName(ip.organizationName ?? "");
-            setPreferredIndustry(ip.preferredIndustry ?? "");
-            setInvestmentBudget(ip.investmentBudget?.toString() ?? "");
-            setCountry(ip.country ?? "");
-            setCity(ip.city ?? "");
-          } catch (err: any) {
-            if (err.response?.status !== 404) toast.error("Failed to load investor profile.");
-          }
+        if (user!.role === "INVESTOR") {
+          try { ip = await userService.getInvestorProfile(user!.id); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load investor profile."); }
         }
-
-        if (user.role === "EVALUATOR") {
-          try {
-            ep = await userService.getEvaluatorProfile(user.id);
-            setDepartment(ep.department ?? "");
-            setSpecialization(ep.specialization ?? "");
-            setCountry(ep.country ?? "");
-            setCity(ep.city ?? "");
-          } catch (err: any) {
-            if (err.response?.status !== 404) toast.error("Failed to load evaluator profile.");
-          }
+        if (user!.role === "EVALUATOR") {
+          try { ep = await userService.getEvaluatorProfile(user!.id); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load evaluator profile."); }
         }
-
-        setSavedSnapshot({
-          fullName:          userData.fullName              ?? "",
-          phoneNumber:       userData.phoneNumber           ?? "",
-          companyName:       sp?.companyName                ?? "",
-          industry:          sp?.industry                   ?? "",
-          country:           sp?.country ?? ip?.country ?? ep?.country ?? "",
-          city:              sp?.city    ?? ip?.city    ?? ep?.city    ?? "",
-          website:           sp?.website                    ?? "",
-          teamSize:          sp?.teamSize?.toString()       ?? "",
-          foundedYear:       sp?.foundedYear?.toString()    ?? "",
-          fundingNeeded:     sp?.fundingNeeded?.toString()  ?? "",
-          organizationName:  ip?.organizationName           ?? "",
-          preferredIndustry: ip?.preferredIndustry          ?? "",
-          investmentBudget:  ip?.investmentBudget?.toString() ?? "",
-          department:        ep?.department                 ?? "",
-          specialization:    ep?.specialization             ?? "",
-        });
+        return { userData, sp, ip, ep };
       } catch {
         toast.error("Failed to load profile.");
-      } finally {
-        setIsLoading(false);
+        throw new Error("Failed to load profile");
       }
-    };
+    },
+    enabled: !!user?.id,
+    retry: false,
+  });
 
-    loadProfile();
-  }, [user?.id, user?.role]);
+  useEffect(() => {
+    if (!profileData) return;
+    const { userData, sp, ip, ep } = profileData;
+
+    setFullName(userData.fullName ?? "");
+    setPhoneNumber(userData.phoneNumber ?? "");
+
+    if (sp) {
+      setCompanyName(sp.companyName ?? "");
+      setIndustry(sp.industry ?? "");
+      setCountry(sp.country ?? "");
+      setCity(sp.city ?? "");
+      setWebsite(sp.website ?? "");
+      setTeamSize(sp.teamSize?.toString() ?? "");
+      setFoundedYear(sp.foundedYear?.toString() ?? "");
+      setFundingNeeded(sp.fundingNeeded?.toString() ?? "");
+    }
+    if (ip) {
+      setOrganizationName(ip.organizationName ?? "");
+      setPreferredIndustry(ip.preferredIndustry ?? "");
+      setInvestmentBudget(ip.investmentBudget?.toString() ?? "");
+      setCountry(ip.country ?? "");
+      setCity(ip.city ?? "");
+    }
+    if (ep) {
+      setDepartment(ep.department ?? "");
+      setSpecialization(ep.specialization ?? "");
+      setCountry(ep.country ?? "");
+      setCity(ep.city ?? "");
+    }
+
+    setSavedSnapshot({
+      fullName:          userData.fullName              ?? "",
+      phoneNumber:       userData.phoneNumber           ?? "",
+      companyName:       sp?.companyName                ?? "",
+      industry:          sp?.industry                   ?? "",
+      country:           sp?.country ?? ip?.country ?? ep?.country ?? "",
+      city:              sp?.city    ?? ip?.city    ?? ep?.city    ?? "",
+      website:           sp?.website                    ?? "",
+      teamSize:          sp?.teamSize?.toString()       ?? "",
+      foundedYear:       sp?.foundedYear?.toString()    ?? "",
+      fundingNeeded:     sp?.fundingNeeded?.toString()  ?? "",
+      organizationName:  ip?.organizationName           ?? "",
+      preferredIndustry: ip?.preferredIndustry          ?? "",
+      investmentBudget:  ip?.investmentBudget?.toString() ?? "",
+      department:        ep?.department                 ?? "",
+      specialization:    ep?.specialization             ?? "",
+    });
+  }, [profileData]);
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};

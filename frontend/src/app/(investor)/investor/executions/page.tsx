@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { investorService } from "@/services/investorService";
 import { InvestorExecution } from "@/types/execution";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,15 +41,24 @@ const statusConfig = {
 };
 
 export default function InvestorExecutionsPage() {
-  const [executions, setExecutions] = useState<InvestorExecution[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
+
+  const { data: executions = [], isLoading } = useQuery<InvestorExecution[]>({
+    queryKey: ["investor-executions"],
+    queryFn: async () => {
+      const res = await investorService.getExecutions();
+      return res.data.data ?? [];
+    },
+  });
 
   const handleWithdraw = async (id: number) => {
     setWithdrawingId(id);
     try {
       await investorService.withdrawExecution(String(id));
-      setExecutions((prev) => prev.filter((e) => e.id !== id));
+      queryClient.setQueryData<InvestorExecution[]>(["investor-executions"], (prev) =>
+        (prev ?? []).filter((e) => e.id !== id)
+      );
       toast.success("Execution withdrawn successfully.");
     } catch {
       toast.error("Failed to withdraw. Please try again.");
@@ -55,14 +66,6 @@ export default function InvestorExecutionsPage() {
       setWithdrawingId(null);
     }
   };
-
-  useEffect(() => {
-    investorService
-      .getExecutions()
-      .then((res) => setExecutions(res.data.data ?? []))
-      .catch(() => setExecutions([]))
-      .finally(() => setIsLoading(false));
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -134,9 +137,7 @@ export default function InvestorExecutionsPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-        </div>
+        <PageSkeleton stats={3} rows={3} />
       ) : executions.length === 0 ? (
         <Card className="border-dashed border-2 border-[var(--color-border)]">
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">

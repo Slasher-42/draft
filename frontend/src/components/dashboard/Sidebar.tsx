@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
+import { prefetchRoute } from "@/lib/prefetch";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -88,6 +90,7 @@ export function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
 
   const navigation = navByRole[user?.role ?? "STARTUP"] ?? startupNav;
 
@@ -196,6 +199,7 @@ export function Sidebar() {
                         : undefined
                     }
                     onMouseEnter={(e) => {
+                      prefetchRoute(queryClient, item.href, Number(user?.id));
                       if (!isActive)
                         (e.currentTarget as HTMLElement).style.backgroundColor =
                           "#07366A";

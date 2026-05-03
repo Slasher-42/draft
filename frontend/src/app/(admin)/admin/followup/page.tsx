@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
@@ -49,7 +50,6 @@ export default function AdminFollowUpPage() {
   const [matches, setMatches] = useState<any[]>([]);
   const [meetups, setMeetups] = useState<Meetup[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [userNames, setUserNames] = useState<Record<number, string>>({});
 
   const [schedulingMatchId, setSchedulingMatchId] = useState<number | null>(null);
@@ -63,9 +63,9 @@ export default function AdminFollowUpPage() {
 
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
+  const { isLoading } = useQuery({
+    queryKey: ["admin-followup"],
+    queryFn: async () => {
       try {
         const [matchRes, meetupRes, contractRes] = await Promise.all([
           matchingService.getAllMatches ? matchingService.getAllMatches() : Promise.resolve({ data: { data: [] } }),
@@ -75,9 +75,6 @@ export default function AdminFollowUpPage() {
         const matchData = matchRes.data?.data ?? [];
         const meetupData = meetupRes.data?.data ?? [];
         const contractData = contractRes.data?.data ?? [];
-        setMatches(matchData);
-        setMeetups(meetupData);
-        setContracts(contractData);
 
         const ids = new Set<number>();
         matchData.forEach((m: any) => { if (m.investorUserId) ids.add(m.investorUserId); if (m.startupUserId) ids.add(m.startupUserId); });
@@ -88,21 +85,24 @@ export default function AdminFollowUpPage() {
         await Promise.all([...ids].map(async (id) => {
           try {
             const res = await api.get(`/api/users/${id}`);
-            const fullName = res.data?.data?.fullName;
-            names[id] = fullName || `#${id}`;
+            names[id] = res.data?.data?.fullName || `#${id}`;
           } catch {
             names[id] = `#${id}`;
           }
         }));
+
+        setMatches(matchData);
+        setMeetups(meetupData);
+        setContracts(contractData);
         setUserNames(names);
+        return { matchData, meetupData, contractData, names };
       } catch {
         toast.error("Failed to load follow-up data");
-      } finally {
-        setIsLoading(false);
+        throw new Error("Failed to load follow-up data");
       }
-    };
-    load();
-  }, []);
+    },
+    retry: false,
+  });
 
   const handleSchedule = async () => {
     if (!scheduleForm || !schedulingMatchId) return;

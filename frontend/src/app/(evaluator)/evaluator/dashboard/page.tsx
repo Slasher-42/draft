@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { evaluatorService } from "@/services/evaluatorService";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,32 +25,15 @@ interface DashboardStats {
 }
 
 export default function EvaluatorDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ["evaluator-dashboard"],
+    queryFn: async () => {
+      const res = await evaluatorService.getDashboardStats();
+      return res.data.data ?? { totalAssigned: 0, pending: 0, approved: 0, rejected: 0, escalated: 0 };
+    },
+  });
 
-  useEffect(() => {
-    evaluatorService
-      .getDashboardStats()
-      .then((res) => setStats(res.data.data))
-      .catch(() =>
-        setStats({
-          totalAssigned: 0,
-          pending: 0,
-          approved: 0,
-          rejected: 0,
-          escalated: 0,
-        })
-      )
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-      </div>
-    );
-  }
+  if (isLoading) return <PageSkeleton stats={4} rows={2} />;
 
   return (
     <div className="space-y-6">

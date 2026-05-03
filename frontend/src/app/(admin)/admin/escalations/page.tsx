@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { evaluatorService } from "@/services/evaluatorService";
 import { Button } from "@/components/ui/button";
 import { Textarea, Label } from "@/components/ui/input";
@@ -46,19 +47,20 @@ const classificationColors: Record<string, string> = {
 
 export default function AdminEscalationsPage() {
   const [reviews, setReviews] = useState<EscalatedReview[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [decisions, setDecisions] = useState<Record<number, "APPROVED" | "REJECTED">>({});
   const [reasons, setReasons] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
 
-  useEffect(() => {
-    evaluatorService
-      .getEscalatedReviews()
-      .then((res) => setReviews(res.data?.data ?? []))
-      .catch(() => toast.error("Failed to load escalated reviews"))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { isLoading } = useQuery({
+    queryKey: ["admin-escalations"],
+    queryFn: async () => {
+      const res = await evaluatorService.getEscalatedReviews();
+      const data = res.data?.data ?? [];
+      setReviews(data);
+      return data;
+    },
+  });
 
   const handleDecision = async (review: EscalatedReview) => {
     const decision = decisions[review.id];

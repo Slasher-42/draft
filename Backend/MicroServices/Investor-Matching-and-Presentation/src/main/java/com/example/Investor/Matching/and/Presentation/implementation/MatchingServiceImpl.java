@@ -12,6 +12,8 @@ import com.example.Investor.Matching.and.Presentation.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -19,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class MatchingServiceImpl implements MatchingService {
     private String startupServiceUrl;
 
     @Override
+    @CacheEvict(value = {"matches-investor", "matches-startup"}, allEntries = true)
     public void runMatching(Long startupExecutionId, Long startupUserId) {
         try {
 
@@ -50,13 +54,12 @@ public class MatchingServiceImpl implements MatchingService {
                 return;
             }
 
-            List<InvestorMatch> matches = new ArrayList<>();
+            Set<Long> alreadyMatched = matchRepository.findMatchedInvestorExecutionIds(startupExecutionId);
 
+            List<InvestorMatch> toSave = new ArrayList<>();
             for (InvestorExecutionDTO investor : investors) {
                 if (!"PENDING".equals(investor.getStatus())) continue;
-
-                if (matchRepository.existsByStartupExecutionIdAndInvestorExecutionId(
-                        startupExecutionId, investor.getId())) continue;
+                if (alreadyMatched.contains(investor.getId())) continue;
 
                 double score = computeMatchScore(startup, investor);
 
@@ -72,9 +75,11 @@ public class MatchingServiceImpl implements MatchingService {
                     match.setMatchReason(reason);
                     match.setStatus(MatchStatus.MATCHED);
 
-                    matches.add(matchRepository.save(match));
+                    toSave.add(match);
                 }
             }
+
+            List<InvestorMatch> matches = matchRepository.saveAll(toSave);
 
             if (!matches.isEmpty()) {
                 updateStartupExecutionStatus(startupExecutionId, "MATCHED");
@@ -118,6 +123,7 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
+    @CacheEvict(value = {"matches-investor", "matches-startup"}, allEntries = true)
     public void runMatchingForNewInvestor(Long investorExecutionId, Long investorUserId) {
         try {
             InvestorExecutionDTO investor = fetchInvestorExecution(investorExecutionId);
@@ -137,14 +143,13 @@ public class MatchingServiceImpl implements MatchingService {
                 return;
             }
 
-            List<InvestorMatch> matches = new ArrayList<>();
+            Set<Long> alreadyMatched = matchRepository.findMatchedStartupExecutionIds(investorExecutionId);
 
+            List<InvestorMatch> toSave = new ArrayList<>();
             for (StartupExecutionDTO startup : startups) {
                 // Only match against startups that have been approved by an evaluator
                 if (!"APPROVED".equals(startup.getStatus())) continue;
-
-                if (matchRepository.existsByStartupExecutionIdAndInvestorExecutionId(
-                        startup.getId(), investorExecutionId)) continue;
+                if (alreadyMatched.contains(startup.getId())) continue;
 
                 double score = computeMatchScore(startup, investor);
 
@@ -160,9 +165,11 @@ public class MatchingServiceImpl implements MatchingService {
                     match.setMatchReason(reason);
                     match.setStatus(MatchStatus.MATCHED);
 
-                    matches.add(matchRepository.save(match));
+                    toSave.add(match);
                 }
             }
+
+            List<InvestorMatch> matches = matchRepository.saveAll(toSave);
 
             if (!matches.isEmpty()) {
                 updateInvestorExecutionStatus(investorExecutionId, "MATCHED");
@@ -233,6 +240,7 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
+    @Cacheable(value = "matches-investor", key = "#investorUserId")
     public List<MatchResponse> getMatchesForInvestor(Long investorUserId) {
         return matchRepository.findByInvestorUserId(investorUserId)
                 .stream()
@@ -241,6 +249,7 @@ public class MatchingServiceImpl implements MatchingService {
     }
 
     @Override
+    @Cacheable(value = "matches-startup", key = "#startupUserId")
     public List<MatchResponse> getMatchesForStartup(Long startupUserId) {
         return matchRepository.findByStartupUserId(startupUserId)
                 .stream()

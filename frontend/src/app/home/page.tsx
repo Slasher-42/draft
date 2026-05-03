@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView, useAnimation } from "framer-motion";
@@ -360,22 +361,45 @@ function SectionHeading({
 export default function HomePage() {
   const { config, isLoaded } = useHomeConfig();
   const { user, logout } = useAuth();
-  const [investors, setInvestors] = useState<User[]>([]);
-  const [startups, setStartups] = useState<User[]>([]);
   const [heroVideoUrl, setHeroVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
   const anim = config.animationsEnabled;
 
-  // Fetch hero video from backend config (or fall back to localStorage config)
+  const { data: usersData } = useQuery({
+    queryKey: ["home-users"],
+    queryFn: async () => {
+      const [investorsJson, startupsJson] = await Promise.all([
+        publicGet("/api/users/public?role=INVESTOR"),
+        publicGet("/api/users/public?role=STARTUP"),
+      ]);
+      return {
+        investors: (investorsJson?.data ?? []) as User[],
+        startups: (startupsJson?.data ?? []) as User[],
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const investors = usersData?.investors ?? [];
+  const startups = usersData?.startups ?? [];
+
+  const { data: configData } = useQuery({
+    queryKey: ["home-config"],
+    queryFn: async () => {
+      const json = await publicGet("/api/config");
+      return json?.data ?? json;
+    },
+    enabled: isLoaded,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // Sync hero video URL from query data or local config
   useEffect(() => {
-    if (!isLoaded) return;
-    publicGet("/api/config").then((json) => {
-      const data = json?.data ?? json;
-      setHeroVideoUrl(data?.heroVideoUrl ?? config.heroVideoUrl ?? null);
-    });
-  }, [isLoaded, config.heroVideoUrl]);
+    const url = configData?.heroVideoUrl ?? config.heroVideoUrl ?? null;
+    setHeroVideoUrl(url);
+  }, [configData, config.heroVideoUrl]);
 
   // Load video when URL changes
   useEffect(() => {
@@ -383,17 +407,6 @@ export default function HomePage() {
       videoRef.current.load();
     }
   }, [heroVideoUrl]);
-
-  // Fetch users — uses the public endpoint so any role (or no auth) can see them
-  useEffect(() => {
-    Promise.all([
-      publicGet("/api/users/public?role=INVESTOR"),
-      publicGet("/api/users/public?role=STARTUP"),
-    ]).then(([investorsJson, startupsJson]) => {
-      setInvestors(investorsJson?.data ?? []);
-      setStartups(startupsJson?.data ?? []);
-    });
-  }, []);
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });

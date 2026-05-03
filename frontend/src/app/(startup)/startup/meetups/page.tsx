@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { followupService } from "@/services/followupService";
 import { Meetup } from "@/types/followup";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,23 +25,15 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 };
 
 export default function StartupMeetupsPage() {
-  const [meetups, setMeetups] = useState<Meetup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: meetups = [], isLoading } = useQuery<Meetup[]>({
+    queryKey: ["startup-meetups"],
+    queryFn: async () => {
+      const res = await followupService.getMyMeetups();
+      return res.data?.data ?? [];
+    },
+  });
 
-  useEffect(() => {
-    followupService.getMyMeetups()
-      .then((res) => setMeetups(res.data?.data ?? []))
-      .catch(() => toast.error("Failed to load meetups"))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-      </div>
-    );
-  }
+  if (isLoading) return <PageSkeleton stats={3} rows={3} />;
 
   return (
     <div className="space-y-6">

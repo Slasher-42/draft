@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { adminService } from "@/services/adminService";
 import { AnalyticsData } from "@/types/admin";
@@ -30,23 +30,13 @@ import {
 } from "recharts";
 
 export default function AdminDashboardPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    adminService
-      .getDashboardStats()
-      .then((res) => {
-        const payload = res.data?.data ?? res.data;
-        setAnalytics(payload);
-      })
-      .catch(() => {
-        setError(true);
-        setAnalytics(null);
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { data: analytics, isLoading, isError: error } = useQuery<AnalyticsData>({
+    queryKey: ["admin-dashboard"],
+    queryFn: async () => {
+      const res = await adminService.getDashboardStats();
+      return res.data?.data ?? res.data;
+    },
+  });
 
   if (isLoading) {
     return (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/adminService";
 import { AuditLog, InvestorMatch } from "@/types/admin";
 import { StartupExecution, InvestorExecution } from "@/types/execution";
@@ -631,47 +632,41 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
 }
 
 function MatchesTab() {
-  const [matches, setMatches] = useState<EnrichedMatch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<EnrichedMatch | null>(null);
 
-  useEffect(() => {
-    Promise.allSettled([
-      adminService.getAllMatches(),
-      adminService.getAllStartupExecutions(),
-      adminService.getAllInvestorExecutions(),
-      adminService.getAllUsers("STARTUP"),
-      adminService.getAllUsers("INVESTOR"),
-    ]).then(([matchRes, startupExecRes, investorExecRes, startupUserRes, investorUserRes]) => {
-      const rawMatches: InvestorMatch[] =
-        matchRes.status === "fulfilled" ? (matchRes.value.data?.data ?? []) : [];
-      const startupExecs: StartupExecution[] =
-        startupExecRes.status === "fulfilled" ? (startupExecRes.value.data?.data ?? []) : [];
-      const investorExecs: InvestorExecution[] =
-        investorExecRes.status === "fulfilled" ? (investorExecRes.value.data?.data ?? []) : [];
-      const startupUsers: User[] =
-        startupUserRes.status === "fulfilled" ? (startupUserRes.value.data?.data ?? []) : [];
-      const investorUsers: User[] =
-        investorUserRes.status === "fulfilled" ? (investorUserRes.value.data?.data ?? []) : [];
+  const { data: matches = [], isLoading } = useQuery<EnrichedMatch[]>({
+    queryKey: ["admin-audit-matches"],
+    queryFn: async () => {
+      const [matchRes, startupExecRes, investorExecRes, startupUserRes, investorUserRes] =
+        await Promise.allSettled([
+          adminService.getAllMatches(),
+          adminService.getAllStartupExecutions(),
+          adminService.getAllInvestorExecutions(),
+          adminService.getAllUsers("STARTUP"),
+          adminService.getAllUsers("INVESTOR"),
+        ]);
+
+      const rawMatches: InvestorMatch[] = matchRes.status === "fulfilled" ? (matchRes.value.data?.data ?? []) : [];
+      const startupExecs: StartupExecution[] = startupExecRes.status === "fulfilled" ? (startupExecRes.value.data?.data ?? []) : [];
+      const investorExecs: InvestorExecution[] = investorExecRes.status === "fulfilled" ? (investorExecRes.value.data?.data ?? []) : [];
+      const startupUsers: User[] = startupUserRes.status === "fulfilled" ? (startupUserRes.value.data?.data ?? []) : [];
+      const investorUsers: User[] = investorUserRes.status === "fulfilled" ? (investorUserRes.value.data?.data ?? []) : [];
 
       const startupExecById = new Map(startupExecs.map((e) => [e.id, e]));
       const investorExecById = new Map(investorExecs.map((e) => [e.id, e]));
       const startupUserById = new Map(startupUsers.map((u) => [Number(u.id), u]));
       const investorUserById = new Map(investorUsers.map((u) => [Number(u.id), u]));
 
-      setMatches(
-        rawMatches.map((m) => ({
-          ...m,
-          startup: startupExecById.get(m.startupExecutionId),
-          investor: investorExecById.get(m.investorExecutionId),
-          startupUser: startupUserById.get(m.startupUserId),
-          investorUser: investorUserById.get(m.investorUserId),
-        }))
-      );
-      setIsLoading(false);
-    });
-  }, []);
+      return rawMatches.map((m) => ({
+        ...m,
+        startup: startupExecById.get(m.startupExecutionId),
+        investor: investorExecById.get(m.investorExecutionId),
+        startupUser: startupUserById.get(m.startupUserId),
+        investorUser: investorUserById.get(m.investorUserId),
+      }));
+    },
+  });
 
   const filtered = useMemo(() => {
     if (!search.trim()) return matches;
@@ -753,24 +748,20 @@ function MatchesTab() {
 
 
 function AuditLogsTab() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
-  const loadLogs = (filters?: Record<string, string>) => {
-    setIsLoading(true);
-    adminService
-      .getAuditLogs(filters)
-      .then((res) => setLogs(res.data.data ?? []))
-      .catch(() => setLogs([]))
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(() => { loadLogs(); }, []);
+  const { data: logs = [], isLoading } = useQuery<AuditLog[]>({
+    queryKey: ["admin-audit-logs", search],
+    queryFn: async () => {
+      const res = await adminService.getAuditLogs(search ? { search } : undefined);
+      return res.data.data ?? [];
+    },
+  });
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    loadLogs({ search });
+    setSearch(searchInput);
   };
 
   const outcomeVariant = (outcome: string) => {
@@ -788,8 +779,8 @@ function AuditLogsTab() {
             <Input
               placeholder="Search by user, action, or resource…"
               className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
           <Button type="submit" variant="outline">Search</Button>

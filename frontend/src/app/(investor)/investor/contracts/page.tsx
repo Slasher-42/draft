@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
@@ -293,8 +294,8 @@ function PrintModal({ contract, data, onClose }: { contract: Contract; data: Pri
 }
 
 export default function InvestorContractsPage() {
+  const queryClient = useQueryClient();
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [signingId, setSigningId] = useState<number | null>(null);
   const [sigValue, setSigValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -302,12 +303,15 @@ export default function InvestorContractsPage() {
   const [printLoading, setPrintLoading] = useState(false);
   const [printData, setPrintData] = useState<PrintData | null>(null);
 
-  useEffect(() => {
-    followupService.getMyContracts()
-      .then((res) => setContracts(res.data?.data ?? []))
-      .catch(() => toast.error("Failed to load contracts"))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { isLoading } = useQuery({
+    queryKey: ["investor-contracts"],
+    queryFn: async () => {
+      const res = await followupService.getMyContracts();
+      const data = res.data?.data ?? [];
+      setContracts(data);
+      return data;
+    },
+  });
 
   const handleSign = async (contractId: number) => {
     if (!sigValue.trim()) { toast.error("Enter your full name as signature"); return; }

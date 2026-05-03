@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { startupService } from "@/services/startupService";
 import { matchingService } from "@/services/matchingService";
 import { useAuth } from "@/context/AuthContext";
 import { StartupExecution } from "@/types/execution";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,11 +67,35 @@ function formatCurrency(n: number) {
 
 export default function StartupExecutionsPage() {
   const { user } = useAuth();
-  const [executions, setExecutions] = useState<StartupExecution[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
   const [uploadingImageId, setUploadingImageId] = useState<number | null>(null);
-  const [matchCounts, setMatchCounts] = useState<Record<number, number>>({});
+
+  const { data: executions = [], isLoading } = useQuery<StartupExecution[]>({
+    queryKey: ["startup-executions"],
+    queryFn: async () => {
+      const res = await startupService.getExecutions();
+      const data = res.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.content)) return data.content;
+      if (Array.isArray(data?.data)) return data.data;
+      return [];
+    },
+  });
+
+  const { data: matchCounts = {} } = useQuery<Record<number, number>>({
+    queryKey: ["startup-match-counts", user?.id],
+    queryFn: async () => {
+      const res = await matchingService.getMatchesForStartup(Number(user!.id));
+      const matches = res.data?.data ?? [];
+      const counts: Record<number, number> = {};
+      matches.forEach((m: any) => {
+        counts[m.startupExecutionId] = (counts[m.startupExecutionId] ?? 0) + 1;
+      });
+      return counts;
+    },
+    enabled: !!user?.id,
+  });
 
   const handleImageUpload = async (id: number, file: File) => {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -84,8 +110,8 @@ export default function StartupExecutionsPage() {
     try {
       const res = await startupService.uploadExecutionImage(String(id), file);
       const url = res.data?.data?.imageUrl ?? res.data?.imageUrl;
-      setExecutions((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, imageUrl: url } : e))
+      queryClient.setQueryData<StartupExecution[]>(["startup-executions"], (prev) =>
+        (prev ?? []).map((e) => (e.id === id ? { ...e, imageUrl: url } : e))
       );
       toast.success("Image uploaded successfully.");
     } catch {
@@ -99,7 +125,9 @@ export default function StartupExecutionsPage() {
     setWithdrawingId(id);
     try {
       await startupService.withdrawExecution(String(id));
-      setExecutions((prev) => prev.filter((e) => e.id !== id));
+      queryClient.setQueryData<StartupExecution[]>(["startup-executions"], (prev) =>
+        (prev ?? []).filter((e) => e.id !== id)
+      );
       toast.success("Execution withdrawn successfully.");
     } catch {
       toast.error("Failed to withdraw. Please try again.");
@@ -107,40 +135,6 @@ export default function StartupExecutionsPage() {
       setWithdrawingId(null);
     }
   };
-
-  useEffect(() => {
-    startupService
-      .getExecutions()
-      .then((res) => {
-        const data = res.data;
-        let list: StartupExecution[] = [];
-        if (Array.isArray(data)) {
-          list = data;
-        } else if (Array.isArray(data?.content)) {
-          list = data.content;
-        } else if (Array.isArray(data?.data)) {
-          list = data.data;
-        }
-        setExecutions(list);
-      })
-      .catch(() => setExecutions([]))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    matchingService
-      .getMatchesForStartup(Number(user.id))
-      .then((res) => {
-        const matches = res.data?.data ?? [];
-        const counts: Record<number, number> = {};
-        matches.forEach((m: any) => {
-          counts[m.startupExecutionId] = (counts[m.startupExecutionId] ?? 0) + 1;
-        });
-        setMatchCounts(counts);
-      })
-      .catch(() => {});
-  }, [user?.id]);
 
   return (
     <div className="space-y-6">
@@ -209,9 +203,7 @@ export default function StartupExecutionsPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
-        </div>
+        <PageSkeleton stats={3} rows={3} />
       ) : executions.length === 0 ? (
         <Card className="border-dashed border-2 border-[var(--color-border)]">
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">

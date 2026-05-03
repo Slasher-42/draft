@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { evaluatorService } from "@/services/evaluatorService";
 import { EvaluatorReview, ReviewDecision } from "@/types/review";
@@ -27,24 +28,24 @@ import {
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [review, setReview] = useState<EvaluatorReview | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [decision, setDecision] = useState<ReviewDecision | null>(null);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: review = null, isLoading } = useQuery<EvaluatorReview | null>({
+    queryKey: ["evaluator-review", id],
+    queryFn: async () => {
+      const res = await evaluatorService.getReviewById(id as string);
+      return res.data.data ?? null;
+    },
+    enabled: !!id,
+  });
+
   useEffect(() => {
-    evaluatorService
-      .getReviewById(id as string)
-      .then((res) => {
-        const data = res.data.data;
-        setReview(data);
-        if (data.decision) setDecision(data.decision);
-        if (data.reason) setReason(data.reason);
-      })
-      .catch(() => setReview(null))
-      .finally(() => setIsLoading(false));
-  }, [id]);
+    if (!review) return;
+    if (review.decision) setDecision(review.decision);
+    if (review.reason) setReason(review.reason);
+  }, [review]);
 
   const handleSubmit = async () => {
     if (!decision) {

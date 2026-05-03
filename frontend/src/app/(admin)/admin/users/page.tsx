@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { userService } from "@/services/userService";
 import { User, UserRole } from "@/types/user";
@@ -28,37 +29,32 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
 
-  const loadUsers = () => {
-    setIsLoading(true);
-    userService
-      .getAllUsers({
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["admin-users", roleFilter, search],
+    queryFn: async () => {
+      const data = await userService.getAllUsers({
         role: roleFilter !== "ALL" ? roleFilter : undefined,
         search: search || undefined,
-      })
-     .then((users) => setUsers(users))
-      .catch(() => setUsers([]))
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(() => {
-    loadUsers();
-  }, [roleFilter]);
+      });
+      return data ?? [];
+    },
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadUsers();
+    setSearch(searchInput);
   };
 
   const handleActivate = async (id: string) => {
     try {
       await userService.activateUser(id);
       toast.success("User activated.");
-      loadUsers();
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
       toast.error("Failed to activate user.");
     }
@@ -68,7 +64,7 @@ export default function AdminUsersPage() {
     try {
       await userService.deactivateUser(id);
       toast.success("User deactivated.");
-      loadUsers();
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
       toast.error("Failed to deactivate user.");
     }
@@ -80,7 +76,7 @@ export default function AdminUsersPage() {
     try {
       await userService.deleteUser(id);
       toast.success("User deleted.");
-      loadUsers();
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
       toast.error("Failed to delete user.");
     }
@@ -114,8 +110,8 @@ export default function AdminUsersPage() {
             <Input
               placeholder="Search by name or email…"
               className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
           <Button type="submit" variant="outline">

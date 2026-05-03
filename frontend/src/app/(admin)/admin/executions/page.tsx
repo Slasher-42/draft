@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ClipboardList, Clock, CheckCircle2, XCircle, TrendingUp, AlertCircle } from "lucide-react";
@@ -29,35 +30,24 @@ const statusConfig: Record<string, { label: string; icon: any; classes: string }
 };
 
 export default function AdminExecutionsPage() {
-  const [allExecutions, setAllExecutions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
-  useEffect(() => {
-    setIsLoading(true);
-    setFetchError(null);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-executions"],
+    queryFn: async () => {
+      const [startupRes, investorRes, reviewsRes] = await Promise.allSettled([
+        execApi.get("/api/executions/startup/all"),
+        execApi.get("/api/executions/investor/all"),
+        evalApi.get("/api/evaluator/reviews/all"),
+      ]);
 
-    Promise.allSettled([
-      execApi.get("/api/executions/startup/all"),
-      execApi.get("/api/executions/investor/all"),
-      evalApi.get("/api/evaluator/reviews/all"),
-    ]).then(([startupRes, investorRes, reviewsRes]) => {
       const reviews: any[] = reviewsRes.status === "fulfilled"
-        ? (reviewsRes.value.data?.data ?? [])
-        : [];
-
+        ? (reviewsRes.value.data?.data ?? []) : [];
       const reviewStatusMap: Record<number, string> = {};
-      reviews.forEach((r: any) => {
-        if (r.decision) reviewStatusMap[r.executionId] = r.decision;
-      });
+      reviews.forEach((r: any) => { if (r.decision) reviewStatusMap[r.executionId] = r.decision; });
 
       const startups = startupRes.status === "fulfilled"
-        ? (startupRes.value.data?.data ?? []).map((e: any) => ({
-            ...e,
-            type: "STARTUP",
-            status: reviewStatusMap[e.id] ?? e.status,
-          }))
+        ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP", status: reviewStatusMap[e.id] ?? e.status }))
         : [];
       const investors = investorRes.status === "fulfilled"
         ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
@@ -67,13 +57,17 @@ export default function AdminExecutionsPage() {
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
-      if (combined.length === 0 && startupRes.status === "rejected" && investorRes.status === "rejected") {
-        setFetchError("Could not load executions. Check that the StartupApplicationService (port 8082) is running and your token has ROLE_ADMIN.");
-      }
+      return {
+        allExecutions: combined,
+        fetchError: combined.length === 0 && startupRes.status === "rejected" && investorRes.status === "rejected"
+          ? "Could not load executions. Check that the StartupApplicationService (port 8082) is running and your token has ROLE_ADMIN."
+          : null,
+      };
+    },
+  });
 
-      setAllExecutions(combined);
-    }).finally(() => setIsLoading(false));
-  }, []);
+  const allExecutions = data?.allExecutions ?? [];
+  const fetchError = data?.fetchError ?? null;
 
   const executions = statusFilter === "ALL"
     ? allExecutions

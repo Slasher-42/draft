@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { evaluatorService } from "@/services/evaluatorService";
 import { EvaluatorReview } from "@/types/review";
@@ -24,17 +25,15 @@ const decisionConfig = {
 };
 
 export default function EvaluatorReviewsPage() {
-  const [reviews, setReviews] = useState<EvaluatorReview[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "DECIDED">("ALL");
 
-  useEffect(() => {
-    evaluatorService
-      .getReviews()
-      .then((res) => setReviews(res.data.data ?? []))
-      .catch(() => setReviews([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { data: reviews = [], isLoading } = useQuery<EvaluatorReview[]>({
+    queryKey: ["evaluator-reviews"],
+    queryFn: async () => {
+      const res = await evaluatorService.getReviews();
+      return res.data.data ?? [];
+    },
+  });
 
   const filtered = reviews.filter((r) => {
     if (filter === "PENDING") return !r.decision;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/userService";
 import { User } from "@/types/user";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,16 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ShieldCheck, Mail } from "lucide-react";
 
 export default function AdminEvaluatorsPage() {
-  const [evaluators, setEvaluators] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    userService
-      .getAllUsers({ role: "EVALUATOR" })
-      .then((data) => setEvaluators(data))
-      .catch(() => setEvaluators([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { data: evaluators = [], isLoading } = useQuery<User[]>({
+    queryKey: ["admin-evaluators"],
+    queryFn: async () => {
+      const data = await userService.getAllUsers({ role: "EVALUATOR" });
+      return data ?? [];
+    },
+  });
 
   return (
     <div className="space-y-6">

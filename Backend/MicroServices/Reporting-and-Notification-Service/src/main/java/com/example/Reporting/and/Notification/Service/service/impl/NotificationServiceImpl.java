@@ -10,6 +10,8 @@ import com.example.Reporting.and.Notification.Service.service.NotificationServic
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -53,6 +55,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @CacheEvict(value = "unread-count", key = "#userId")
     public NotificationResponse markAsRead(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found with id: " + notificationId));
@@ -66,6 +69,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @CacheEvict(value = "unread-count", key = "#userId")
     public void markAllAsRead(Long userId) {
         List<Notification> unread = notificationRepository.findByRecipientUserIdAndReadFalse(userId);
         unread.forEach(n -> n.setRead(true));
@@ -73,8 +77,9 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Cacheable(value = "unread-count", key = "#userId")
     public long countUnread(Long userId) {
-        return notificationRepository.findByRecipientUserIdAndReadFalse(userId).size();
+        return notificationRepository.countByRecipientUserIdAndReadFalse(userId);
     }
 
     @Override

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -8,35 +8,30 @@ import { Loader2, MapPin, Building2, TrendingUp, Star, Sparkles, Users } from "l
 
 export default function InvestorCollaboratorsPage() {
   const { user } = useAuth();
-  const [matches, setMatches] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<Record<number, any>>({});
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    matchingService
-      .getMatchesForInvestor(Number(user.id))
-      .then(async (res) => {
-        const data = res.data.data ?? [];
-        setMatches(data);
-        const profileMap: Record<number, any> = {};
-        await Promise.allSettled(
-          data.map(async (m: any) => {
-            try {
-              const u = await userService.getById(m.startupUserId);
-              let sp = null;
-              try {
-                sp = await userService.getStartupProfile(m.startupUserId);
-              } catch {}
-              profileMap[m.startupUserId] = { ...u, startupProfile: sp };
-            } catch {}
-          })
-        );
-        setProfiles(profileMap);
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, [user?.id]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["investor-collaborators", user?.id],
+    queryFn: async () => {
+      const res = await matchingService.getMatchesForInvestor(Number(user!.id));
+      const data = res.data.data ?? [];
+      const profileMap: Record<number, any> = {};
+      await Promise.allSettled(
+        data.map(async (m: any) => {
+          try {
+            const u = await userService.getById(m.startupUserId);
+            let sp = null;
+            try { sp = await userService.getStartupProfile(m.startupUserId); } catch {}
+            profileMap[m.startupUserId] = { ...u, startupProfile: sp };
+          } catch {}
+        })
+      );
+      return { matches: data, profiles: profileMap };
+    },
+    enabled: !!user?.id,
+  });
+
+  const matches = data?.matches ?? [];
+  const profiles = data?.profiles ?? {};
 
   if (isLoading) {
     return (
