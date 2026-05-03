@@ -77,6 +77,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<UserResponse> searchUsers(String query, String role) {
+        List<User> users = (query != null && !query.isBlank())
+                ? userRepository.findByFullNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query)
+                : userRepository.findAll();
+
+        if (role != null && !role.isBlank()) {
+            RoleType roleType = RoleType.valueOf(role.toUpperCase());
+            users = users.stream()
+                    .filter(u -> u.getRole().getName() == roleType)
+                    .collect(Collectors.toList());
+        }
+
+        return users.stream().map(UserMapper::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
     @Caching(evict = {
         @CacheEvict(value = "users", key = "#id"),
         @CacheEvict(value = "users-email", allEntries = true)

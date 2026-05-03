@@ -13,6 +13,7 @@ public interface UserService {
     UserResponse getUserByEmail(String email);
     List<UserResponse> getAllUsers();
     List<UserResponse> getUsersByRole(String role);
+    List<UserResponse> searchUsers(String query, String role);
     UserResponse updateUser(Long id, UpdateUserRequest request, String callerEmail);
     void changePassword(Long id, ChangePasswordRequest request, String callerEmail);
     void toggleUserStatus(Long id);

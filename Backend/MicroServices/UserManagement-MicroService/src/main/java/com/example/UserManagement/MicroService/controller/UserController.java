@@ -42,10 +42,13 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
-            @RequestParam(required = false) String role) {
-        List<UserResponse> users = (role != null && !role.isBlank())
-                ? userService.getUsersByRole(role)
-                : userService.getAllUsers();
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String search) {
+        List<UserResponse> users = (search != null && !search.isBlank())
+                ? userService.searchUsers(search, role)
+                : (role != null && !role.isBlank())
+                    ? userService.getUsersByRole(role)
+                    : userService.getAllUsers();
         return ResponseEntity.ok(new ApiResponse<>(true, "Users fetched successfully", users));
     }
 
