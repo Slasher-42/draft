@@ -1,14 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RouteGuard } from "@/components/common/RouteGuard";
+import { prefetchRoute } from "@/lib/prefetch";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const adminRoutes = ["/admin/dashboard", "/admin/users", "/admin/evaluators"];
+    adminRoutes.forEach((route) =>
+      prefetchRoute(queryClient, route, Number(user?.id))
+    );
+  }, [queryClient, user?.id]);
+
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <div className="flex h-screen bg-[var(--color-neutral-50)] overflow-hidden">

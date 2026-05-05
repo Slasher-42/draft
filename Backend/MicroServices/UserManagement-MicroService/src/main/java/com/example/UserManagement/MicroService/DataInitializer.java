@@ -5,6 +5,7 @@ import com.example.UserManagement.MicroService.model.Role;
 import com.example.UserManagement.MicroService.model.User;
 import com.example.UserManagement.MicroService.repository.RoleRepository;
 import com.example.UserManagement.MicroService.repository.UserRepository;
+import com.example.UserManagement.MicroService.service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -15,13 +16,16 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     public DataInitializer(RoleRepository roleRepository,
                            UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           UserService userService) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
     @Override
@@ -47,5 +51,7 @@ public class DataInitializer implements CommandLineRunner {
 
             userRepository.save(admin);
         }
+
+        userService.getAllUsers();
     }
 }

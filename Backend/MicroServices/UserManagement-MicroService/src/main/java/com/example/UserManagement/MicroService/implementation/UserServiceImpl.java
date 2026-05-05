@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "all-users")
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
@@ -95,7 +96,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Caching(evict = {
         @CacheEvict(value = "users", key = "#id"),
-        @CacheEvict(value = "users-email", allEntries = true)
+        @CacheEvict(value = "users-email", allEntries = true),
+        @CacheEvict(value = "all-users", allEntries = true)
     })
     public UserResponse updateUser(Long id, UpdateUserRequest request, String callerEmail) {
         User caller = userRepository.findByEmail(callerEmail)
@@ -141,7 +143,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Caching(evict = {
         @CacheEvict(value = "users", key = "#id"),
-        @CacheEvict(value = "users-email", allEntries = true)
+        @CacheEvict(value = "users-email", allEntries = true),
+        @CacheEvict(value = "all-users", allEntries = true)
     })
     public void toggleUserStatus(Long id) {
         User user = userRepository.findById(id)
@@ -159,7 +162,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Caching(evict = {
         @CacheEvict(value = "users", key = "#id"),
-        @CacheEvict(value = "users-email", allEntries = true)
+        @CacheEvict(value = "users-email", allEntries = true),
+        @CacheEvict(value = "all-users", allEntries = true)
     })
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)

@@ -39,6 +39,48 @@ interface EscalatedReview {
   createdAt: string;
 }
 
+const REASONING_SECTIONS = [
+  { key: "MARKET & COMPETITIVE LANDSCAPE", color: "text-blue-700" },
+  { key: "FINANCIAL REALISM", color: "text-purple-700" },
+  { key: "GROWTH TRAJECTORY", color: "text-emerald-700" },
+  { key: "KEY STRENGTHS", color: "text-green-700" },
+  { key: "CONCERNS & RED FLAGS", color: "text-red-700" },
+  { key: "OVERALL VERDICT", color: "text-[var(--color-primary-700)]" },
+];
+
+function StructuredReasoning({ text }: { text: string }) {
+  const parsed: { label: string; color: string; content: string }[] = [];
+
+  for (let i = 0; i < REASONING_SECTIONS.length; i++) {
+    const { key, color } = REASONING_SECTIONS[i];
+    const nextKey = REASONING_SECTIONS[i + 1]?.key;
+    const pattern = nextKey
+      ? new RegExp(`${key}:\\s*([\\s\\S]*?)(?=${nextKey}:)`, "i")
+      : new RegExp(`${key}:\\s*([\\s\\S]*)$`, "i");
+    const match = text.match(pattern);
+    if (match) parsed.push({ label: key, color, content: match[1].trim() });
+  }
+
+  if (parsed.length === 0) {
+    return (
+      <p className="text-sm text-[var(--color-primary-800)] leading-relaxed whitespace-pre-wrap">
+        {text}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {parsed.map(({ label, color, content }) => (
+        <div key={label}>
+          <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${color}`}>{label}</p>
+          <p className="text-sm text-[var(--color-primary-800)] leading-relaxed">{content}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const classificationColors: Record<string, string> = {
   HIGHLY_READY: "text-green-600 bg-green-50 border-green-200",
   MODERATELY_READY: "text-yellow-600 bg-yellow-50 border-yellow-200",
@@ -198,8 +240,8 @@ export default function AdminEscalationsPage() {
 
                       {/* AI Reasoning */}
                       <div className="p-4 rounded-xl bg-[var(--color-primary-50)] border border-[var(--color-primary-100)]">
-                        <p className="text-xs font-medium text-[var(--color-primary-700)] uppercase tracking-wide mb-2">AI Reasoning</p>
-                        <p className="text-sm text-[var(--color-primary-800)] leading-relaxed">{review.aiReasoning}</p>
+                        <p className="text-xs font-medium text-[var(--color-primary-700)] uppercase tracking-wide mb-3">AI Reasoning</p>
+                        <StructuredReasoning text={review.aiReasoning} />
                       </div>
 
                       {/* Startup info */}

@@ -66,6 +66,26 @@ Classification rules:
 Be honest and precise in your scoring. Consider the depth of answers, realism of numbers,
 team credibility, market understanding, and business model clarity.
 
+--- REASONING INSTRUCTIONS ---
+For the "reasoning" field, produce a structured analytical assessment that a senior investment analyst
+would write after a real due-diligence conversation. Be specific to the data above — never give generic praise.
+Do NOT say things like "the amount specified is good" without explaining why based on stage, sector, and market.
+
+Write the reasoning with EXACTLY these six section labels, each on its own line, followed by a colon and your analysis.
+Separate each section with a blank line. Do not add any text outside the sections.
+
+MARKET & COMPETITIVE LANDSCAPE: [Analyze the local and regional market for this specific type of business. Are there already many similar businesses in the same city, region, or target area? Is this niche saturated or underserved? Name realistic competitors or business categories that already exist nearby. Assess whether the stated target market is actually reachable or is too vague.]
+
+FINANCIAL REALISM: [Critically assess whether the funding amount requested makes sense for this business stage, sector, and operating context. Examine revenue projections and burn rate — are they credible or inflated? Would a real investor find the financial assumptions defensible? If numbers raise concerns, state them directly. Do not validate numbers just because the applicant stated them.]
+
+GROWTH TRAJECTORY: [Describe how this business would realistically grow over the next 12 to 24 months given its team, market, and available capital. Identify specific milestones that are achievable and which ones are optimistic. Note what could realistically slow or block growth. Tie analysis directly to the business model, not generic startup advice.]
+
+KEY STRENGTHS: [List what is genuinely strong about this application, referencing specific answers or data points from the conversation and form. Only include real strengths — not flattery. If there are no standout strengths, say so honestly.]
+
+CONCERNS & RED FLAGS: [List concrete risks and concerns. Flag unrealistic growth projections, vague market claims, thin team credentials, single points of failure, regulatory exposure, or anything that signals poor preparation or elevated risk. Be direct. This section must never be left empty — every business has risks worth noting.]
+
+OVERALL VERDICT: [One to two sentences summarizing the investment readiness classification and the single most decisive factor behind it.]
+
 Respond ONLY with this exact JSON structure and nothing else:
 {{
   "financial_health": <number 0-100>,
@@ -74,7 +94,7 @@ Respond ONLY with this exact JSON structure and nothing else:
   "business_viability": <number 0-100>,
   "overall_score": <weighted total>,
   "classification": "<HIGHLY_READY | MODERATELY_READY | NOT_READY>",
-  "reasoning": "<2-3 sentences explaining the overall assessment and key strengths or concerns>"
+  "reasoning": "<the full structured reasoning with all six sections as described above>"
 }}
 """
 
