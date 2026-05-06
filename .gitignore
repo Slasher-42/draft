@@ -20,6 +20,7 @@ target/
 
 # Spring Boot sensitive config — never commit credentials
 Backend/MicroServices/StartupApplicationService/StartupApplicationService/src/main/resources/application.properties
+Backend/MicroServices/UserManagement-MicroService/src/main/resources/application.properties
 
 # Node / Next.js
 node_modules/
