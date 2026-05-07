@@ -31,7 +31,7 @@ import type { User } from "@/types/user";
 async function publicGet<T = any>(path: string): Promise<T | null> {
   try {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const res = await fetch(`http://localhost:3000${path}`, {
+    const res = await fetch(path, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return null;
