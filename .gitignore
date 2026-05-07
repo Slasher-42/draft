@@ -8,7 +8,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-Lib/
+Backend/MicroServices/AIAssessmentEngine-Service/Lib/
 Scripts/
 pyvenv.cfg
 
