@@ -15,10 +15,8 @@ import com.example.UserManagement.MicroService.security.JwtUtil;
 import com.example.UserManagement.MicroService.service.AuthService;
 import com.example.UserManagement.MicroService.service.TwoFactorService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,10 +24,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    @Value("${resend.api.key}")
+    private String resendApiKey;
 
     private final AuthService            authService;
     private final JwtUtil                jwtUtil;
@@ -39,7 +45,6 @@ public class AuthController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository         roleRepository;
     private final PasswordEncoder        passwordEncoder;
-    private final JavaMailSender         mailSender;
 
     public AuthController(AuthService authService,
                           JwtUtil jwtUtil,
@@ -48,8 +53,7 @@ public class AuthController {
                           TwoFactorService twoFactorService,
                           RefreshTokenRepository refreshTokenRepository,
                           RoleRepository roleRepository,
-                          PasswordEncoder passwordEncoder,
-                          JavaMailSender mailSender) {
+                          PasswordEncoder passwordEncoder) {
         this.authService            = authService;
         this.jwtUtil                = jwtUtil;
         this.userDetailsService     = userDetailsService;
@@ -58,7 +62,22 @@ public class AuthController {
         this.refreshTokenRepository = refreshTokenRepository;
         this.roleRepository         = roleRepository;
         this.passwordEncoder        = passwordEncoder;
-        this.mailSender             = mailSender;
+    }
+
+    private void sendEmail(String to, String subject, String text) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("from", "RG Partners <onboarding@resend.dev>");
+        body.put("to", List.of(to));
+        body.put("subject", subject);
+        body.put("text", text);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        restTemplate.postForObject("https://api.resend.com/emails", request, String.class);
     }
 
     @PostMapping("/register")
@@ -104,6 +123,7 @@ public class AuthController {
                 newAccessToken, stored.getToken(), user.getEmail(), role, user.getId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refreshed successfully", fullAuth));
     }
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -111,6 +131,7 @@ public class AuthController {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ResponseEntity.ok(new ApiResponse<>(true, "User fetched successfully", UserMapper.toResponse(user)));
     }
+
     @GetMapping("/validate")
     public ResponseEntity<ApiResponse<TokenValidationResponse>> validateToken(
             @RequestHeader("Authorization") String authHeader) {
@@ -163,12 +184,15 @@ public class AuthController {
         user.setEnabled(true);
         userRepository.save(user);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("onboarding@resend.dev");
-        message.setTo(request.getEmail());
-        message.setSubject("RG Partners — Your account has been created");
-        message.setText("Hello " + request.getFullName() + ",\n\nYour account has been created on RG Partners.\n\nEmail: " + request.getEmail() + "\nTemporary Password: " + request.getTemporaryPassword() + "\n\nPlease log in and change your password immediately.");
-        mailSender.send(message);
+        sendEmail(
+            request.getEmail(),
+            "RG Partners — Your account has been created",
+            "Hello " + request.getFullName() + ",\n\n" +
+            "Your account has been created on RG Partners.\n\n" +
+            "Email: " + request.getEmail() + "\n" +
+            "Temporary Password: " + request.getTemporaryPassword() + "\n\n" +
+            "Please log in and change your password immediately."
+        );
 
         UserResponse userResponse = new UserResponse();
         userResponse.setId(user.getId());
