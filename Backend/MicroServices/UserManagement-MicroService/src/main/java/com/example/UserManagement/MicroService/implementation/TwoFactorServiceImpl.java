@@ -54,6 +54,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         userRepository.save(user);
 
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("onboarding@resend.dev");
         message.setTo(email);
         message.setSubject("RG Partners — Your verification code");
         message.setText("Your verification code is: " + code + "\n\nThis code expires in 10 minutes.\n\nIf you did not request this, please ignore this email.");

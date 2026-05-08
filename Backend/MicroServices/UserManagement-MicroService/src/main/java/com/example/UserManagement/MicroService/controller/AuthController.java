@@ -164,6 +164,7 @@ public class AuthController {
         userRepository.save(user);
 
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("onboarding@resend.dev");
         message.setTo(request.getEmail());
         message.setSubject("RG Partners — Your account has been created");
         message.setText("Hello " + request.getFullName() + ",\n\nYour account has been created on RG Partners.\n\nEmail: " + request.getEmail() + "\nTemporary Password: " + request.getTemporaryPassword() + "\n\nPlease log in and change your password immediately.");
