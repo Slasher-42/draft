@@ -8,14 +8,14 @@ import { Loader2, ClipboardList, CheckCircle2, TrendingUp, Clock, XCircle } from
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { notificationService } from "@/services/notificationService";
 
-const execApi = axios.create({ baseURL: "http://localhost:8082", timeout: 30000 });
+const execApi = axios.create({ baseURL: "https://startup-application-service.onrender.com", timeout: 30000 });
 execApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-const evalApi = axios.create({ baseURL: "http://localhost:8084", timeout: 30000 });
+const evalApi = axios.create({ baseURL: "https://evaluation-decision-service.onrender.com", timeout: 30000 });
 evalApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
