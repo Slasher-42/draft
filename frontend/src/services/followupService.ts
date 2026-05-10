@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const followupApi = axios.create({
-  baseURL: "http://localhost:8088",
+  baseURL: "https://followup-service.onrender.com",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
@@ -15,7 +15,7 @@ followupApi.interceptors.request.use((config) => {
 });
 
 export const followupService = {
-  // ── Meetups ────────────────────────────────────────────
+
   getAllMeetups: () =>
     followupApi.get("/api/followup/meetups"),
 
@@ -39,7 +39,7 @@ export const followupService = {
   updateMeetupStatus: (id: number, payload: { status: string; adminNotes?: string }) =>
     followupApi.patch(`/api/followup/meetups/${id}/status`, payload),
 
-  // ── Contracts ──────────────────────────────────────────
+  
   getAllContracts: () =>
     followupApi.get("/api/followup/contracts"),
 
@@ -60,7 +60,7 @@ export const followupService = {
       adminValidationSignature,
     }),
 
-  // ── Accounts ───────────────────────────────────────────
+
   getMyAccount: () =>
     followupApi.get("/api/followup/accounts/me"),
 

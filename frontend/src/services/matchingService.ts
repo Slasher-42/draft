@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const matchingServiceApi = axios.create({
-  baseURL: "http://localhost:8085",
+  baseURL: "https://investor-matching-service.onrender.com",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });

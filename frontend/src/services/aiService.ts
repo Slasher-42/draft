@@ -2,7 +2,7 @@ import axios from "axios";
 import { api } from "@/lib/api";
 
 const aiServiceApi = axios.create({
-  baseURL: "http://localhost:8083",
+  baseURL: "https://ai-assessment-service.onrender.com",
   timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });

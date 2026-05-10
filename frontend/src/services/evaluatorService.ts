@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const evaluationServiceApi = axios.create({
-  baseURL: "http://localhost:8084",
+  baseURL: "https://evaluation-decision-service.onrender.com",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
