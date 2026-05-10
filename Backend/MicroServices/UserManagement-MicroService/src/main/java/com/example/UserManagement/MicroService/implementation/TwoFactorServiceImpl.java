@@ -54,7 +54,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         headers.setBearerAuth(resendApiKey);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("from", "RG Partners <onboarding@resend.dev>");
+        body.put("from", "RG Partners <noreply@rgpartners.store>>");
         body.put("to", List.of(to));
         body.put("subject", subject);
         body.put("text", text);
