@@ -10,6 +10,7 @@ import com.example.StartupApplicationService.repository.InvestorExecutionReposit
 import com.example.StartupApplicationService.service.InvestorExecutionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +32,7 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
         execution.setExpectedReturnTimeline(request.getExpectedReturnTimeline());
         execution.setSuccessCriteria(request.getSuccessCriteria());
         execution.setStatus(ExecutionStatus.PENDING);
-        
+
 InvestorExecution saved = investorExecutionRepository.save(execution);
 CompletableFuture.runAsync(() -> eventPublisher.publishInvestorExecutionSubmitted(saved.getId(), userId));
 return toResponse(saved);

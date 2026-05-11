@@ -13,6 +13,7 @@ import com.example.StartupApplicationService.service.StartupExecutionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.concurrent.CompletableFuture;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
