@@ -43,9 +43,9 @@ public class StartupExecutionServiceImpl implements StartupExecutionService {
         execution.setLocation(request.getLocation());
         execution.setStatus(ExecutionStatus.PENDING);
 
-        StartupExecution saved = startupExecutionRepository.save(execution);
-        eventPublisher.publishStartupExecutionSubmitted(saved.getId(), userId);
-        return toResponse(saved);
+       StartupExecution saved = startupExecutionRepository.save(execution);
+CompletableFuture.runAsync(() -> eventPublisher.publishStartupExecutionSubmitted(saved.getId(), userId));
+return toResponse(saved);
     }
 
     @Override

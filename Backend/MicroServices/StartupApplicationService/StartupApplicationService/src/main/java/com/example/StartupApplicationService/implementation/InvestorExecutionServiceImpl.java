@@ -31,10 +31,10 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
         execution.setExpectedReturnTimeline(request.getExpectedReturnTimeline());
         execution.setSuccessCriteria(request.getSuccessCriteria());
         execution.setStatus(ExecutionStatus.PENDING);
-
-        InvestorExecution saved = investorExecutionRepository.save(execution);
-        eventPublisher.publishInvestorExecutionSubmitted(saved.getId(), userId);
-        return toResponse(saved);
+        
+InvestorExecution saved = investorExecutionRepository.save(execution);
+CompletableFuture.runAsync(() -> eventPublisher.publishInvestorExecutionSubmitted(saved.getId(), userId));
+return toResponse(saved);
     }
 
     @Override
