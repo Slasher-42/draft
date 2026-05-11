@@ -45,7 +45,7 @@ return toResponse(saved);
                 .map(this::toResponse)
                 .toList();
     }
-
+    
     @Override
     public List<InvestorExecutionResponse> getAllByUser(Long userId) {
         return investorExecutionRepository.findByUserId(userId)

@@ -170,7 +170,14 @@ export const adminService = {
   getAllStartupExecutions: () => execServiceApi.get("/api/executions/startup/all"),
 
   getAllInvestorExecutions: () => execServiceApi.get("/api/executions/investor/all"),
+getAllUsers: async (role?: string) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const url = role
+    ? `https://user-management-service-2zr5.onrender.com/api/users?role=${role}`
+    : `https://user-management-service-2zr5.onrender.com/api/users`;
+  return axios.get(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+},
 
-  getAllUsers: (role?: string) =>
-    role ? api.get(`/api/users?role=${role}`) : api.get("/api/users"),
 };

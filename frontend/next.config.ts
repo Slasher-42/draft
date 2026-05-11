@@ -65,6 +65,22 @@ const nextConfig: NextConfig = {
         source: "/api/admin/:path*",
         destination: "https://audit-compliance-service.onrender.com/api/admin/:path*",
       },
+      {
+  source: "/api/users",
+  destination: "https://user-management-service-2zr5.onrender.com/api/users",
+},
+{
+  source: "/api/notifications/:path*",
+  destination: "https://reporting-notification-service.onrender.com/api/notifications/:path*",
+},
+{
+  source: "/api/conversation/:path*",
+  destination: "https://ai-assessment-service.onrender.com/api/conversation/:path*",
+},
+{
+  source: "/api/assessment/:path*",
+  destination: "https://ai-assessment-service.onrender.com/api/assessment/:path*",
+},
     ];
   },
 };
