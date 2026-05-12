@@ -52,11 +52,12 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(UserDetails userDetails, Long userId) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", userId);
-        return createToken(claims, userDetails.getUsername());
-    }
+   public String generateToken(UserDetails userDetails, Long userId) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("email", userDetails.getUsername());
+    claims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
+    return createToken(claims, String.valueOf(userId));
+}
 
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
