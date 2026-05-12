@@ -70,10 +70,17 @@ export const userService = {
   },
 
   async getAllUsers(params?: { role?: string; search?: string; page?: number }): Promise<any[]> {
-    const res = await api.get("/api/users", { params });
-    const result = res.data?.data ?? res.data;
-    return Array.isArray(result) ? result : [];
-  },
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const url = new URL("https://user-management-service-2zr5.onrender.com/api/users");
+  if (params?.role) url.searchParams.set("role", params.role);
+  if (params?.search) url.searchParams.set("search", params.search);
+  const res = await fetch(url.toString(), {
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+  });
+  const data = await res.json();
+  const result = data?.data ?? data;
+  return Array.isArray(result) ? result : [];
+},
 
   async createUser(data: any): Promise<any> {
     const res = await api.post("/api/auth/admin/create-user", data);
