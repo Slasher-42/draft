@@ -13,7 +13,7 @@ public class KafkaTopicConfig {
     public static final String TOPIC_USER_DELETED          = "user.deleted";
     public static final String TOPIC_STARTUP_PROFILE_SAVED = "startup.profile.saved";
     public static final String TOPIC_INVESTOR_PROFILE_SAVED = "investor.profile.saved";
-    public static final String TOPIC_USER_STATUS_CHANGED = "user-status-changed";
+    public static final String TOPIC_USER_STATUS_CHANGED = "user.status.changed";
 
     @Bean
     public NewTopic userRegisteredTopic() {
