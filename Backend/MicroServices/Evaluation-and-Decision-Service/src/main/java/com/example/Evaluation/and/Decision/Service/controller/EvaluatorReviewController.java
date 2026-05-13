@@ -51,7 +51,7 @@ public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getAllReviews(
     }
 
     @PostMapping("/reviews/{id}/decision")
-    @PreAuthorize("hasAuthority('ROLE_EVALUATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_EVALUATOR', 'ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<EvaluatorReviewResponse>> submitDecision(
             Authentication authentication,
             @PathVariable Long id,

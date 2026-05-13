@@ -55,41 +55,40 @@ public List<EvaluatorReviewResponse> getMyReviews(Long evaluatorId) {
                 .map(this::toResponse)
                 .toList();
     }
+@Override
+public EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, DecisionRequest request) {
+    EvaluatorReview review = reviewRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
 
-    @Override
-    public EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, DecisionRequest request) {
-        EvaluatorReview review = reviewRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
-
-        if (!review.getEvaluatorId().equals(evaluatorId)) {
-            throw new UnauthorizedException("You are not assigned to this review");
-        }
-
-        if (review.getStatus() == DecisionStatus.DECIDED) {
-            throw new UnauthorizedException("This review has already been decided");
-        }
-
-        review.setDecision(request.getDecision());
-        review.setReason(request.getReason());
-        review.setStatus(DecisionStatus.DECIDED);
-        review.setDecidedAt(LocalDateTime.now());
-
-        EvaluatorReview saved = reviewRepository.save(review);
-
-        switch (request.getDecision()) {
-            case APPROVED -> eventPublisher.publishStartupApproved(
-                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-            case REJECTED -> eventPublisher.publishStartupRejected(
-                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-            case ESCALATED -> eventPublisher.publishStartupEscalated(
-                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-        }
-
-        eventPublisher.publishEvaluationCompleted(
-                saved.getId(), saved.getExecutionId(), saved.getDecision().name());
-
-        return toResponse(saved);
+    if (review.getEvaluatorId() != null && !review.getEvaluatorId().equals(evaluatorId)) {
+        throw new UnauthorizedException("You are not assigned to this review");
     }
+
+    if (review.getStatus() == DecisionStatus.DECIDED) {
+        throw new UnauthorizedException("This review has already been decided");
+    }
+
+    review.setDecision(request.getDecision());
+    review.setReason(request.getReason());
+    review.setStatus(DecisionStatus.DECIDED);
+    review.setDecidedAt(LocalDateTime.now());
+
+    EvaluatorReview saved = reviewRepository.save(review);
+
+    switch (request.getDecision()) {
+        case APPROVED -> eventPublisher.publishStartupApproved(
+                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+        case REJECTED -> eventPublisher.publishStartupRejected(
+                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+        case ESCALATED -> eventPublisher.publishStartupEscalated(
+                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+    }
+
+    eventPublisher.publishEvaluationCompleted(
+            saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+
+    return toResponse(saved);
+}
 
     @Override
     public List<EvaluatorReviewResponse> getEscalatedReviews() {
