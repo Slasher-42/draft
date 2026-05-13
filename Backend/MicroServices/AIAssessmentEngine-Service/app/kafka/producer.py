@@ -3,15 +3,24 @@ from app.config import settings
 
 _producer = None
 
+from kafka import KafkaProducer
+from app.config import settings
+
+_producer = None
+
 def get_producer():
     global _producer
     if _producer is None:
         try:
-           _producer = KafkaProducer(
-    bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-    value_serializer=lambda v: str(v).encode('utf-8'),
-    api_version=(3, 7, 0)
-)
+            _producer = KafkaProducer(
+                bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
+                value_serializer=lambda v: str(v).encode('utf-8'),
+                security_protocol="SASL_SSL",
+                sasl_mechanism="SCRAM-SHA-256",
+                sasl_plain_username=settings.KAFKA_USERNAME,
+                sasl_plain_password=settings.KAFKA_PASSWORD,
+                api_version=(3, 7, 0)
+            )
         except Exception as e:
             print(f"Warning: Kafka not available — {e}")
             return None

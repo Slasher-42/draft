@@ -6,7 +6,9 @@ class Settings(BaseSettings):
     USER_MANAGEMENT_URL: str
     STARTUP_SERVICE_URL: str
     KAFKA_BOOTSTRAP_SERVERS: str
-    PORT: int = 8083
+    KAFKA_USERNAME: str = "slasher"        
+    KAFKA_PASSWORD: str = ""              
+    KAFKA_SASL_MECHANISM: str = "SCRAM-SHA-256" 
 
     class Config:
         env_file = ".env"
