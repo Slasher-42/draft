@@ -36,11 +36,11 @@ public class EvaluatorReviewController {
     }
 
     @GetMapping("/reviews/all")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getAllReviews() {
-        List<EvaluatorReviewResponse> reviews = reviewService.getAllReviews();
-        return ResponseEntity.ok(new ApiResponse<>(true, "All reviews fetched successfully", reviews));
-    }
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EVALUATOR')")
+public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getAllReviews() {
+    List<EvaluatorReviewResponse> reviews = reviewService.getAllReviews();
+    return ResponseEntity.ok(new ApiResponse<>(true, "All reviews fetched successfully", reviews));
+}
 
     @GetMapping("/reviews/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_EVALUATOR', 'ROLE_ADMIN')")

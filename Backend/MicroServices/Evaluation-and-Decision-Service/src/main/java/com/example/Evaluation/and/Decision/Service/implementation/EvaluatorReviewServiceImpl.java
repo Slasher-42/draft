@@ -37,13 +37,14 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
         return toResponse(review);
     }
 
-    @Override
-    public List<EvaluatorReviewResponse> getMyReviews(Long evaluatorId) {
-        return reviewRepository.findByEvaluatorId(evaluatorId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
+   @Override
+public List<EvaluatorReviewResponse> getMyReviews(Long evaluatorId) {
+    return reviewRepository
+        .findByEvaluatorIdOrEvaluatorIdIsNull(evaluatorId)
+        .stream()
+        .map(this::toResponse)
+        .toList();
+}
 
     @Override
     public List<EvaluatorReviewResponse> getAllReviews() {
@@ -128,45 +129,48 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
         return toResponse(reviewRepository.save(review));
     }
 
-    @Override
-    public EvaluatorReviewResponse createReviewFromScore(
-            Long executionId,
-            Long startupUserId,
-            Double financialHealth,
-            Double teamStrength,
-            Double marketPotential,
-            Double businessViability,
-            Double overallScore,
-            String classification,
-            String aiReasoning,
-            String companySize,
-            String problemStatement,
-            String businessModel,
-            String targetMarket,
-            Double fundingNeeded) {
+   @Override
+public EvaluatorReviewResponse createReviewFromScore(
+        Long executionId,
+        Long startupUserId,
+        Double financialHealth,
+        Double teamStrength,
+        Double marketPotential,
+        Double businessViability,
+        Double overallScore,
+        String classification,
+        String aiReasoning,
+        String companySize,
+        String problemStatement,
+        String businessModel,
+        String targetMarket,
+        Double fundingNeeded) {
 
-        EvaluatorReview review = new EvaluatorReview();
-        review.setExecutionId(executionId);
-        review.setStartupUserId(startupUserId);
-        review.setFinancialHealth(financialHealth);
-        review.setTeamStrength(teamStrength);
-        review.setMarketPotential(marketPotential);
-        review.setBusinessViability(businessViability);
-        review.setOverallScore(overallScore);
-        review.setClassification(classification);
-        review.setAiReasoning(aiReasoning);
-        review.setCompanySize(companySize);
-        review.setProblemStatement(problemStatement);
-        review.setBusinessModel(businessModel);
-        review.setTargetMarket(targetMarket);
-        review.setFundingNeeded(fundingNeeded);
-        Long assignedEvaluatorId = fetchLeastLoadedEvaluatorId();
-        review.setEvaluatorId(assignedEvaluatorId);
-        review.setStatus(DecisionStatus.PENDING);
+    EvaluatorReview review = new EvaluatorReview();
+    review.setExecutionId(executionId);
+    review.setStartupUserId(startupUserId);
+    review.setFinancialHealth(financialHealth);
+    review.setTeamStrength(teamStrength);
+    review.setMarketPotential(marketPotential);
+    review.setBusinessViability(businessViability);
+    review.setOverallScore(overallScore);
+    review.setClassification(classification);
+    review.setAiReasoning(aiReasoning);
+    review.setCompanySize(companySize);
+    review.setProblemStatement(problemStatement);
+    review.setBusinessModel(businessModel);
+    review.setTargetMarket(targetMarket);
+    review.setFundingNeeded(fundingNeeded);
 
-        return toResponse(reviewRepository.save(review));
+    Long assignedEvaluatorId = fetchLeastLoadedEvaluatorId();
+    if (assignedEvaluatorId == null) {
+        log.warn("[Review] No evaluator could be assigned for executionId={}. Review saved as unassigned.", executionId);
     }
+    review.setEvaluatorId(assignedEvaluatorId); 
+    review.setStatus(DecisionStatus.PENDING);
 
+    return toResponse(reviewRepository.save(review));
+}
     @Override
     public long countPendingForEvaluator(Long evaluatorId) {
         return reviewRepository.countByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.PENDING);
