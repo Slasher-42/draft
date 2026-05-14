@@ -44,6 +44,11 @@ const statusConfig = {
     icon: XCircle,
     variant: "destructive" as const,
   },
+  APPROVED: {
+    label: "Approved",
+    icon: CheckCircle2,
+    variant: "success" as const,
+  },
 };
 
 const companySizeLabels: Record<string, string> = {
