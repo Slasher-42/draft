@@ -35,4 +35,9 @@ public class MatchController {
         List<MatchResponse> matches = matchingService.getAllMatches();
         return ResponseEntity.ok(new ApiResponse<>(true, "All matches fetched successfully", matches));
     }
+    @PostMapping("/admin/run-matching")
+    public ResponseEntity<ApiResponse<String>> runMatchingForAll() {
+        matchingService.runMatchingForAll();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Matching run triggered successfully", null));
+    }
 }
