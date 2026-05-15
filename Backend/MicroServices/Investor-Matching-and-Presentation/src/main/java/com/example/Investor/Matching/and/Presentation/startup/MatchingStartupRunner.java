@@ -16,8 +16,9 @@ public class MatchingStartupRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("[Matching] Service started — running catch-up matching for all existing executions");
+        log.info("[Matching] Service started — waiting 15s before catch-up matching...");
         try {
+            Thread.sleep(15000);
             matchingService.runMatchingForAll();
         } catch (Exception e) {
             log.error("[Matching] Catch-up matching on startup failed: {}", e.getMessage());
