@@ -64,7 +64,7 @@ export default function MeetupRoomPage() {
   const ignoreOfferRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
   const politeRef = useRef(false);
-  const tracksAddedRef = useRef(false);
+  
 
   const [connected, setConnected] = useState(false);
   const [remoteConnected, setRemoteConnected] = useState(false);
@@ -81,12 +81,15 @@ export default function MeetupRoomPage() {
     });
   }, [roomId, user]);
 
-  const addLocalTracks = useCallback(() => {
+ const addLocalTracks = useCallback(() => {
     const pc = peerRef.current;
     const stream = localStreamRef.current;
-    if (!pc || !stream || tracksAddedRef.current) return;
-    tracksAddedRef.current = true;
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    if (!pc || !stream) return;
+    const existingSenders = pc.getSenders();
+    stream.getTracks().forEach((track) => {
+      const alreadyAdded = existingSenders.some((s) => s.track === track);
+      if (!alreadyAdded) pc.addTrack(track, stream);
+    });
   }, []);
 
   const createPeer = useCallback(() => {
