@@ -205,7 +205,7 @@ export default function MeetupRoomPage() {
       peerRef.current = pc;
 
       const stomp = new Client({
-        webSocketFactory: () => new SockJS("http://localhost:8088/ws/signaling"),
+        webSocketFactory: () => new SockJS("https://followup-service.onrender.com/ws/signaling"),
         reconnectDelay: 3000,
         onConnect: () => {
           if (!mounted) return;
