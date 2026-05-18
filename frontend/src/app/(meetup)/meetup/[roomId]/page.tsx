@@ -20,22 +20,28 @@ import { Button } from "@/components/ui/button";
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
     {
-      urls: "turn:openrelay.metered.ca:80",
-      username: "openrelayproject",
-      credential: "openrelayproject",
+      urls: "stun:stun.relay.metered.ca:80",
     },
     {
-      urls: "turn:openrelay.metered.ca:443",
-      username: "openrelayproject",
-      credential: "openrelayproject",
+      urls: "turn:global.relay.metered.ca:80",
+      username: "b660e9e04d2f73b9587aa5f3",
+      credential: "1y3bf01VWUWoPTyV",
     },
     {
-      urls: "turn:openrelay.metered.ca:443?transport=tcp",
-      username: "openrelayproject",
-      credential: "openrelayproject",
+      urls: "turn:global.relay.metered.ca:80?transport=tcp",
+      username: "b660e9e04d2f73b9587aa5f3",
+      credential: "1y3bf01VWUWoPTyV",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:443",
+      username: "b660e9e04d2f73b9587aa5f3",
+      credential: "1y3bf01VWUWoPTyV",
+    },
+    {
+      urls: "turns:global.relay.metered.ca:443?transport=tcp",
+      username: "b660e9e04d2f73b9587aa5f3",
+      credential: "1y3bf01VWUWoPTyV",
     },
   ],
 };
@@ -64,7 +70,7 @@ export default function MeetupRoomPage() {
   const ignoreOfferRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
   const politeRef = useRef(false);
-  
+  const subscribedRef = useRef(false);
 
   const [connected, setConnected] = useState(false);
   const [remoteConnected, setRemoteConnected] = useState(false);
@@ -73,15 +79,18 @@ export default function MeetupRoomPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [roomError, setRoomError] = useState<string | null>(null);
 
-  const sendSignal = useCallback((msg: Omit<SignalMessage, "from" | "roomId">) => {
-    if (!stompRef.current?.connected || !user) return;
-    stompRef.current.publish({
-      destination: `/app/signal/${roomId}`,
-      body: JSON.stringify({ ...msg, roomId, from: Number(user.id) }),
-    });
-  }, [roomId, user]);
+  const sendSignal = useCallback(
+    (msg: Omit<SignalMessage, "from" | "roomId">) => {
+      if (!stompRef.current?.connected || !user) return;
+      stompRef.current.publish({
+        destination: `/app/signal/${roomId}`,
+        body: JSON.stringify({ ...msg, roomId, from: Number(user.id) }),
+      });
+    },
+    [roomId, user]
+  );
 
- const addLocalTracks = useCallback(() => {
+  const addLocalTracks = useCallback(() => {
     const pc = peerRef.current;
     const stream = localStreamRef.current;
     if (!pc || !stream) return;
@@ -97,7 +106,10 @@ export default function MeetupRoomPage() {
 
     pc.onicecandidate = ({ candidate }) => {
       if (candidate) {
-        sendSignal({ type: "ice-candidate", candidate: JSON.stringify(candidate) });
+        sendSignal({
+          type: "ice-candidate",
+          candidate: JSON.stringify(candidate),
+        });
       }
     };
 
@@ -109,6 +121,9 @@ export default function MeetupRoomPage() {
     };
 
     pc.onnegotiationneeded = async () => {
+      // Only the impolite peer (higher user ID) creates the offer.
+      // The polite peer waits to receive an offer.
+      if (politeRef.current) return;
       try {
         makingOfferRef.current = true;
         const offer = await pc.createOffer();
@@ -122,97 +137,124 @@ export default function MeetupRoomPage() {
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
+      if (
+        pc.connectionState === "disconnected" ||
+        pc.connectionState === "failed"
+      ) {
         setRemoteConnected(false);
+      }
+      if (pc.connectionState === "connected") {
+        setRemoteConnected(true);
       }
     };
 
     return pc;
   }, [sendSignal]);
 
-  const handleSignal = useCallback(async (msg: SignalMessage) => {
-    if (!user || msg.from === Number(user.id)) return;
+  const handleSignal = useCallback(
+    async (msg: SignalMessage) => {
+      if (!user || msg.from === Number(user.id)) return;
 
-    if (msg.type === "join") {
-      politeRef.current = Number(user.id) < msg.from;
-      addLocalTracks();
-      return;
-    }
-
-    if (msg.type === "leave") {
-      setRemoteConnected(false);
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-      return;
-    }
-
-    if (!peerRef.current) return;
-    const pc = peerRef.current;
-
-    if (msg.type === "offer" && msg.sdp) {
-      const offerDesc = JSON.parse(msg.sdp) as RTCSessionDescriptionInit;
-      const offerCollision = makingOfferRef.current || pc.signalingState !== "stable";
-      ignoreOfferRef.current = !politeRef.current && offerCollision;
-      if (ignoreOfferRef.current) return;
-
-      if (offerCollision) {
-        await Promise.all([
-          pc.setLocalDescription({ type: "rollback" }),
-          pc.setRemoteDescription(offerDesc),
-        ]);
-      } else {
-        isSettingRemoteRef.current = true;
-        await pc.setRemoteDescription(offerDesc);
-        isSettingRemoteRef.current = false;
+      if (msg.type === "join") {
+        // Lower ID = polite peer (answers).
+        // Higher ID = impolite peer (sends offer).
+        politeRef.current = Number(user.id) < msg.from;
+        addLocalTracks();
+        return;
       }
 
-      addLocalTracks();
+      if (msg.type === "leave") {
+        setRemoteConnected(false);
+        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+        return;
+      }
 
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      sendSignal({ type: "answer", sdp: JSON.stringify(pc.localDescription) });
-    } else if (msg.type === "answer" && msg.sdp) {
-      const answerDesc = JSON.parse(msg.sdp) as RTCSessionDescriptionInit;
-      if (pc.signalingState !== "have-local-offer") return;
-      await pc.setRemoteDescription(answerDesc);
-    } else if (msg.type === "ice-candidate" && msg.candidate) {
-      try {
-        if (!isSettingRemoteRef.current && !ignoreOfferRef.current) {
-          await pc.addIceCandidate(JSON.parse(msg.candidate));
+      if (!peerRef.current) return;
+      const pc = peerRef.current;
+
+      if (msg.type === "offer" && msg.sdp) {
+        const offerDesc = JSON.parse(msg.sdp) as RTCSessionDescriptionInit;
+        const offerCollision =
+          makingOfferRef.current || pc.signalingState !== "stable";
+        ignoreOfferRef.current = !politeRef.current && offerCollision;
+        if (ignoreOfferRef.current) return;
+
+        if (offerCollision) {
+          await Promise.all([
+            pc.setLocalDescription({ type: "rollback" }),
+            pc.setRemoteDescription(offerDesc),
+          ]);
+        } else {
+          isSettingRemoteRef.current = true;
+          await pc.setRemoteDescription(offerDesc);
+          isSettingRemoteRef.current = false;
         }
-      } catch {
+
+        addLocalTracks();
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSignal({ type: "answer", sdp: JSON.stringify(pc.localDescription) });
+      } else if (msg.type === "answer" && msg.sdp) {
+        const answerDesc = JSON.parse(msg.sdp) as RTCSessionDescriptionInit;
+        if (pc.signalingState !== "have-local-offer") return;
+        await pc.setRemoteDescription(answerDesc);
+      } else if (msg.type === "ice-candidate" && msg.candidate) {
+        try {
+          if (!isSettingRemoteRef.current && !ignoreOfferRef.current) {
+            await pc.addIceCandidate(JSON.parse(msg.candidate));
+          }
+        } catch {
+          // Silently ignore invalid ICE candidates
+        }
       }
-    }
-  }, [user, sendSignal, addLocalTracks]);
+    },
+    [user, sendSignal, addLocalTracks]
+  );
 
   useEffect(() => {
     if (!user || !roomId) return;
 
     let mounted = true;
+    subscribedRef.current = false;
 
     const init = async () => {
       try {
         await followupService.getMeetupByRoom(roomId);
       } catch {
-        setRoomError("This meeting room does not exist or you don't have access.");
+        setRoomError(
+          "This meeting room does not exist or you don't have access."
+        );
         setIsLoading(false);
         return;
       }
 
       let stream: MediaStream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
       } catch {
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
           setVideoEnabled(false);
         } catch {
-          setRoomError("Camera and microphone access is required to join this call.");
+          setRoomError(
+            "Camera and microphone access is required to join this call."
+          );
           setIsLoading(false);
           return;
         }
       }
 
-      if (!mounted) { stream.getTracks().forEach((t) => t.stop()); return; }
+      if (!mounted) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
 
       localStreamRef.current = stream;
       if (localVideoRef.current) {
@@ -223,10 +265,15 @@ export default function MeetupRoomPage() {
       peerRef.current = pc;
 
       const stomp = new Client({
-        webSocketFactory: () => new SockJS("https://followup-service.onrender.com/ws/signaling"),
+        webSocketFactory: () =>
+          new SockJS("https://followup-service.onrender.com/ws/signaling"),
         reconnectDelay: 3000,
         onConnect: () => {
           if (!mounted) return;
+          // Prevent duplicate subscriptions on reconnect
+          if (subscribedRef.current) return;
+          subscribedRef.current = true;
+
           setConnected(true);
           setIsLoading(false);
 
@@ -235,13 +282,22 @@ export default function MeetupRoomPage() {
               const msg: SignalMessage = JSON.parse(frame.body);
               handleSignal(msg);
             } catch {
+              // Silently ignore malformed signal messages
             }
           });
 
+          // Add local tracks BEFORE sending join so tracks are ready
+          // when onnegotiationneeded fires after the other peer joins.
+          addLocalTracks();
+
+          // Announce presence to the room
           sendSignal({ type: "join" });
         },
         onDisconnect: () => {
-          if (mounted) setConnected(false);
+          if (mounted) {
+            setConnected(false);
+            subscribedRef.current = false;
+          }
         },
         onStompError: () => {
           if (mounted) toast.error("Signaling connection error");
@@ -256,12 +312,19 @@ export default function MeetupRoomPage() {
 
     return () => {
       mounted = false;
-      sendSignal({ type: "leave" });
+      // Use stompRef directly in cleanup — sendSignal closure may be stale
+      if (stompRef.current?.connected && user) {
+        stompRef.current.publish({
+          destination: `/app/signal/${roomId}`,
+          body: JSON.stringify({ type: "leave", roomId, from: Number(user.id) }),
+        });
+      }
       stompRef.current?.deactivate();
       peerRef.current?.close();
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [user, roomId, createPeer, handleSignal, sendSignal]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, roomId]);
 
   const toggleAudio = () => {
     localStreamRef.current?.getAudioTracks().forEach((t) => {
@@ -278,7 +341,12 @@ export default function MeetupRoomPage() {
   };
 
   const leaveCall = () => {
-    sendSignal({ type: "leave" });
+    if (stompRef.current?.connected && user) {
+      stompRef.current.publish({
+        destination: `/app/signal/${roomId}`,
+        body: JSON.stringify({ type: "leave", roomId, from: Number(user.id) }),
+      });
+    }
     stompRef.current?.deactivate();
     peerRef.current?.close();
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -300,8 +368,14 @@ export default function MeetupRoomPage() {
         <div className="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center">
           <PhoneOff className="h-8 w-8 text-red-400" />
         </div>
-        <p className="text-white font-semibold text-lg text-center">{roomError}</p>
-        <Button variant="outline" className="mt-2 text-white border-white/20 hover:bg-white/10" onClick={() => router.back()}>
+        <p className="text-white font-semibold text-lg text-center">
+          {roomError}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-2 text-white border-white/20 hover:bg-white/10"
+          onClick={() => router.back()}
+        >
           Go Back
         </Button>
       </div>
@@ -312,12 +386,19 @@ export default function MeetupRoomPage() {
     <div className="flex flex-col h-screen bg-gray-950 text-white">
       <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className={`h-2 w-2 rounded-full ${connected ? "bg-green-400" : "bg-red-400"}`} />
+          <div
+            className={`h-2 w-2 rounded-full ${
+              connected ? "bg-green-400" : "bg-red-400"
+            }`}
+          />
           <span className="text-sm font-medium">Room: {roomId}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-white/50">
           <Users className="h-4 w-4" />
-          <span>{remoteConnected ? "2" : "1"} participant{remoteConnected ? "s" : ""}</span>
+          <span>
+            {remoteConnected ? "2" : "1"} participant
+            {remoteConnected ? "s" : ""}
+          </span>
         </div>
       </div>
 
@@ -360,7 +441,9 @@ export default function MeetupRoomPage() {
               <div className="h-16 w-16 rounded-full bg-gray-700 flex items-center justify-center">
                 <Users className="h-7 w-7 text-white/30" />
               </div>
-              <p className="text-sm text-white/40">Waiting for other participant…</p>
+              <p className="text-sm text-white/40">
+                Waiting for other participant…
+              </p>
             </div>
           )}
         </div>
@@ -370,21 +453,33 @@ export default function MeetupRoomPage() {
         <button
           onClick={toggleAudio}
           className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${
-            audioEnabled ? "bg-gray-700 hover:bg-gray-600" : "bg-red-500 hover:bg-red-400"
+            audioEnabled
+              ? "bg-gray-700 hover:bg-gray-600"
+              : "bg-red-500 hover:bg-red-400"
           }`}
           title={audioEnabled ? "Mute" : "Unmute"}
         >
-          {audioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+          {audioEnabled ? (
+            <Mic className="h-5 w-5" />
+          ) : (
+            <MicOff className="h-5 w-5" />
+          )}
         </button>
 
         <button
           onClick={toggleVideo}
           className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${
-            videoEnabled ? "bg-gray-700 hover:bg-gray-600" : "bg-red-500 hover:bg-red-400"
+            videoEnabled
+              ? "bg-gray-700 hover:bg-gray-600"
+              : "bg-red-500 hover:bg-red-400"
           }`}
           title={videoEnabled ? "Stop video" : "Start video"}
         >
-          {videoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+          {videoEnabled ? (
+            <Video className="h-5 w-5" />
+          ) : (
+            <VideoOff className="h-5 w-5" />
+          )}
         </button>
 
         <button
