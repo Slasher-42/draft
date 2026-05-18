@@ -17,9 +17,9 @@ public class KafkaProducerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${spring.kafka.properties.sasl.jaas.config}")  
-    private String saslJaasConfig;
 
+    @Value("${spring.kafka.properties.sasl.jaas.config}")
+    private String saslJaasConfig;
 
     @Bean
     public ProducerFactory<String, String> producerFactory() {
@@ -29,9 +29,9 @@ public class KafkaProducerConfig {
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.ACKS_CONFIG, "all");
         config.put(ProducerConfig.RETRIES_CONFIG, 3);
-        config.put("security.protocol", "SASL_SSL");         
-        config.put("sasl.mechanism", "SCRAM-SHA-256");       
-        config.put("sasl.jaas.config", saslJaasConfig);      
+        config.put("security.protocol", "SASL_SSL");
+        config.put("sasl.mechanism", "SCRAM-SHA-256");
+        config.put("sasl.jaas.config", saslJaasConfig);
         return new DefaultKafkaProducerFactory<>(config);
     }
 

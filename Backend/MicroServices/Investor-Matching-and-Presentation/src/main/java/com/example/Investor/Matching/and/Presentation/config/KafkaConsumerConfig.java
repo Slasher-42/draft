@@ -18,7 +18,7 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${spring.kafka.properties.sasl.jaas.config}")  
+    @Value("${spring.kafka.properties.sasl.jaas.config}")
     private String saslJaasConfig;
 
     @Bean
@@ -28,10 +28,10 @@ public class KafkaConsumerConfig {
         config.put(ConsumerConfig.GROUP_ID_CONFIG, "matching-service");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-        config.put("security.protocol", "SASL_SSL");         
-        config.put("sasl.mechanism", "SCRAM-SHA-256");        
-        config.put("sasl.jaas.config", saslJaasConfig);      
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put("security.protocol", "SASL_SSL");
+        config.put("sasl.mechanism", "SCRAM-SHA-256");
+        config.put("sasl.jaas.config", saslJaasConfig);
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
