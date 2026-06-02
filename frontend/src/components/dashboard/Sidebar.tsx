@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { prefetchRoute } from "@/lib/prefetch";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -35,64 +35,72 @@ import {
 } from "lucide-react";
 
 const startupNav = [
-  { name: "My Executions", href: "/startup/executions", icon: ClipboardList },
-  { name: "New Execution", href: "/startup/execute", icon: PlusCircle },
-  { name: "Account", href: "/startup/account", icon: Wallet },
-  { name: "Meetups", href: "/startup/meetups", icon: Video },
-  { name: "Contracts", href: "/startup/contracts", icon: FileText },
-  { name: "Profile", href: "/profile", icon: User },
-  { name: "My Collaborators", href: "/startup/collaborators", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "My Executions",    href: "/startup/executions",  icon: ClipboardList },
+  { name: "New Execution",    href: "/startup/execute",     icon: PlusCircle    },
+  { name: "Account",          href: "/startup/account",     icon: Wallet        },
+  { name: "Meetups",          href: "/startup/meetups",     icon: Video         },
+  { name: "Contracts",        href: "/startup/contracts",   icon: FileText      },
+  { name: "Profile",          href: "/profile",             icon: User          },
+  { name: "My Collaborators", href: "/startup/collaborators", icon: Users       },
+  { name: "Settings",         href: "/settings",            icon: Settings      },
 ];
 
 const investorNav = [
-  { name: "My Investments", href: "/investor/executions", icon: Briefcase },
-  { name: "New Investment", href: "/investor/execute", icon: PlusCircle },
-  { name: "Look Up Matches", href: "/investor/executions", icon: Search },
-  { name: "Account", href: "/investor/account", icon: Wallet },
-  { name: "Meetups", href: "/investor/meetups", icon: Video },
-  { name: "Contracts", href: "/investor/contracts", icon: FileText },
-  { name: "Profile", href: "/profile", icon: User },
-  { name: "My Collaborators", href: "/investor/collaborators", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "My Investments",    href: "/investor/executions",    icon: Briefcase   },
+  { name: "New Investment",    href: "/investor/execute",       icon: PlusCircle  },
+  { name: "Look Up Matches",   href: "/investor/executions",    icon: Search      },
+  { name: "Account",           href: "/investor/account",       icon: Wallet      },
+  { name: "Meetups",           href: "/investor/meetups",       icon: Video       },
+  { name: "Contracts",         href: "/investor/contracts",     icon: FileText    },
+  { name: "Profile",           href: "/profile",                icon: User        },
+  { name: "My Collaborators",  href: "/investor/collaborators", icon: Users       },
+  { name: "Settings",          href: "/settings",               icon: Settings    },
 ];
 
 const evaluatorNav = [
-  { name: "Dashboard", href: "/evaluator/dashboard", icon: LayoutDashboard },
-  { name: "Pending Reviews", href: "/evaluator/reviews", icon: Eye },
-  { name: "All Reviews", href: "/evaluator/reviews", icon: ClipboardList },
-  { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard",       href: "/evaluator/dashboard", icon: LayoutDashboard },
+  { name: "Pending Reviews", href: "/evaluator/reviews",   icon: Eye             },
+  { name: "All Reviews",     href: "/evaluator/reviews",   icon: ClipboardList   },
+  { name: "Profile",         href: "/profile",             icon: User            },
+  { name: "Settings",        href: "/settings",            icon: Settings        },
 ];
 
 const adminNav = [
-  { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { name: "Home Controller", href: "/admin/home-controller", icon: Home },
-  { name: "User Management", href: "/admin/users", icon: Users },
-  { name: "Evaluators", href: "/admin/evaluators", icon: ShieldCheck },
-  { name: "Executions", href: "/admin/executions", icon: ClipboardList },
-  { name: "Escalations", href: "/admin/escalations", icon: AlertTriangle },
-  { name: "Follow Up", href: "/admin/followup", icon: Handshake },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart2 },
-  { name: "Audit Logs", href: "/admin/audit-logs", icon: BookOpen },
-  { name: "System Settings", href: "/admin/settings", icon: Settings },
+  { name: "Dashboard",       href: "/admin/dashboard",       icon: LayoutDashboard },
+  { name: "Home Controller", href: "/admin/home-controller", icon: Home            },
+  { name: "User Management", href: "/admin/users",           icon: Users           },
+  { name: "Evaluators",      href: "/admin/evaluators",      icon: ShieldCheck     },
+  { name: "Executions",      href: "/admin/executions",      icon: ClipboardList   },
+  { name: "Escalations",     href: "/admin/escalations",     icon: AlertTriangle   },
+  { name: "Follow Up",       href: "/admin/followup",        icon: Handshake       },
+  { name: "Analytics",       href: "/admin/analytics",       icon: BarChart2       },
+  { name: "Audit Logs",      href: "/admin/audit-logs",      icon: BookOpen        },
+  { name: "System Settings", href: "/admin/settings",        icon: Settings        },
 ];
 
 const navByRole: Record<string, typeof startupNav> = {
-  STARTUP: startupNav,
-  INVESTOR: investorNav,
+  STARTUP:   startupNav,
+  INVESTOR:  investorNav,
   EVALUATOR: evaluatorNav,
-  ADMIN: adminNav,
+  ADMIN:     adminNav,
+};
+
+const roleColors: Record<string, string> = {
+  STARTUP:   "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 text-emerald-300",
+  INVESTOR:  "from-blue-500/20 to-blue-600/10 border-blue-400/30 text-blue-300",
+  EVALUATOR: "from-violet-500/20 to-violet-600/10 border-violet-400/30 text-violet-300",
+  ADMIN:     "from-amber-500/20 to-amber-600/10 border-amber-400/30 text-amber-300",
 };
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const pathname = usePathname();
+  const [isMobile, setIsMobile]   = useState(false);
+  const pathname    = usePathname();
   const { user, logout } = useAuth();
   const queryClient = useQueryClient();
 
   const navigation = navByRole[user?.role ?? "STARTUP"] ?? startupNav;
+  const roleColor  = roleColors[user?.role ?? "STARTUP"] ?? roleColors.INVESTOR;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -105,115 +113,155 @@ export function Sidebar() {
     if (isMobile) setCollapsed(true);
   }, [isMobile]);
 
+  const initials = user?.fullName
+    ?.split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() ?? "U";
+
   return (
     <>
       {isMobile && !collapsed && (
         <div
-          className="fixed inset-0 bg-black/40 z-30"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
           onClick={() => setCollapsed(true)}
         />
       )}
 
       <motion.aside
-        className="fixed md:relative z-40 h-full flex flex-col"
-        style={{ backgroundColor: "#052654", borderRight: "1px solid #07366A" }}
-        initial={false}
-        animate={{
-          width: collapsed ? 64 : 256,
-          x: isMobile && collapsed ? -64 : 0,
+        className="fixed md:relative z-40 h-full flex flex-col overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg,#020C1B 0%,#071C38 55%,#030F1F 100%)",
+          borderRight: "1px solid rgba(115,168,207,0.1)",
         }}
+        initial={false}
+        animate={{ width: collapsed ? 64 : 256, x: isMobile && collapsed ? -64 : 0 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
       >
-        {/* Logo */}
+        {/* Subtle ambient glow top-right */}
         <div
-          className="flex items-center justify-between p-4 min-h-[64px]"
-          style={{ borderBottom: "1px solid #07366A" }}
+          className="absolute top-0 right-0 w-40 h-40 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle,rgba(47,114,165,0.08) 0%,transparent 70%)", zIndex: 0 }}
+        />
+
+        {/* ── Logo ──────────────────────────────────────────────────────── */}
+        <div
+          className="relative z-10 flex items-center justify-between p-4 min-h-[64px]"
+          style={{ borderBottom: "1px solid rgba(115,168,207,0.1)" }}
         >
-          {!collapsed && (
-            <Link href="/home" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0">
-                <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
-              </div>
-              <div className="leading-tight">
-                <p className="font-bold text-white text-xs tracking-widest uppercase">
-                  RG Partners
-                </p>
-                <p className="text-[10px]" style={{ color: "#73A8CF" }}>
-                  Investment Readiness
-                </p>
-              </div>
-            </Link>
-          )}
+          <AnimatePresence initial={false}>
+            {!collapsed && (
+              <motion.div
+                key="logo-full"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link href="/home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                  <div className="h-8 w-8 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+                    <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
+                  </div>
+                  <div className="leading-tight">
+                    <p className="font-bold text-white text-xs tracking-widest uppercase">
+                      RG Partners
+                    </p>
+                    <p className="text-[10px]" style={{ color: "#73A8CF" }}>
+                      Investment Readiness
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {collapsed && (
-            <div className="h-8 w-8 rounded-lg overflow-hidden mx-auto">
+            <div className="h-8 w-8 rounded-lg overflow-hidden mx-auto ring-1 ring-white/10">
               <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
             </div>
           )}
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex h-6 w-6 items-center justify-center rounded text-white/60 hover:text-white transition-colors flex-shrink-0"
+            className="hidden md:flex h-6 w-6 items-center justify-center rounded-md text-white/40 hover:text-white hover:bg-white/8 transition-all flex-shrink-0"
           >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
           </button>
         </div>
 
-        {/* Role badge */}
+        {/* ── Role badge ───────────────────────────────────────────────── */}
         {!collapsed && user?.role && (
-          <div className="px-4 py-2" style={{ borderBottom: "1px solid #07366A" }}>
+          <div
+            className="relative z-10 px-4 py-2.5"
+            style={{ borderBottom: "1px solid rgba(115,168,207,0.08)" }}
+          >
             <span
-              className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#072452", color: "#73A8CF" }}
+              className={cn(
+                "inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r border",
+                roleColor
+              )}
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
               {user.role}
             </span>
           </div>
         )}
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3">
+        {/* ── Nav ──────────────────────────────────────────────────────── */}
+        <nav className="relative z-10 flex-1 overflow-y-auto py-3 scrollbar-thin">
           <ul className="space-y-0.5 px-2">
             {navigation.map((item) => {
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <li key={item.name}>
                   <Link
                     href={item.href}
                     title={collapsed ? item.name : undefined}
                     className={cn(
-                      "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                      "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 overflow-hidden",
                       isActive
                         ? "text-white"
-                        : "text-white/60 hover:text-white"
+                        : "text-white/50 hover:text-white/90"
                     )}
                     style={
                       isActive
-                        ? { backgroundColor: "var(--color-secondary)" }
-                        : undefined
+                        ? {
+                            background:
+                              "linear-gradient(90deg,rgba(47,114,165,0.28) 0%,rgba(47,114,165,0.08) 100%)",
+                            borderLeft: "3px solid #2F72A5",
+                            boxShadow: "inset 0 0 24px rgba(47,114,165,0.1)",
+                          }
+                        : { borderLeft: "3px solid transparent" }
                     }
                     onMouseEnter={(e) => {
                       prefetchRoute(queryClient, item.href, Number(user?.id));
-                      if (!isActive)
+                      if (!isActive) {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "#07366A";
+                          "rgba(255,255,255,0.05)";
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive)
+                      if (!isActive) {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
                           "transparent";
+                      }
                     }}
                   >
+                    {/* Active glow dot */}
+                    {isActive && (
+                      <span
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
+                        style={{ background: "#2F72A5", boxShadow: "0 0 8px #2F72A5" }}
+                      />
+                    )}
+
                     <item.icon
                       className={cn(
-                        "h-5 w-5 flex-shrink-0",
-                        collapsed ? "mx-auto" : "mr-3"
+                        "h-4.5 w-4.5 flex-shrink-0 transition-colors",
+                        collapsed ? "mx-auto h-5 w-5" : "mr-3",
+                        isActive ? "text-[#73A8CF]" : "text-white/40 group-hover:text-white/70"
                       )}
                     />
                     {!collapsed && (
@@ -226,43 +274,72 @@ export function Sidebar() {
           </ul>
         </nav>
 
-        {/* User footer */}
-        <div className="p-3" style={{ borderTop: "1px solid #07366A" }}>
+        {/* ── User footer ──────────────────────────────────────────────── */}
+        <div
+          className="relative z-10 p-3"
+          style={{ borderTop: "1px solid rgba(115,168,207,0.1)" }}
+        >
           {!collapsed ? (
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-[var(--color-secondary)] flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">
-                  {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
-                </span>
+              {/* Avatar */}
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg,#0B4A8B,#2F72A5)",
+                  boxShadow: "0 0 0 2px rgba(47,114,165,0.4), 0 0 12px rgba(47,114,165,0.2)",
+                }}
+              >
+                {user?.profilePictureUrl ? (
+                  <img
+                    src={user.profilePictureUrl}
+                    alt={user?.fullName ?? ""}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
               </div>
+
+              {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-white truncate">
+                <p className="text-xs font-semibold text-white truncate leading-tight">
                   {user?.fullName || "User"}
                 </p>
-                <p className="text-[11px] truncate" style={{ color: "#73A8CF" }}>
+                <p className="text-[10px] truncate mt-0.5" style={{ color: "#73A8CF" }}>
                   {user?.email}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Actions */}
+              <div className="flex items-center gap-1">
                 <ThemeToggle />
                 <button
                   onClick={logout}
-                  className="text-white/40 hover:text-white transition-colors"
+                  className="h-7 w-7 flex items-center justify-center rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
                   title="Logout"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
+              <div
+                className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                style={{
+                  background: "linear-gradient(135deg,#0B4A8B,#2F72A5)",
+                  boxShadow: "0 0 0 1.5px rgba(47,114,165,0.4)",
+                }}
+              >
+                {initials}
+              </div>
               <ThemeToggle />
               <button
                 onClick={logout}
-                className="flex items-center justify-center w-full text-white/40 hover:text-white transition-colors py-1"
+                className="flex items-center justify-center w-full text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all py-1 rounded-md"
                 title="Logout"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5" />
               </button>
             </div>
           )}

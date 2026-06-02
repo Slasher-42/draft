@@ -26,7 +26,7 @@ export default function AdminLayout({
 
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
-      <div className="flex h-screen bg-[var(--color-neutral-50)] overflow-hidden">
+      <div className="flex h-screen dashboard-bg overflow-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />

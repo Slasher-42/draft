@@ -164,7 +164,16 @@ function InvestorCard({
   const p = user.investorProfile;
   return (
     <FadeIn delay={delay} enabled={enabled}>
-      <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col gap-4 h-full">
+      <div
+        className="group rounded-2xl border transition-all duration-300 p-6 flex flex-col gap-4 h-full hover:-translate-y-1.5"
+        style={{
+          background: "white",
+          borderColor: "#E2E8F0",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)",
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(11,74,139,0.10), 0 12px 32px rgba(11,74,139,0.07)"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)"}
+      >
         {/* Header */}
         <div className="flex items-center gap-4">
           <Avatar src={user.profilePictureUrl} name={user.fullName} size={52} />
@@ -179,7 +188,10 @@ function InvestorCard({
             )}
           </div>
           <div className="ml-auto flex-shrink-0">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-700">
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              style={{ background: "linear-gradient(135deg,#EFF6FF,#DBEAFE)", color: "#1D4ED8", border: "1px solid #BFDBFE" }}
+            >
               <Briefcase className="w-3 h-3" /> Investor
             </span>
           </div>
@@ -210,12 +222,12 @@ function InvestorCard({
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-50">
+        <div className="pt-3" style={{ borderTop: "1px solid #F1F5F9" }}>
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">
               {user.isActive ? (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" style={{ boxShadow: "0 0 6px rgba(74,222,128,0.6)" }} />
                   Active
                 </span>
               ) : (
@@ -225,7 +237,7 @@ function InvestorCard({
                 </span>
               )}
             </span>
-            <Star className="w-4 h-4 text-amber-300 group-hover:text-amber-400 transition-colors" />
+            <Star className="w-4 h-4 text-amber-300 group-hover:text-amber-400 transition-colors group-hover:scale-110" />
           </div>
         </div>
       </div>
@@ -246,7 +258,16 @@ function StartupCard({
   const p = user.startupProfile;
   return (
     <FadeIn delay={delay} enabled={enabled}>
-      <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col gap-4 h-full">
+      <div
+        className="group rounded-2xl border transition-all duration-300 p-6 flex flex-col gap-4 h-full hover:-translate-y-1.5"
+        style={{
+          background: "white",
+          borderColor: "#E2E8F0",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)",
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(5,150,105,0.10), 0 12px 32px rgba(5,150,105,0.07)"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)"}
+      >
         {/* Header */}
         <div className="flex items-center gap-4">
           <Avatar src={user.profilePictureUrl} name={p?.companyName || user.fullName} size={52} />
@@ -257,7 +278,10 @@ function StartupCard({
             <p className="text-sm text-slate-500 truncate">{user.fullName}</p>
           </div>
           <div className="ml-auto flex-shrink-0">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", color: "#059669", border: "1px solid #BBF7D0" }}
+            >
               <Rocket className="w-3 h-3" /> Startup
             </span>
           </div>
@@ -307,12 +331,12 @@ function StartupCard({
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-50">
+        <div className="pt-3" style={{ borderTop: "1px solid #F1F5F9" }}>
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">
               {user.isActive ? (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" style={{ boxShadow: "0 0 6px rgba(74,222,128,0.6)" }} />
                   Active
                 </span>
               ) : (
@@ -322,7 +346,7 @@ function StartupCard({
                 </span>
               )}
             </span>
-            <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:text-emerald-500 transition-colors" />
+            <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:text-emerald-500 group-hover:scale-110 transition-all" />
           </div>
         </div>
       </div>
@@ -421,14 +445,14 @@ export default function HomePage() {
   }&layer=mapnik&marker=${config.locationLat},${config.locationLng}`;
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen font-sans" style={{ backgroundColor: "#F8FAFC" }}>
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section
         ref={heroRef}
         className="relative min-h-screen flex flex-col overflow-hidden"
         style={{ backgroundColor: "#052654" }}
       >
-        {/* Video background */}
+        {/* Video background — much more visible */}
         {heroVideoUrl && (
           <video
             ref={videoRef}
@@ -437,19 +461,20 @@ export default function HomePage() {
             loop
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ zIndex: 0, opacity: 0.28 }}
+            style={{ zIndex: 0, opacity: 0.55 }}
           >
             <source src={heroVideoUrl} />
           </video>
         )}
 
-        {/* Gradient overlay */}
+        {/* Gradient overlay — lighter, lets video breathe */}
         <div
           className="absolute inset-0"
           style={{
             zIndex: 1,
-            background:
-              "linear-gradient(135deg,rgba(5,38,84,0.92) 0%,rgba(7,54,106,0.75) 50%,rgba(2,19,42,0.95) 100%)",
+            background: heroVideoUrl
+              ? "linear-gradient(135deg,rgba(5,38,84,0.72) 0%,rgba(7,54,106,0.45) 50%,rgba(2,19,42,0.78) 100%)"
+              : "linear-gradient(135deg,rgba(5,38,84,0.97) 0%,rgba(7,54,106,0.90) 50%,rgba(2,19,42,0.98) 100%)",
           }}
         />
 
@@ -477,8 +502,14 @@ export default function HomePage() {
 
         {/* ── Nav bar ─────────────────────────────────────────────────────── */}
         <nav
-          className="relative flex items-center justify-between px-6 md:px-12 py-5"
-          style={{ zIndex: 10 }}
+          className="relative flex items-center justify-between px-6 md:px-12 py-4"
+          style={{
+            zIndex: 10,
+            background: "rgba(2,12,27,0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderBottom: "1px solid rgba(115,168,207,0.1)",
+          }}
         >
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
@@ -595,9 +626,9 @@ export default function HomePage() {
 
       {/* ── STATS ────────────────────────────────────────────────────────── */}
       {config.showStats && (
-        <section id="stats" className="py-16 bg-slate-50 border-b border-slate-100">
+        <section id="stats" className="py-20" style={{ background: "linear-gradient(180deg,#F8FAFC 0%,#EFF6FF 100%)" }}>
           <div className="max-w-6xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
                 {
                   icon: <Briefcase className="w-6 h-6" />,
@@ -605,6 +636,8 @@ export default function HomePage() {
                   value: investors.length,
                   suffix: "+",
                   color: "#2F72A5",
+                  bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
+                  border: "#BFDBFE",
                 },
                 {
                   icon: <Rocket className="w-6 h-6" />,
@@ -612,6 +645,8 @@ export default function HomePage() {
                   value: startups.length,
                   suffix: "+",
                   color: "#059669",
+                  bg: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
+                  border: "#BBF7D0",
                 },
                 {
                   icon: <TrendingUp className="w-6 h-6" />,
@@ -619,6 +654,8 @@ export default function HomePage() {
                   value: 200,
                   suffix: "+",
                   color: "#7C3AED",
+                  bg: "linear-gradient(135deg,#F5F3FF,#EDE9FE)",
+                  border: "#DDD6FE",
                 },
                 {
                   icon: <Star className="w-6 h-6" />,
@@ -626,30 +663,25 @@ export default function HomePage() {
                   value: 78,
                   suffix: "%",
                   color: "#D97706",
+                  bg: "linear-gradient(135deg,#FFFBEB,#FEF3C7)",
+                  border: "#FDE68A",
                 },
               ].map((stat, i) => (
                 <FadeIn key={stat.label} delay={i * 0.08} enabled={anim}>
-                  <div className="text-center">
+                  <div
+                    className="rounded-2xl p-6 text-center border"
+                    style={{ background: stat.bg, borderColor: stat.border, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+                  >
                     <div
                       className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
-                      style={{
-                        backgroundColor: `${stat.color}18`,
-                        color: stat.color,
-                      }}
+                      style={{ backgroundColor: `${stat.color}20`, color: stat.color }}
                     >
                       {stat.icon}
                     </div>
-                    <p
-                      className="text-4xl font-extrabold mb-1"
-                      style={{ color: stat.color }}
-                    >
-                      <AnimatedCounter
-                        target={stat.value}
-                        suffix={stat.suffix}
-                        enabled={anim}
-                      />
+                    <p className="text-4xl font-extrabold mb-1" style={{ color: stat.color }}>
+                      <AnimatedCounter target={stat.value} suffix={stat.suffix} enabled={anim} />
                     </p>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm font-semibold" style={{ color: stat.color, opacity: 0.75 }}>
                       {stat.label}
                     </p>
                   </div>
@@ -662,7 +694,7 @@ export default function HomePage() {
 
       {/* ── INVESTORS ────────────────────────────────────────────────────── */}
       {config.showInvestors && (
-        <section id="investors" className="py-20 bg-white">
+        <section id="investors" className="py-20" style={{ backgroundColor: "#fff" }}>
           <div className="max-w-7xl mx-auto px-6">
             <SectionHeading
               label="Our Investors"
@@ -695,7 +727,7 @@ export default function HomePage() {
 
       {/* ── STARTUPS ─────────────────────────────────────────────────────── */}
       {config.showStartups && (
-        <section id="startups" className="py-20 bg-slate-50">
+        <section id="startups" className="py-20" style={{ background: "linear-gradient(180deg,#F8FAFC 0%,#F0FDF4 100%)" }}>
           <div className="max-w-7xl mx-auto px-6">
             <SectionHeading
               label="Our Startups"

@@ -416,39 +416,54 @@ export default function InvestorExecutionsPage() {
             label: "Total Executions",
             value: executions.length,
             icon: Briefcase,
-            bg: "bg-[var(--color-primary-50)]",
-            color: "text-[var(--color-primary)]",
+            gradient: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
+            border: "#BFDBFE",
+            iconBg: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
+            valueColor: "#1D4ED8",
           },
           {
             label: "Active Matches",
             value: executions.filter((e) => e.status === "MATCHED").length,
             icon: CheckCircle2,
-            bg: "bg-green-50",
-            color: "text-green-600",
+            gradient: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
+            border: "#BBF7D0",
+            iconBg: "linear-gradient(135deg,#059669,#10B981)",
+            valueColor: "#059669",
           },
           {
             label: "Pending",
             value: executions.filter((e) => e.status === "PENDING").length,
             icon: Clock,
-            bg: "bg-blue-50",
-            color: "text-blue-600",
+            gradient: "linear-gradient(135deg,#FFFBEB,#FEF3C7)",
+            border: "#FDE68A",
+            iconBg: "linear-gradient(135deg,#B45309,#D97706)",
+            valueColor: "#B45309",
           },
         ].map((stat) => (
-          <Card key={stat.label} className="border border-[var(--color-border)]">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div
-                className={`h-10 w-10 rounded-lg flex items-center justify-center ${stat.bg}`}
-              >
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[var(--color-primary-800)]">
-                  {stat.value}
-                </p>
-                <p className="text-xs text-[var(--color-neutral-500)]">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            key={stat.label}
+            className="rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5"
+            style={{
+              background: stat.gradient,
+              borderColor: stat.border,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+            }}
+          >
+            <div
+              className="h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.border}` }}
+            >
+              <stat.icon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold" style={{ color: stat.valueColor }}>
+                {stat.value}
+              </p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: stat.valueColor, opacity: 0.7 }}>
+                {stat.label}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
 

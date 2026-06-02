@@ -105,51 +105,63 @@ export default function AdminDashboardPage() {
             label: "Total Executions",
             value: analytics?.totalExecutions ?? 0,
             icon: ClipboardList,
-            bg: "bg-[var(--color-primary-50)]",
-            color: "text-[var(--color-primary)]",
+            gradient: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
+            border: "#BFDBFE",
+            iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
+            valueColor: "#1D4ED8",
           },
           {
             label: "Approved",
             value: analytics?.totalApproved ?? 0,
             icon: CheckCircle2,
-            bg: "bg-green-50",
-            color: "text-green-600",
+            gradient: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
+            border: "#BBF7D0",
+            iconBg: "linear-gradient(135deg,#059669,#10B981)",
+            valueColor: "#059669",
           },
           {
             label: "Matched",
             value: analytics?.totalMatched ?? 0,
             icon: TrendingUp,
-            bg: "bg-[var(--color-secondary-50)]",
-            color: "text-[var(--color-secondary)]",
+            gradient: "linear-gradient(135deg,#F0FDFA,#CCFBF1)",
+            border: "#99F6E4",
+            iconBg: "linear-gradient(135deg,#0D9488,#14B8A6)",
+            valueColor: "#0D9488",
           },
           {
             label: "Pending",
             value: analytics?.totalPending ?? 0,
             icon: Clock,
-            bg: "bg-blue-50",
-            color: "text-blue-600",
+            gradient: "linear-gradient(135deg,#FFFBEB,#FEF3C7)",
+            border: "#FDE68A",
+            iconBg: "linear-gradient(135deg,#D97706,#F59E0B)",
+            valueColor: "#D97706",
           },
         ].map((stat) => (
-          <Card
+          <div
             key={stat.label}
-            className="border border-[var(--color-border)]"
+            className="rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5"
+            style={{
+              background: stat.gradient,
+              borderColor: stat.border,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+            }}
           >
-            <CardContent className="p-5 flex items-center gap-4">
-              <div
-                className={`h-11 w-11 rounded-xl flex items-center justify-center ${stat.bg}`}
-              >
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-[var(--color-primary-800)]">
-                  {stat.value}
-                </p>
-                <p className="text-xs text-[var(--color-neutral-500)]">
-                  {stat.label}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            <div
+              className="h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.border}` }}
+            >
+              <stat.icon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold" style={{ color: stat.valueColor }}>
+                {stat.value}
+              </p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: stat.valueColor, opacity: 0.7 }}>
+                {stat.label}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -262,37 +274,59 @@ export default function AdminDashboardPage() {
             desc: "View, activate or deactivate user accounts",
             href: "/admin/users",
             icon: Users,
+            accent: "#2563EB",
+            bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
+            border: "#BFDBFE",
           },
           {
             label: "Audit Logs",
             desc: "Full system activity trail",
             href: "/admin/audit-logs",
             icon: ClipboardList,
+            accent: "#7C3AED",
+            bg: "linear-gradient(135deg,#F5F3FF,#EDE9FE)",
+            border: "#DDD6FE",
           },
           {
             label: "All Executions",
             desc: "View all startup and investor executions",
             href: "/admin/executions",
             icon: BarChart2,
+            accent: "#0D9488",
+            bg: "linear-gradient(135deg,#F0FDFA,#CCFBF1)",
+            border: "#99F6E4",
           },
         ].map((link) => (
           <Link key={link.label} href={link.href}>
-            <Card className="border border-[var(--color-border)] hover:shadow-md hover:border-[var(--color-primary-200)] transition-all cursor-pointer h-full">
-              <CardContent className="p-5 flex items-start gap-3">
-                <div className="h-9 w-9 rounded-lg bg-[var(--color-primary-50)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <link.icon className="h-5 w-5 text-[var(--color-primary)]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[var(--color-primary-800)]">
-                    {link.label}
-                  </p>
-                  <p className="text-xs text-[var(--color-neutral-500)] mt-0.5">
-                    {link.desc}
-                  </p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-[var(--color-neutral-400)] flex-shrink-0 mt-0.5" />
-              </CardContent>
-            </Card>
+            <div
+              className="rounded-2xl border p-5 flex items-start gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
+              style={{
+                background: link.bg,
+                borderColor: link.border,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${link.border}, 0 8px 24px rgba(0,0,0,0.06)`}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"}
+            >
+              <div
+                className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: link.accent, boxShadow: `0 4px 12px ${link.border}` }}
+              >
+                <link.icon className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: link.accent }}>
+                  {link.label}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {link.desc}
+                </p>
+              </div>
+              <ArrowRight
+                className="h-4 w-4 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1"
+                style={{ color: link.accent, opacity: 0.5 }}
+              />
+            </div>
           </Link>
         ))}
       </div>
