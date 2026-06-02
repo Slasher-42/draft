@@ -228,55 +228,43 @@ export function FloatingAIAssistant() {
       {/* ── Premium circular FAB ──────────────────────────────────────────── */}
       <AnimatePresence>
         {!isOpen && (
-          <motion.div
-            key="fab-wrapper"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+          <motion.button
+            key="fab-pill"
+            onClick={handleOpen}
+            initial={{ scale: 0, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0, y: 16 }}
+            whileHover={{ scale: 1.05, boxShadow: "0 8px 32px rgba(109,40,217,0.55), 0 2px 12px rgba(0,0,0,0.18), inset 0 1px 1px rgba(255,255,255,0.3)" }}
+            whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
-            style={{ position: "fixed", bottom: 28, right: 28, zIndex: 9998, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+            style={{
+              position: "fixed", bottom: 28, right: 28, zIndex: 9998,
+              display: "flex", alignItems: "center", gap: 8,
+              paddingLeft: 16, paddingRight: 20, height: 44,
+              borderRadius: 999,
+              background: "linear-gradient(135deg,#A78BFA 0%,#8B5CF6 45%,#6D28D9 100%)",
+              border: "1.5px solid rgba(255,255,255,0.22)",
+              cursor: "pointer", color: "#fff",
+              boxShadow: "0 6px 24px rgba(109,40,217,0.45), 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.25)",
+              animation: "fabPulse 2.8s ease-in-out infinite",
+            } as React.CSSProperties}
+            title="Open AI Assistant"
           >
-            {/* Circular button */}
-            <motion.button
-              onClick={handleOpen}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              style={{
-                width: 60, height: 60, borderRadius: "50%",
-                background: "linear-gradient(135deg,#A78BFA 0%,#8B5CF6 40%,#6D28D9 100%)",
-                border: "2px solid rgba(255,255,255,0.2)",
-                cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff",
-                boxShadow: "0 6px 24px rgba(109,40,217,0.45), 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.25)",
-                animation: "fabPulse 2.5s ease-in-out infinite",
-                position: "relative",
-              }}
-              title="Open AI Assistant"
-            >
-              <Sparkles size={22} />
-              {unread && (
-                <span style={{
-                  position: "absolute", top: 2, right: 2,
-                  width: 12, height: 12, borderRadius: "50%",
-                  background: "#ef4444", border: "2.5px solid #fff",
-                }} />
-              )}
-            </motion.button>
-
-            {/* Label pill */}
-            <div style={{
-              background: "linear-gradient(135deg,rgba(139,92,246,0.18),rgba(109,40,217,0.12))",
-              border: "1px solid rgba(139,92,246,0.3)",
-              backdropFilter: "blur(8px)",
-              borderRadius: 20, padding: "3px 10px",
-              fontSize: 10.5, fontWeight: 700, color: "#8B5CF6",
-              letterSpacing: "0.04em", whiteSpace: "nowrap",
-              boxShadow: "0 2px 8px rgba(109,40,217,0.15)",
+            <Sparkles size={17} style={{ flexShrink: 0 }} />
+            <span style={{
+              fontSize: 13.5, fontWeight: 700, letterSpacing: "0.01em",
+              whiteSpace: "nowrap", lineHeight: 1,
             }}>
               AI Assistant
-            </div>
-          </motion.div>
+            </span>
+            {unread && (
+              <span style={{
+                position: "absolute", top: -3, right: -3,
+                width: 11, height: 11, borderRadius: "50%",
+                background: "#ef4444", border: "2px solid #fff",
+              }} />
+            )}
+          </motion.button>
         )}
       </AnimatePresence>
 
