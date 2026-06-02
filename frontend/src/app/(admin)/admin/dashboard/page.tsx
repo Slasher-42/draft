@@ -105,61 +105,53 @@ export default function AdminDashboardPage() {
             label: "Total Executions",
             value: analytics?.totalExecutions ?? 0,
             icon: ClipboardList,
-            gradient: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
-            border: "#BFDBFE",
+            bgClass: "stat-bg-blue",
+            textClass: "stat-text-blue",
             iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
-            valueColor: "#1D4ED8",
+            iconShadow: "rgba(59,130,246,0.35)",
           },
           {
             label: "Approved",
             value: analytics?.totalApproved ?? 0,
             icon: CheckCircle2,
-            gradient: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
-            border: "#BBF7D0",
+            bgClass: "stat-bg-green",
+            textClass: "stat-text-green",
             iconBg: "linear-gradient(135deg,#059669,#10B981)",
-            valueColor: "#059669",
+            iconShadow: "rgba(16,185,129,0.35)",
           },
           {
             label: "Matched",
             value: analytics?.totalMatched ?? 0,
             icon: TrendingUp,
-            gradient: "linear-gradient(135deg,#F0FDFA,#CCFBF1)",
-            border: "#99F6E4",
+            bgClass: "stat-bg-teal",
+            textClass: "stat-text-teal",
             iconBg: "linear-gradient(135deg,#0D9488,#14B8A6)",
-            valueColor: "#0D9488",
+            iconShadow: "rgba(20,184,166,0.35)",
           },
           {
             label: "Pending",
             value: analytics?.totalPending ?? 0,
             icon: Clock,
-            gradient: "linear-gradient(135deg,#FFFBEB,#FEF3C7)",
-            border: "#FDE68A",
+            bgClass: "stat-bg-amber",
+            textClass: "stat-text-amber",
             iconBg: "linear-gradient(135deg,#D97706,#F59E0B)",
-            valueColor: "#D97706",
+            iconShadow: "rgba(245,158,11,0.35)",
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5"
-            style={{
-              background: stat.gradient,
-              borderColor: stat.border,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-            }}
+            className={`${stat.bgClass} rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5`}
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)" }}
           >
             <div
               className="h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.border}` }}
+              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.iconShadow}` }}
             >
               <stat.icon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold" style={{ color: stat.valueColor }}>
-                {stat.value}
-              </p>
-              <p className="text-xs font-medium mt-0.5" style={{ color: stat.valueColor, opacity: 0.7 }}>
-                {stat.label}
-              </p>
+              <p className={`text-2xl font-extrabold ${stat.textClass}`}>{stat.value}</p>
+              <p className={`text-xs font-medium mt-0.5 opacity-75 ${stat.textClass}`}>{stat.label}</p>
             </div>
           </div>
         ))}
@@ -274,58 +266,45 @@ export default function AdminDashboardPage() {
             desc: "View, activate or deactivate user accounts",
             href: "/admin/users",
             icon: Users,
-            accent: "#2563EB",
-            bg: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
-            border: "#BFDBFE",
+            bgClass: "stat-bg-blue",
+            textClass: "stat-text-blue",
+            iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
           },
           {
             label: "Audit Logs",
             desc: "Full system activity trail",
             href: "/admin/audit-logs",
             icon: ClipboardList,
-            accent: "#7C3AED",
-            bg: "linear-gradient(135deg,#F5F3FF,#EDE9FE)",
-            border: "#DDD6FE",
+            bgClass: "stat-bg-violet",
+            textClass: "stat-text-violet",
+            iconBg: "linear-gradient(135deg,#7C3AED,#8B5CF6)",
           },
           {
             label: "All Executions",
             desc: "View all startup and investor executions",
             href: "/admin/executions",
             icon: BarChart2,
-            accent: "#0D9488",
-            bg: "linear-gradient(135deg,#F0FDFA,#CCFBF1)",
-            border: "#99F6E4",
+            bgClass: "stat-bg-teal",
+            textClass: "stat-text-teal",
+            iconBg: "linear-gradient(135deg,#0D9488,#14B8A6)",
           },
         ].map((link) => (
           <Link key={link.label} href={link.href}>
             <div
-              className="rounded-2xl border p-5 flex items-start gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
-              style={{
-                background: link.bg,
-                borderColor: link.border,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-              }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px ${link.border}, 0 8px 24px rgba(0,0,0,0.06)`}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"}
+              className={`${link.bgClass} rounded-2xl border p-5 flex items-start gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group`}
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
             >
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: link.accent, boxShadow: `0 4px 12px ${link.border}` }}
+                style={{ background: link.iconBg }}
               >
                 <link.icon className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold" style={{ color: link.accent }}>
-                  {link.label}
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {link.desc}
-                </p>
+                <p className={`text-sm font-bold ${link.textClass}`}>{link.label}</p>
+                <p className="text-xs text-[var(--color-neutral-500)] mt-0.5">{link.desc}</p>
               </div>
-              <ArrowRight
-                className="h-4 w-4 flex-shrink-0 mt-0.5 transition-transform group-hover:translate-x-1"
-                style={{ color: link.accent, opacity: 0.5 }}
-              />
+              <ArrowRight className={`h-4 w-4 flex-shrink-0 mt-0.5 opacity-50 transition-transform group-hover:translate-x-1 ${link.textClass}`} />
             </div>
           </Link>
         ))}

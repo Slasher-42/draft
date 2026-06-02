@@ -29,11 +29,11 @@ const pageTitles: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  STARTUP_APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  STARTUP_REJECTED: "bg-red-50 text-red-700 border-red-200",
-  STARTUP_ESCALATED: "bg-amber-50 text-amber-700 border-amber-200",
-  MATCH_FOUND: "bg-blue-50 text-blue-700 border-blue-200",
-  INTERVAL_UPDATE: "bg-slate-50 text-slate-600 border-slate-200",
+  STARTUP_APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  STARTUP_REJECTED: "bg-red-50 text-red-700 border border-red-200",
+  STARTUP_ESCALATED: "bg-amber-50 text-amber-700 border border-amber-200",
+  MATCH_FOUND: "bg-blue-50 text-blue-700 border border-blue-200",
+  INTERVAL_UPDATE: "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] border border-[var(--color-border)]",
 };
 
 const typeDots: Record<string, string> = {
@@ -41,7 +41,7 @@ const typeDots: Record<string, string> = {
   STARTUP_REJECTED: "bg-red-400",
   STARTUP_ESCALATED: "bg-amber-400",
   MATCH_FOUND: "bg-blue-400",
-  INTERVAL_UPDATE: "bg-slate-400",
+  INTERVAL_UPDATE: "bg-[var(--color-neutral-400)]",
 };
 
 const typeLabels: Record<string, string> = {
@@ -64,10 +64,10 @@ function timeAgo(dateStr: string): string {
 }
 
 export function DashboardHeader() {
-  const pathname       = usePathname();
-  const { user }       = useAuth();
+  const pathname        = usePathname();
+  const { user }        = useAuth();
   const [open, setOpen] = useState(false);
-  const dropdownRef    = useRef<HTMLDivElement>(null);
+  const dropdownRef     = useRef<HTMLDivElement>(null);
 
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
@@ -90,28 +90,18 @@ export function DashboardHeader() {
   };
 
   return (
-    <header
-      className="sticky top-0 z-20 flex items-center justify-between px-6 py-3.5"
-      style={{
-        background: "rgba(255,255,255,0.92)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(226,232,240,0.8)",
-        boxShadow: "0 1px 0 rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)",
-      }}
-    >
+    <header className="glass-header sticky top-0 z-20 flex items-center justify-between px-6 py-3.5">
       {/* Left — page title */}
       <div className="flex items-center gap-3">
-        {/* Gradient accent bar */}
         <div
           className="w-1 h-8 rounded-full flex-shrink-0"
           style={{ background: "linear-gradient(180deg,#0B4A8B,#2F72A5)" }}
         />
         <div>
-          <h1 className="text-base font-bold leading-tight" style={{ color: "#052654" }}>
+          <h1 className="text-base font-bold leading-tight text-[var(--color-primary-800)]">
             {getTitle()}
           </h1>
-          <p className="text-[11px] flex items-center gap-1" style={{ color: "#94A3B8" }}>
+          <p className="text-[11px] flex items-center gap-1 text-[var(--color-neutral-400)]">
             <Sparkles className="w-3 h-3" />
             RG Partners · Investment Readiness Assessment System
           </p>
@@ -126,9 +116,9 @@ export function DashboardHeader() {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((prev) => !prev)}
-            className="relative h-9 w-9 flex items-center justify-center rounded-xl transition-all hover:bg-slate-50 border border-transparent hover:border-slate-200"
+            className="relative h-9 w-9 flex items-center justify-center rounded-xl transition-all hover:bg-[var(--color-neutral-100)] border border-transparent hover:border-[var(--color-border)]"
           >
-            <Bell className="h-4.5 w-4.5 text-slate-500" />
+            <Bell className="h-4 w-4 text-[var(--color-neutral-500)]" />
             {unreadCount > 0 && (
               <span
                 className="absolute top-1 right-1 h-4 w-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
@@ -140,23 +130,14 @@ export function DashboardHeader() {
           </button>
 
           {open && (
-            <div
-              className="absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50"
-              style={{
-                background: "rgba(255,255,255,0.97)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(226,232,240,0.9)",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 12px 40px rgba(0,0,0,0.06)",
-              }}
-            >
+            <div className="glass-dropdown absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50">
               {/* Header */}
               <div
                 className="px-4 py-3 flex items-center justify-between"
-                style={{ borderBottom: "1px solid rgba(226,232,240,0.8)" }}
+                style={{ borderBottom: "1px solid var(--color-border)" }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-800">Notifications</span>
+                  <span className="text-sm font-bold text-[var(--color-foreground)]">Notifications</span>
                   {unreadCount > 0 && (
                     <span
                       className="px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
@@ -170,8 +151,7 @@ export function DashboardHeader() {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-[11px] font-medium hover:underline flex items-center gap-1"
-                      style={{ color: "#0B4A8B" }}
+                      className="text-[11px] font-medium hover:underline flex items-center gap-1 text-[var(--color-primary)]"
                     >
                       <CheckCheck className="h-3 w-3" />
                       Mark all read
@@ -179,56 +159,49 @@ export function DashboardHeader() {
                   )}
                   <button
                     onClick={() => setOpen(false)}
-                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+                    className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-[var(--color-neutral-100)] transition-colors"
                   >
-                    <X className="h-3.5 w-3.5 text-slate-400" />
+                    <X className="h-3.5 w-3.5 text-[var(--color-neutral-400)]" />
                   </button>
                 </div>
               </div>
 
               {/* List */}
-              <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+              <div
+                className="max-h-96 overflow-y-auto"
+                style={{ borderTop: "none", divideColor: "var(--color-border)" }}
+              >
                 {notifications.length === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <div
                       className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                      style={{ background: "linear-gradient(135deg,#EFF6FF,#DBEAFE)" }}
+                      style={{ background: "linear-gradient(135deg,var(--color-primary-50),var(--color-primary-100))" }}
                     >
-                      <Bell className="h-5 w-5 text-blue-400" />
+                      <Bell className="h-5 w-5 text-[var(--color-primary)]" />
                     </div>
-                    <p className="text-sm font-medium text-slate-700">All caught up</p>
-                    <p className="text-xs text-slate-400 mt-0.5">No notifications yet</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">All caught up</p>
+                    <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">No notifications yet</p>
                   </div>
                 ) : (
                   notifications.map((n) => (
                     <div
                       key={n.id}
                       onClick={() => { if (!n.read) markAsRead(n.id); }}
-                      className={`px-4 py-3.5 cursor-pointer hover:bg-slate-50/80 transition-colors ${
-                        !n.read ? "bg-blue-50/30" : ""
-                      }`}
+                      className={`notif-item px-4 py-3.5 cursor-pointer border-b border-[var(--color-border)] last:border-b-0 ${!n.read ? "notif-item-unread" : ""}`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-                            typeColors[n.type] ?? "bg-slate-50 text-slate-600 border-slate-200"
-                          }`}
-                        >
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${typeColors[n.type] ?? "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)]"}`}>
                           {typeLabels[n.type] ?? n.type}
                         </span>
-                        <span className="text-[10px] text-slate-400 flex-shrink-0">
+                        <span className="text-[10px] text-[var(--color-neutral-400)] flex-shrink-0">
                           {timeAgo(n.createdAt)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">
+                      <p className="text-xs text-[var(--color-neutral-600)] leading-relaxed">
                         {n.message}
                       </p>
                       {!n.read && (
-                        <span
-                          className={`inline-block mt-1.5 h-1.5 w-1.5 rounded-full ${
-                            typeDots[n.type] ?? "bg-slate-400"
-                          }`}
-                        />
+                        <span className={`inline-block mt-1.5 h-1.5 w-1.5 rounded-full ${typeDots[n.type] ?? "bg-[var(--color-neutral-400)]"}`} />
                       )}
                     </div>
                   ))
@@ -241,7 +214,7 @@ export function DashboardHeader() {
         {/* User avatar */}
         <div
           className="hidden sm:flex items-center gap-2.5 pl-3 ml-1"
-          style={{ borderLeft: "1px solid rgba(226,232,240,0.8)" }}
+          style={{ borderLeft: "1px solid var(--color-border)" }}
         >
           <div
             className="h-8 w-8 rounded-xl flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0"
@@ -257,8 +230,8 @@ export function DashboardHeader() {
             )}
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-slate-800">{user?.fullName}</p>
-            <p className="text-[11px] text-slate-400 capitalize">{user?.role?.toLowerCase()}</p>
+            <p className="text-sm font-semibold text-[var(--color-foreground)]">{user?.fullName}</p>
+            <p className="text-[11px] text-[var(--color-neutral-400)] capitalize">{user?.role?.toLowerCase()}</p>
           </div>
         </div>
       </div>

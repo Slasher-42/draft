@@ -154,12 +154,7 @@ export default function AuthLayout({
       </div>
 
       {/* ── Right panel ─────────────────────────────────────────────────── */}
-      <div
-        className="flex-1 flex flex-col justify-center items-center px-6 py-12 relative"
-        style={{
-          background: "linear-gradient(160deg,#F8FAFC 0%,#EFF6FF 50%,#F8FAFC 100%)",
-        }}
-      >
+      <div className="auth-right-bg flex-1 flex flex-col justify-center items-center px-6 py-12 relative">
         {/* Subtle background circles */}
         <div
           className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"

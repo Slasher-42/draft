@@ -416,52 +416,44 @@ export default function InvestorExecutionsPage() {
             label: "Total Executions",
             value: executions.length,
             icon: Briefcase,
-            gradient: "linear-gradient(135deg,#EFF6FF,#DBEAFE)",
-            border: "#BFDBFE",
+            bgClass: "stat-bg-blue",
+            textClass: "stat-text-blue",
             iconBg: "linear-gradient(135deg,#1D4ED8,#3B82F6)",
-            valueColor: "#1D4ED8",
+            iconShadow: "rgba(59,130,246,0.35)",
           },
           {
             label: "Active Matches",
             value: executions.filter((e) => e.status === "MATCHED").length,
             icon: CheckCircle2,
-            gradient: "linear-gradient(135deg,#F0FDF4,#DCFCE7)",
-            border: "#BBF7D0",
+            bgClass: "stat-bg-green",
+            textClass: "stat-text-green",
             iconBg: "linear-gradient(135deg,#059669,#10B981)",
-            valueColor: "#059669",
+            iconShadow: "rgba(16,185,129,0.35)",
           },
           {
             label: "Pending",
             value: executions.filter((e) => e.status === "PENDING").length,
             icon: Clock,
-            gradient: "linear-gradient(135deg,#FFFBEB,#FEF3C7)",
-            border: "#FDE68A",
+            bgClass: "stat-bg-amber",
+            textClass: "stat-text-amber",
             iconBg: "linear-gradient(135deg,#B45309,#D97706)",
-            valueColor: "#B45309",
+            iconShadow: "rgba(217,119,6,0.35)",
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5"
-            style={{
-              background: stat.gradient,
-              borderColor: stat.border,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-            }}
+            className={`${stat.bgClass} rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5`}
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)" }}
           >
             <div
               className="h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.border}` }}
+              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.iconShadow}` }}
             >
               <stat.icon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-2xl font-extrabold" style={{ color: stat.valueColor }}>
-                {stat.value}
-              </p>
-              <p className="text-xs font-medium mt-0.5" style={{ color: stat.valueColor, opacity: 0.7 }}>
-                {stat.label}
-              </p>
+              <p className={`text-2xl font-extrabold ${stat.textClass}`}>{stat.value}</p>
+              <p className={`text-xs font-medium mt-0.5 opacity-75 ${stat.textClass}`}>{stat.label}</p>
             </div>
           </div>
         ))}
