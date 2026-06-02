@@ -3,6 +3,7 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RouteGuard } from "@/components/common/RouteGuard";
+import { FloatingAIAssistant } from "@/components/assistant/FloatingAIAssistant";
 
 export default function InvestorLayout({
   children,
@@ -20,6 +21,7 @@ export default function InvestorLayout({
           </main>
         </div>
       </div>
+      <FloatingAIAssistant />
     </RouteGuard>
   );
 }

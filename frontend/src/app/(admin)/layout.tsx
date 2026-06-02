@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RouteGuard } from "@/components/common/RouteGuard";
 import { prefetchRoute } from "@/lib/prefetch";
 import { useAuth } from "@/context/AuthContext";
+import { FloatingAIAssistant } from "@/components/assistant/FloatingAIAssistant";
 
 export default function AdminLayout({
   children,
@@ -34,6 +35,7 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
+      <FloatingAIAssistant />
     </RouteGuard>
   );
 }
