@@ -4,10 +4,9 @@ import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Send, Loader2, RefreshCw, MessageSquareMore, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  buildSystemPrompt,
-  getWelcomeMessage,
-} from "@/services/assistantContextService";
+import { getWelcomeMessage } from "@/services/assistantContextService";
+
+const AI_SERVICE_URL = "https://ai-assessment-service.onrender.com";
 
 interface Message {
   role: "user" | "assistant";
@@ -150,10 +149,8 @@ export function FloatingAIAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isLoadingContext, setIsLoadingContext] = useState(false);
   const [unread, setUnread] = useState(false);
 
-  const systemPromptRef = useRef<string | null>(null);
   const historyRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -167,35 +164,18 @@ export function FloatingAIAssistant() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const initConversation = useCallback(async () => {
+  const initConversation = useCallback(() => {
     if (!user) return;
-    setIsLoadingContext(true);
     setMessages([]);
     historyRef.current = [];
-    systemPromptRef.current = null;
-
-    try {
-      const prompt = await buildSystemPrompt(user);
-      systemPromptRef.current = prompt;
-      const welcome = getWelcomeMessage(user);
-      setMessages([{ role: "assistant", content: welcome, timestamp: new Date() }]);
-    } catch {
-      setMessages([{
-        role: "assistant",
-        content: "Hi! I'm Aria. I had trouble loading your live data, but I can still answer general questions. How can I help?",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsLoadingContext(false);
-    }
+    const welcome = getWelcomeMessage(user);
+    setMessages([{ role: "assistant", content: welcome, timestamp: new Date() }]);
   }, [user]);
 
   const handleOpen = useCallback(() => {
     setIsOpen(true);
     setUnread(false);
-    if (messages.length === 0) {
-      initConversation();
-    }
+    if (messages.length === 0) initConversation();
   }, [messages.length, initConversation]);
 
   const handleClose = useCallback(() => {
@@ -210,10 +190,10 @@ export function FloatingAIAssistant() {
 
   const sendMessage = useCallback(async () => {
     const text = input.trim();
-    if (!text || isStreaming || isLoadingContext) return;
+    if (!text || isStreaming) return;
 
-    const prompt = systemPromptRef.current;
-    if (!prompt) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) return;
 
     setInput("");
     textareaRef.current && (textareaRef.current.style.height = "auto");
@@ -229,14 +209,16 @@ export function FloatingAIAssistant() {
 
     let fullText = "";
     try {
-      const res = await fetch("/api/assistant/chat", {
+      const res = await fetch(`${AI_SERVICE_URL}/api/assistant/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         signal: abortRef.current.signal,
         body: JSON.stringify({
           message: text,
-          conversationHistory: historySnapshot,
-          systemPrompt: prompt,
+          conversation_history: historySnapshot,
         }),
       });
 
@@ -277,7 +259,7 @@ export function FloatingAIAssistant() {
     } finally {
       setIsStreaming(false);
     }
-  }, [input, isStreaming, isLoadingContext, isOpen]);
+  }, [input, isStreaming, false, isOpen]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -433,12 +415,12 @@ export function FloatingAIAssistant() {
                         width: 7,
                         height: 7,
                         borderRadius: "50%",
-                        background: isLoadingContext ? "#fbbf24" : "#34d399",
+                        background: false ? "#fbbf24" : "#34d399",
                         flexShrink: 0,
                       }}
                     />
                     <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 11.5 }}>
-                      {isLoadingContext ? "Loading your data..." : "AI Assistant · Annick AI"}
+                      {false ? "Loading your data..." : "AI Assistant · Annick AI"}
                     </span>
                     {user.role && (
                       <span
@@ -504,7 +486,7 @@ export function FloatingAIAssistant() {
                   flexDirection: "column",
                 }}
               >
-                {isLoadingContext && messages.length === 0 ? (
+                {false && messages.length === 0 ? (
                   <div
                     style={{
                       flex: 1,
@@ -591,11 +573,11 @@ export function FloatingAIAssistant() {
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder={
-                      isLoadingContext
+                      false
                         ? "Loading context, please wait…"
                         : "Ask anything… (Enter to send, Shift+Enter for newline)"
                     }
-                    disabled={isLoadingContext}
+                    disabled={false}
                     rows={1}
                     style={{
                       flex: 1,
@@ -613,31 +595,31 @@ export function FloatingAIAssistant() {
                   />
                   <button
                     onClick={sendMessage}
-                    disabled={!input.trim() || isStreaming || isLoadingContext}
+                    disabled={!input.trim() || isStreaming || false}
                     style={{
                       width: 34,
                       height: 34,
                       borderRadius: 10,
                       background:
-                        !input.trim() || isStreaming || isLoadingContext
+                        !input.trim() || isStreaming || false
                           ? "var(--color-neutral-200, #e5e5e9)"
                           : "linear-gradient(135deg, #7c6af7 0%, #5b4de0 100%)",
                       border: "none",
                       cursor:
-                        !input.trim() || isStreaming || isLoadingContext
+                        !input.trim() || isStreaming || false
                           ? "not-allowed"
                           : "pointer",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       color:
-                        !input.trim() || isStreaming || isLoadingContext
+                        !input.trim() || isStreaming || false
                           ? "var(--color-neutral-400, #9090a8)"
                           : "#fff",
                       flexShrink: 0,
                       transition: "all 0.2s",
                       boxShadow:
-                        !input.trim() || isStreaming || isLoadingContext
+                        !input.trim() || isStreaming || false
                           ? "none"
                           : "0 2px 8px rgba(124,106,247,0.35)",
                     }}
