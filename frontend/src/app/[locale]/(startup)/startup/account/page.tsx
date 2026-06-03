@@ -32,7 +32,6 @@ import {
   ChevronUp,
   Banknote,
 } from "lucide-react";
-import { matchingService } from "@/services/matchingService";
 
 const txStatusIcon: Record<string, React.ElementType> = {
   COMPLETED: CheckCircle2,

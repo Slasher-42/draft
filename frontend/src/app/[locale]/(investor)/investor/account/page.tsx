@@ -542,8 +542,6 @@ export default function InvestorAccountPage() {
               )}
             </div>
 
-            </div>
-
             {selectedMatchId && selectedStartup && (
               <div className="rounded-lg bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] p-3 text-sm text-[var(--color-primary-800)]">
                 Investing in <span className="font-semibold">{selectedStartup.fullName}</span>
