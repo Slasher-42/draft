@@ -359,18 +359,61 @@
     "confirmPassword": "Confirm Password"
   },
   "home": {
+    "nav": {
+      "investors": "Investors",
+      "startups": "Startups",
+      "contact": "Contact",
+      "signIn": "Sign In",
+      "register": "Register",
+      "logout": "Logout"
+    },
     "hero": {
-      "badge": "AI-Powered Platform",
-      "title1": "AI-Powered Investment",
-      "title2": "Readiness Assessment",
-      "subtitle": "Connecting promising startups with the right investors through intelligent assessment and matching.",
-      "getStarted": "Get Started",
-      "learnMore": "Learn More"
+      "badge": "AI-Powered Investment Readiness Platform"
+    },
+    "trust": {
+      "users": "Trusted by 250+ users",
+      "industries": "15+ industries",
+      "reach": "Pan-African reach"
     },
     "stats": {
-      "startupsAssessed": "Startups Assessed",
-      "investorsMatched": "Investors Matched",
+      "investors": "Investors",
+      "startups": "Startups",
+      "assessments": "Assessments",
       "successRate": "Success Rate"
+    },
+    "sections": {
+      "investorsLabel": "Our Investors",
+      "investorsTitle": "Strategic Investment Partners",
+      "investorsSubtitle": "Meet the visionary investors driving Africa's economic transformation through smart capital deployment.",
+      "startupsLabel": "Our Startups",
+      "startupsTitle": "Innovative Ventures Seeking Growth",
+      "startupsSubtitle": "Discover the bold startups building tomorrow's solutions — assessed and ready for investment.",
+      "contactLabel": "Get In Touch",
+      "contactTitle": "Contact Us",
+      "contactSubtitle": "Have questions or want to learn more? Reach out to our team."
+    },
+    "contact": {
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address"
+    },
+    "cards": {
+      "active": "Active",
+      "member": "Member",
+      "investor": "Investor",
+      "startup": "Startup",
+      "founded": "Founded {year}",
+      "teamMembers": "{count} team members"
+    },
+    "empty": {
+      "investors": "Investors will appear here once they join the platform.",
+      "startups": "Startups will appear here once they complete their profiles."
+    },
+    "footer": {
+      "signIn": "Sign In",
+      "register": "Register",
+      "contact": "Contact",
+      "copyright": "© {year} RG Partners Financial Services. All rights reserved."
     }
   },
   "language": {

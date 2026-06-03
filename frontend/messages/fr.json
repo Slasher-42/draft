@@ -313,18 +313,61 @@
     "confirmPassword": "Confirmer le mot de passe"
   },
   "home": {
+    "nav": {
+      "investors": "Investisseurs",
+      "startups": "Startups",
+      "contact": "Contact",
+      "signIn": "Se connecter",
+      "register": "S'inscrire",
+      "logout": "Déconnexion"
+    },
     "hero": {
-      "badge": "Plateforme IA",
-      "title1": "Évaluation de la préparation",
-      "title2": "à l'investissement par IA",
-      "subtitle": "Connecter les startups prometteuses aux bons investisseurs grâce à une évaluation intelligente.",
-      "getStarted": "Commencer",
-      "learnMore": "En savoir plus"
+      "badge": "Plateforme d'évaluation de la préparation à l'investissement par IA"
+    },
+    "trust": {
+      "users": "Approuvé par plus de 250 utilisateurs",
+      "industries": "Plus de 15 secteurs",
+      "reach": "Portée panafricaine"
     },
     "stats": {
-      "startupsAssessed": "Startups évaluées",
-      "investorsMatched": "Investisseurs associés",
+      "investors": "Investisseurs",
+      "startups": "Startups",
+      "assessments": "Évaluations",
       "successRate": "Taux de réussite"
+    },
+    "sections": {
+      "investorsLabel": "Nos Investisseurs",
+      "investorsTitle": "Partenaires d'investissement stratégiques",
+      "investorsSubtitle": "Rencontrez les investisseurs visionnaires qui conduisent la transformation économique de l'Afrique grâce à un déploiement de capital intelligent.",
+      "startupsLabel": "Nos Startups",
+      "startupsTitle": "Ventures innovantes en quête de croissance",
+      "startupsSubtitle": "Découvrez les startups audacieuses qui construisent les solutions de demain — évaluées et prêtes pour l'investissement.",
+      "contactLabel": "Nous contacter",
+      "contactTitle": "Contactez-nous",
+      "contactSubtitle": "Vous avez des questions ou voulez en savoir plus ? Contactez notre équipe."
+    },
+    "contact": {
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "address": "Adresse"
+    },
+    "cards": {
+      "active": "Actif",
+      "member": "Membre",
+      "investor": "Investisseur",
+      "startup": "Startup",
+      "founded": "Fondée en {year}",
+      "teamMembers": "{count} membres de l'équipe"
+    },
+    "empty": {
+      "investors": "Les investisseurs apparaîtront ici une fois qu'ils auront rejoint la plateforme.",
+      "startups": "Les startups apparaîtront ici une fois qu'elles auront complété leurs profils."
+    },
+    "footer": {
+      "signIn": "Se connecter",
+      "register": "S'inscrire",
+      "contact": "Contact",
+      "copyright": "© {year} RG Partners Financial Services. Tous droits réservés."
     }
   },
   "language": {

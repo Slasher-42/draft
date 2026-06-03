@@ -313,18 +313,61 @@
     "confirmPassword": "Emeza Ijambobanga"
   },
   "home": {
+    "nav": {
+      "investors": "Abashoramari",
+      "startups": "Startup",
+      "contact": "Twandikire",
+      "signIn": "Injira",
+      "register": "Iyandikishe",
+      "logout": "Sohoka"
+    },
     "hero": {
-      "badge": "Uruhinja rwa AI",
-      "title1": "Isuzuma ry'Ishoramari",
-      "title2": "Ryonywe na AI",
-      "subtitle": "Guhuza startup zizerwa n'abashoramari b'inzobere binyuze mu isuzuma ryiza no guhuriza hamwe.",
-      "getStarted": "Tangira",
-      "learnMore": "Menya Byinshi"
+      "badge": "Uruhinja rwo Gusuzuma Ishoramari Rwonywe na AI"
+    },
+    "trust": {
+      "users": "Bizewe na 250+ bakoresha",
+      "industries": "15+ inzego z'ubukungu",
+      "reach": "Ugera muri Afrika yose"
     },
     "stats": {
-      "startupsAssessed": "Startup Zasuzumwe",
-      "investorsMatched": "Abashoramari Bahuye",
+      "investors": "Abashoramari",
+      "startups": "Startup",
+      "assessments": "Isuzuma",
       "successRate": "Igipimo cy'Intsinzi"
+    },
+    "sections": {
+      "investorsLabel": "Abashoramari Bacu",
+      "investorsTitle": "Inshuti z'Ishoramari Zirambye",
+      "investorsSubtitle": "Menya abashoramari b'ingamba bafasha gutera imbere ubukungu bw'Afrika binyuze mu gutumanahana imari neza.",
+      "startupsLabel": "Startup Zacu",
+      "startupsTitle": "Ubucuruzi Bushya Bushaka Iterambere",
+      "startupsSubtitle": "Menya startup zikomeje kubaka ibisubizo by'ejo hazaza — zasuzumwe kandi zitegure ishoramari.",
+      "contactLabel": "Twandikire",
+      "contactTitle": "Twandikire",
+      "contactSubtitle": "Ufite ibibazo cyangwa urashaka kumenya byinshi? Twandikire."
+    },
+    "contact": {
+      "email": "Imeyili",
+      "phone": "Telefoni",
+      "address": "Aderesi"
+    },
+    "cards": {
+      "active": "Bikora",
+      "member": "Umunyamuryango",
+      "investor": "Ushoramari",
+      "startup": "Startup",
+      "founded": "Yashinzwe {year}",
+      "teamMembers": "Abagize itsinda: {count}"
+    },
+    "empty": {
+      "investors": "Abashoramari bazagaragara hano bamaze kwinjira muri porogaramu.",
+      "startups": "Startup zizagaragara hano zarangije guzuza imwirondoro wazo."
+    },
+    "footer": {
+      "signIn": "Injira",
+      "register": "Iyandikishe",
+      "contact": "Twandikire",
+      "copyright": "© {year} RG Partners Financial Services. Uburenganzira bwose buhariwe."
     }
   },
   "language": {
