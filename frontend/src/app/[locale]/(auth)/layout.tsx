@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 
 function useHeroVideoUrl() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -24,6 +26,7 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("auth_layout");
   const videoUrl = useHeroVideoUrl();
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -33,6 +36,12 @@ export default function AuthLayout({
     }
   }, [videoUrl]);
 
+  const stats = [
+    { label: t("stats.startupsAssessed"), value: "200+" },
+    { label: t("stats.investorsMatched"), value: "50+"  },
+    { label: t("stats.successRate"),       value: "78%" },
+  ];
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#F1F5F9" }}>
       {/* ── Left panel ──────────────────────────────────────────────────── */}
@@ -40,7 +49,6 @@ export default function AuthLayout({
         className="hidden lg:flex lg:w-[52%] flex-col justify-between relative overflow-hidden"
         style={{ background: "linear-gradient(160deg,#020C1B 0%,#071C38 50%,#030F1F 100%)" }}
       >
-        {/* Video — highly visible */}
         {videoUrl && (
           <video
             ref={videoRef}
@@ -55,7 +63,6 @@ export default function AuthLayout({
           </video>
         )}
 
-        {/* Overlay — subtle, mostly lets video show */}
         <div
           className="absolute inset-0"
           style={{
@@ -66,7 +73,6 @@ export default function AuthLayout({
           }}
         />
 
-        {/* Ambient orbs */}
         <div
           className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
           style={{
@@ -109,17 +115,16 @@ export default function AuthLayout({
               style={{ color: "#73A8CF", borderColor: "rgba(115,168,207,0.3)", backgroundColor: "rgba(115,168,207,0.08)" }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              AI-Powered Platform
+              {t("badge")}
             </div>
 
             <h1 className="text-4xl font-extrabold text-white leading-tight mb-4">
-              AI-Powered Investment
+              {t("heading1")}
               <br />
-              <span style={{ color: "#73A8CF" }}>Readiness Assessment</span>
+              <span style={{ color: "#73A8CF" }}>{t("heading2")}</span>
             </h1>
             <p className="text-sm leading-relaxed" style={{ color: "#A2C3DF" }}>
-              Connecting promising startups with the right investors through
-              intelligent assessment and matching.
+              {t("description")}
             </p>
           </div>
         </div>
@@ -127,11 +132,7 @@ export default function AuthLayout({
         {/* Stats footer */}
         <div className="relative z-10 p-10">
           <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Startups Assessed", value: "200+" },
-              { label: "Investors Matched", value: "50+"  },
-              { label: "Success Rate",       value: "78%" },
-            ].map((stat) => (
+            {stats.map((stat) => (
               <div
                 key={stat.label}
                 className="rounded-xl p-3 text-center"
@@ -155,7 +156,11 @@ export default function AuthLayout({
 
       {/* ── Right panel ─────────────────────────────────────────────────── */}
       <div className="auth-right-bg flex-1 flex flex-col justify-center items-center px-6 py-12 relative">
-        {/* Subtle background circles */}
+        {/* Language switcher */}
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+
         <div
           className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle,rgba(11,74,139,0.04) 0%,transparent 70%)", transform: "translate(30%,-30%)" }}

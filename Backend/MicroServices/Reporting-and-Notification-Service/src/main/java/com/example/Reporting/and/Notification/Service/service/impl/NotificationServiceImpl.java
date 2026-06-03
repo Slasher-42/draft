@@ -1,7 +1,9 @@
 package com.example.Reporting.and.Notification.Service.service.impl;
 
+import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.AnalyticsResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
+import com.example.Reporting.and.Notification.Service.enums.NotificationType;
 import com.example.Reporting.and.Notification.Service.model.AnalyticsSummary;
 import com.example.Reporting.and.Notification.Service.model.Notification;
 import com.example.Reporting.and.Notification.Service.repository.AnalyticsSummaryRepository;
@@ -139,6 +141,29 @@ public class NotificationServiceImpl implements NotificationService {
                 .scoreByIndustry(industryScores)
                 .executionTrend(trendEntries)
                 .build();
+    }
+
+    @Override
+    public NotificationResponse createFundRequestNotification(AskForFundRequest request) {
+        String startupPart = request.getStartupName() != null
+                ? " for " + request.getStartupName() : "";
+        String amountPart = request.getFundingAmount() != null
+                ? " ($" + String.format("%,.0f", request.getFundingAmount()) + " required)" : "";
+
+        String message = "Investment Funding Request: Dear " + request.getInvestorName() +
+                ", you are being requested to fund the execution" + startupPart + amountPart +
+                ". Please log in to your account and proceed with the investment. " +
+                "This request was sent by the RG Partners team.";
+
+        Notification notification = Notification.builder()
+                .recipientUserId(request.getInvestorUserId())
+                .type(NotificationType.FUND_REQUEST)
+                .message(message)
+                .relatedExecutionId(request.getExecutionId())
+                .read(false)
+                .build();
+
+        return toResponse(notificationRepository.save(notification));
     }
 
     private NotificationResponse toResponse(Notification n) {

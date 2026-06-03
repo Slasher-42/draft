@@ -123,6 +123,18 @@ return toResponse(saved);
         investorExecutionRepository.delete(execution);
     }
 
+    @Override
+    public InvestorExecutionResponse markAsFunded(Long id, Long userId) {
+        InvestorExecution execution = investorExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        if (!execution.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Execution not found with id: " + id);
+        }
+        execution.setFunded(true);
+        execution.setFundedAt(LocalDateTime.now());
+        return toResponse(investorExecutionRepository.save(execution));
+    }
+
     private InvestorExecutionResponse toResponse(InvestorExecution e) {
         InvestorExecutionResponse response = new InvestorExecutionResponse();
         response.setId(e.getId());
@@ -137,6 +149,8 @@ return toResponse(saved);
         response.setStatus(e.getStatus());
         response.setStatusReason(e.getStatusReason());
         response.setStatusUpdatedAt(e.getStatusUpdatedAt());
+        response.setFunded(e.isFunded());
+        response.setFundedAt(e.getFundedAt());
         response.setCreatedAt(e.getCreatedAt());
         response.setUpdatedAt(e.getUpdatedAt());
         return response;

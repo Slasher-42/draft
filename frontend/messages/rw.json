@@ -1,0 +1,336 @@
+{
+  "common": {
+    "loading": "Gutegereza...",
+    "save": "Bika",
+    "cancel": "Reka",
+    "submit": "Ohereza",
+    "back": "Garuka",
+    "next": "Komeza",
+    "close": "Funga",
+    "delete": "Siba",
+    "edit": "Hindura",
+    "view": "Reba",
+    "search": "Shakisha",
+    "filter": "Shungura",
+    "confirm": "Emeza",
+    "actions": "Ibikorwa",
+    "status": {
+      "pending": "Gutegereza",
+      "approved": "Byemejwe",
+      "rejected": "Byanzwe",
+      "active": "Bikora",
+      "inactive": "Ntibikorwa",
+      "matched": "Byahuye",
+      "escalated": "Byazamujwe"
+    },
+    "roles": {
+      "startup": "Startup",
+      "investor": "Ushoramari",
+      "evaluator": "Usuzuma",
+      "admin": "Umuyobozi"
+    },
+    "copyright": "© {year} RG Partners Financial Services. Uburenganzira bwose buhariwe."
+  },
+  "nav": {
+    "startup": {
+      "myExecutions": "Gahunda Zanjye",
+      "newExecution": "Gahunda Nshya",
+      "messages": "Ubutumwa",
+      "account": "Konti",
+      "meetups": "Inama",
+      "contracts": "Amasezerano",
+      "profile": "Umwirondoro",
+      "myCollaborators": "Inshuti zanjye",
+      "settings": "Igenamiterere"
+    },
+    "investor": {
+      "myInvestments": "Ishoramari Ryanjye",
+      "newInvestment": "Ishoramari Rishya",
+      "lookUpMatches": "Shakisha Amahuriro",
+      "messages": "Ubutumwa",
+      "account": "Konti",
+      "meetups": "Inama",
+      "contracts": "Amasezerano",
+      "profile": "Umwirondoro",
+      "myCollaborators": "Inshuti zanjye",
+      "settings": "Igenamiterere"
+    },
+    "evaluator": {
+      "dashboard": "Ikibaho cy'amakuru",
+      "pendingReviews": "Isuzuma ritegereza",
+      "allReviews": "Isuzuma ryose",
+      "investmentMonitor": "Gukurikirana Ishoramari",
+      "profile": "Umwirondoro",
+      "settings": "Igenamiterere"
+    },
+    "admin": {
+      "dashboard": "Ikibaho cy'amakuru",
+      "homeController": "Umuyobozi w'itangiriro",
+      "userManagement": "Gucunga Abakoresha",
+      "evaluators": "Abasuzuma",
+      "executions": "Gahunda",
+      "escalations": "Ibibazo bikomeye",
+      "followUp": "Gukurikirana",
+      "alumniMonitor": "Gukurikirana Inzobere",
+      "investmentMonitor": "Gukurikirana Ishoramari",
+      "analytics": "Isesengura",
+      "auditLogs": "Inyandiko z'Igenzura",
+      "systemSettings": "Igenamiterere ry'Uruhinja"
+    }
+  },
+  "sidebar": {
+    "investmentReadiness": "Gutegura Ishoramari",
+    "logout": "Sohoka"
+  },
+  "dashboard": {
+    "pageTitles": {
+      "myExecutions": "Gahunda Zanjye",
+      "newExecution": "Gahunda Nshya",
+      "aiAssessment": "Isuzuma rya AI",
+      "myInvestments": "Ishoramari Ryanjye",
+      "newInvestmentExecution": "Gahunda Nshya y'Ishoramari",
+      "evaluatorDashboard": "Ikibaho cy'Umusuzuma",
+      "reviews": "Isuzuma",
+      "adminDashboard": "Ikibaho cy'Umuyobozi",
+      "userManagement": "Gucunga Abakoresha",
+      "evaluatorManagement": "Gucunga Abasuzuma",
+      "allExecutions": "Gahunda Zose",
+      "analytics": "Isesengura",
+      "auditLogs": "Inyandiko z'Igenzura",
+      "notifications": "Amakuru",
+      "systemSettings": "Igenamiterere ry'Uruhinja",
+      "messages": "Ubutumwa",
+      "alumniMonitor": "Gukurikirana Inzobere",
+      "investmentMonitor": "Gukurikirana Ishoramari",
+      "myProfile": "Umwirondoro Wanjye",
+      "settings": "Igenamiterere",
+      "dashboard": "Ikibaho cy'amakuru"
+    },
+    "header": {
+      "subtitle": "RG Partners · Uruhinja rwo Gusuzuma Ishoramari"
+    }
+  },
+  "notifications": {
+    "title": "Amakuru",
+    "markAllRead": "Shyira ko byose bisomwe",
+    "allCaughtUp": "Byose byakiriwe",
+    "noNotifications": "Nta makuru arahari",
+    "types": {
+      "approved": "Byemejwe",
+      "rejected": "Byanzwe",
+      "escalated": "Byazamujwe",
+      "matchFound": "Mahuriro Abonetse",
+      "update": "Kuvugurura"
+    },
+    "timeAgo": {
+      "justNow": "ubu nyine",
+      "minutesAgo": "inzegaminota {minutes} zishize",
+      "hoursAgo": "amasaha {hours} ashize",
+      "daysAgo": "iminsi {days} ishize"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Murakaza neza",
+      "subtitle": "Injira muri konti yawe ya RG Partners",
+      "emailLabel": "Aderesi ya imeyili",
+      "emailPlaceholder": "wewe@urugero.com",
+      "passwordLabel": "Ijambobanga",
+      "forgotPassword": "Wibagiwe ijambobanga?",
+      "signIn": "Injira",
+      "signingIn": "Kwinjira...",
+      "noAccount": "Startup nshya cyangwa ushoramari?",
+      "createAccount": "Fungura konti",
+      "invalidCredentials": "Amakuru ntabyo. Ongera ugerageze.",
+      "validation": {
+        "invalidEmail": "Injiza aderesi ya imeyili nzima",
+        "passwordMinLength": "Ijambobanga rigomba kuba rifite nibura inyuguti 6"
+      }
+    },
+    "register": {
+      "title": "Fungura konti yawe",
+      "subtitle": "Injira muri porogaramu ya RG Partners",
+      "iAmA": "Ndi...",
+      "startup": "Startup",
+      "startupDesc": "Gushaka ishoramari",
+      "investor": "Ushoramari",
+      "investorDesc": "Gushaka gushora imari",
+      "fullNameLabel": "Amazina yuzuye",
+      "fullNamePlaceholder": "Imena Nziza",
+      "emailLabel": "Aderesi ya imeyili",
+      "emailPlaceholder": "wewe@urugero.com",
+      "phoneLabel": "Nomero ya telefoni",
+      "phonePlaceholder": "+250 7XX XXX XXX",
+      "passwordLabel": "Ijambobanga",
+      "passwordPlaceholder": "Nibura inyuguti 8",
+      "confirmPasswordLabel": "Emeza ijambobanga",
+      "confirmPasswordPlaceholder": "Subiramo ijambobanga",
+      "createAccount": "Fungura Konti",
+      "creatingAccount": "Gufungura konti...",
+      "alreadyHaveAccount": "Usanganywe konti?",
+      "signIn": "Injira",
+      "registrationFailed": "Kwiyandikisha ntibyakunze. Ongera ugerageze.",
+      "validation": {
+        "fullNameRequired": "Amazina yuzuye asabwa",
+        "invalidEmail": "Injiza aderesi ya imeyili nzima",
+        "invalidPhone": "Injiza nomero ya telefoni nzima",
+        "passwordMinLength": "Ijambobanga rigomba kuba rifite nibura inyuguti 8",
+        "passwordsMustMatch": "Amagambo banga ntahuye"
+      }
+    },
+    "forgotPassword": {
+      "title": "Wibagiwe ijambobanga?",
+      "subtitle": "Injiza imeyili yawe kandi tuzagutumira uhuza wo kongera ijambobanga",
+      "emailLabel": "Aderesi ya imeyili",
+      "sendLink": "Ohereza Uhuza",
+      "backToLogin": "Garuka ku kwinjira",
+      "checkEmail": "Reba imeyili yawe",
+      "resetSent": "Twakuoherereje uhuza wo gusubira ijambobanga kuri imeyili yawe."
+    },
+    "verify2fa": {
+      "title": "Kugenzura Inshuro Ebyiri",
+      "subtitle": "Injiza kode yo muri porogaramu yawe yo kugenzura",
+      "codeLabel": "Kode yo Kugenzura",
+      "verify": "Genzura",
+      "verifying": "Kugenzura..."
+    }
+  },
+  "auth_layout": {
+    "badge": "Uruhinja rwa AI",
+    "heading1": "Isuzuma ry'Ishoramari",
+    "heading2": "Ryonywe na AI",
+    "description": "Guhuza startup zizerwa n'abashoramari b'inzobere binyuze mu isuzuma ryiza no guhuriza hamwe.",
+    "stats": {
+      "startupsAssessed": "Startup Zasuzumwe",
+      "investorsMatched": "Abashoramari Bahuye",
+      "successRate": "Igipimo cy'Intsinzi"
+    }
+  },
+  "account": {
+    "title": "Konti",
+    "investor": {
+      "subtitle": "Cunga akahigo k'ishoramari",
+      "availableBalance": "Amafaranga Ari Hafi",
+      "deposit": "Shyira mu Konte",
+      "invest": "Shora Imari",
+      "addFunds": "Ongeraho Amafaranga",
+      "accountNumber": "Numero ya Konti",
+      "amount": "Amafaranga (USD)",
+      "paymentMethod": "Uburyo bwo Kwishyura",
+      "investInStartup": "Shora Imari muri Startup"
+    },
+    "startup": {
+      "subtitle": "Cunga konti yawe"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Ikibaho cy'Umuyobozi",
+      "subtitle": "Incamake ya sisitemu n'isesengura",
+      "totalExecutions": "Gahunda Zose",
+      "approved": "Byemejwe",
+      "matched": "Byahuye",
+      "pending": "Gutegereza",
+      "executionTrend": "Imiterere y'Gahunda",
+      "readinessClassification": "Ikigereranyo cyo Gutegura",
+      "manageUsers": "Cunga Abakoresha",
+      "auditLogs": "Inyandiko z'Igenzura",
+      "allExecutions": "Gahunda Zose"
+    },
+    "users": {
+      "title": "Gucunga Abakoresha",
+      "createUser": "Fungura Umukosha",
+      "name": "Izina",
+      "email": "Imeyili",
+      "role": "Uruhare",
+      "createdAt": "Yaratangiye",
+      "lastActive": "Igihe Cya Nyuma"
+    },
+    "evaluators": { "title": "Gucunga Abasuzuma" },
+    "executions": { "title": "Gahunda Zose" },
+    "escalations": { "title": "Ibibazo Bikomeye" },
+    "analytics": { "title": "Isesengura" },
+    "auditLogs": { "title": "Inyandiko z'Igenzura" },
+    "settings": { "title": "Igenamiterere ry'Uruhinja" },
+    "notifications": { "title": "Amakuru" },
+    "alumni": { "title": "Gukurikirana Inzobere" },
+    "investmentMonitor": { "title": "Gukurikirana Ishoramari" }
+  },
+  "startup": {
+    "executions": {
+      "title": "Gahunda Zanjye",
+      "newExecution": "Gahunda Nshya",
+      "noExecutions": "Nta gahunda irahari",
+      "startFirst": "Tangira gahunda yawe ya mbere"
+    },
+    "execute": { "title": "Gahunda Nshya" },
+    "ai": { "title": "Isuzuma rya AI" },
+    "contracts": { "title": "Amasezerano" },
+    "meetups": { "title": "Inama" },
+    "messages": { "title": "Ubutumwa" },
+    "collaborators": { "title": "Inshuti Zanjye" }
+  },
+  "investor": {
+    "executions": {
+      "title": "Ishoramari Ryanjye",
+      "newExecution": "Ishoramari Rishya",
+      "noInvestments": "Nta shoramari rirahari"
+    },
+    "execute": { "title": "Gahunda Nshya y'Ishoramari" },
+    "ai": { "title": "Isuzuma rya AI" },
+    "contracts": { "title": "Amasezerano" },
+    "meetups": { "title": "Inama" },
+    "messages": { "title": "Ubutumwa" },
+    "collaborators": { "title": "Inshuti Zanjye" }
+  },
+  "evaluator": {
+    "dashboard": { "title": "Ikibaho cy'Umusuzuma" },
+    "reviews": {
+      "title": "Isuzuma",
+      "pending": "Isuzuma Ritegereza",
+      "all": "Isuzuma Ryose"
+    },
+    "investmentMonitor": { "title": "Gukurikirana Ishoramari" }
+  },
+  "profile": {
+    "title": "Umwirondoro Wanjye",
+    "editProfile": "Hindura Umwirondoro",
+    "fullName": "Amazina Yuzuye",
+    "email": "Imeyili",
+    "phone": "Telefoni",
+    "role": "Uruhare",
+    "saveChanges": "Bika Impinduka"
+  },
+  "settings": {
+    "title": "Igenamiterere",
+    "language": "Ururimi",
+    "theme": "Ishusho",
+    "notifications": "Amakuru",
+    "security": "Umutekano",
+    "changePassword": "Hindura Ijambobanga",
+    "currentPassword": "Ijambobanga Rya Ubu",
+    "newPassword": "Ijambobanga Rishya",
+    "confirmPassword": "Emeza Ijambobanga"
+  },
+  "home": {
+    "hero": {
+      "badge": "Uruhinja rwa AI",
+      "title1": "Isuzuma ry'Ishoramari",
+      "title2": "Ryonywe na AI",
+      "subtitle": "Guhuza startup zizerwa n'abashoramari b'inzobere binyuze mu isuzuma ryiza no guhuriza hamwe.",
+      "getStarted": "Tangira",
+      "learnMore": "Menya Byinshi"
+    },
+    "stats": {
+      "startupsAssessed": "Startup Zasuzumwe",
+      "investorsMatched": "Abashoramari Bahuye",
+      "successRate": "Igipimo cy'Intsinzi"
+    }
+  },
+  "language": {
+    "select": "Hitamo Ururimi",
+    "en": "English",
+    "fr": "Français",
+    "rw": "Kinyarwanda"
+  }
+}

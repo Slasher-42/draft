@@ -1,32 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Bell, CheckCheck, X, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { useNotifications } from "@/hooks/useNotifications";
-
-const pageTitles: Record<string, string> = {
-  "/startup/executions": "My Executions",
-  "/startup/execute": "New Execution",
-  "/startup/ai": "AI Assessment",
-  "/investor/executions": "My Investments",
-  "/investor/execute": "New Investment Execution",
-  "/investor/ai": "AI Assessment",
-  "/evaluator/dashboard": "Evaluator Dashboard",
-  "/evaluator/reviews": "Reviews",
-  "/admin/dashboard": "Admin Dashboard",
-  "/admin/users": "User Management",
-  "/admin/evaluators": "Evaluator Management",
-  "/admin/executions": "All Executions",
-  "/admin/analytics": "Analytics",
-  "/admin/audit-logs": "Audit Logs",
-  "/admin/notifications": "Notifications",
-  "/admin/settings": "System Settings",
-  "/profile": "My Profile",
-  "/settings": "Settings",
-};
+import { useTranslations } from "next-intl";
 
 const typeColors: Record<string, string> = {
   STARTUP_APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -44,32 +25,24 @@ const typeDots: Record<string, string> = {
   INTERVAL_UPDATE: "bg-[var(--color-neutral-400)]",
 };
 
-const typeLabels: Record<string, string> = {
-  STARTUP_APPROVED: "Approved",
-  STARTUP_REJECTED: "Rejected",
-  STARTUP_ESCALATED: "Escalated",
-  MATCH_FOUND: "Match Found",
-  INTERVAL_UPDATE: "Update",
-};
-
-function timeAgo(dateStr: string): string {
-  const diff  = Date.now() - new Date(dateStr).getTime();
-  const mins  = Math.floor(diff / 60_000);
-  const hours = Math.floor(diff / 3_600_000);
-  const days  = Math.floor(diff / 86_400_000);
-  if (mins < 1)   return "just now";
-  if (mins < 60)  return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${days}d ago`;
-}
-
 export function DashboardHeader() {
   const pathname        = usePathname();
   const { user }        = useAuth();
   const [open, setOpen] = useState(false);
   const dropdownRef     = useRef<HTMLDivElement>(null);
+  const t               = useTranslations("dashboard.pageTitles");
+  const tn              = useTranslations("notifications");
+  const th              = useTranslations("dashboard.header");
 
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+
+  const typeLabels: Record<string, string> = {
+    STARTUP_APPROVED: tn("types.approved"),
+    STARTUP_REJECTED: tn("types.rejected"),
+    STARTUP_ESCALATED: tn("types.escalated"),
+    MATCH_FOUND: tn("types.matchFound"),
+    INTERVAL_UPDATE: tn("types.update"),
+  };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -81,10 +54,47 @@ export function DashboardHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  function timeAgo(dateStr: string): string {
+    const diff  = Date.now() - new Date(dateStr).getTime();
+    const mins  = Math.floor(diff / 60_000);
+    const hours = Math.floor(diff / 3_600_000);
+    const days  = Math.floor(diff / 86_400_000);
+    if (mins < 1)   return tn("timeAgo.justNow");
+    if (mins < 60)  return tn("timeAgo.minutesAgo", { minutes: mins });
+    if (hours < 24) return tn("timeAgo.hoursAgo", { hours });
+    return tn("timeAgo.daysAgo", { days });
+  }
+
+  const pageTitleMap: Record<string, string> = {
+    "/startup/executions":          t("myExecutions"),
+    "/startup/execute":             t("newExecution"),
+    "/startup/ai":                  t("aiAssessment"),
+    "/investor/executions":         t("myInvestments"),
+    "/investor/execute":            t("newInvestmentExecution"),
+    "/investor/ai":                 t("aiAssessment"),
+    "/evaluator/dashboard":         t("evaluatorDashboard"),
+    "/evaluator/reviews":           t("reviews"),
+    "/admin/dashboard":             t("adminDashboard"),
+    "/admin/users":                 t("userManagement"),
+    "/admin/evaluators":            t("evaluatorManagement"),
+    "/admin/executions":            t("allExecutions"),
+    "/admin/analytics":             t("analytics"),
+    "/admin/audit-logs":            t("auditLogs"),
+    "/admin/notifications":         t("notifications"),
+    "/admin/settings":              t("systemSettings"),
+    "/investor/messages":           t("messages"),
+    "/startup/messages":            t("messages"),
+    "/admin/alumni":                t("alumniMonitor"),
+    "/admin/investment-monitor":    t("investmentMonitor"),
+    "/evaluator/investment-monitor":t("investmentMonitor"),
+    "/profile":                     t("myProfile"),
+    "/settings":                    t("settings"),
+  };
+
   const getTitle = () => {
-    if (pageTitles[pathname]) return pageTitles[pathname];
+    if (pageTitleMap[pathname]) return pageTitleMap[pathname];
     const parts = pathname.split("/").filter(Boolean);
-    if (!parts.length) return "Dashboard";
+    if (!parts.length) return t("dashboard");
     const last = parts[parts.length - 1];
     return last.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   };
@@ -103,13 +113,14 @@ export function DashboardHeader() {
           </h1>
           <p className="text-[11px] flex items-center gap-1 text-[var(--color-neutral-400)]">
             <Sparkles className="w-3 h-3" />
-            RG Partners · Investment Readiness Assessment System
+            {th("subtitle")}
           </p>
         </div>
       </div>
 
       {/* Right — actions */}
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <ThemeToggle />
 
         {/* Bell */}
@@ -137,7 +148,7 @@ export function DashboardHeader() {
                 style={{ borderBottom: "1px solid var(--color-border)" }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[var(--color-foreground)]">Notifications</span>
+                  <span className="text-sm font-bold text-[var(--color-foreground)]">{tn("title")}</span>
                   {unreadCount > 0 && (
                     <span
                       className="px-1.5 py-0.5 rounded-full text-white text-[9px] font-bold"
@@ -154,7 +165,7 @@ export function DashboardHeader() {
                       className="text-[11px] font-medium hover:underline flex items-center gap-1 text-[var(--color-primary)]"
                     >
                       <CheckCheck className="h-3 w-3" />
-                      Mark all read
+                      {tn("markAllRead")}
                     </button>
                   )}
                   <button
@@ -167,10 +178,7 @@ export function DashboardHeader() {
               </div>
 
               {/* List */}
-              <div
-                className="max-h-96 overflow-y-auto"
-                style={{ borderTop: "none", divideColor: "var(--color-border)" }}
-              >
+              <div className="max-h-96 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <div
@@ -179,8 +187,8 @@ export function DashboardHeader() {
                     >
                       <Bell className="h-5 w-5 text-[var(--color-primary)]" />
                     </div>
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">All caught up</p>
-                    <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">No notifications yet</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{tn("allCaughtUp")}</p>
+                    <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">{tn("noNotifications")}</p>
                   </div>
                 ) : (
                   notifications.map((n) => (

@@ -1,0 +1,336 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "submit": "Soumettre",
+    "back": "Retour",
+    "next": "Suivant",
+    "close": "Fermer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "confirm": "Confirmer",
+    "actions": "Actions",
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "matched": "Associé",
+      "escalated": "Escaladé"
+    },
+    "roles": {
+      "startup": "Startup",
+      "investor": "Investisseur",
+      "evaluator": "Évaluateur",
+      "admin": "Administrateur"
+    },
+    "copyright": "© {year} RG Partners Financial Services. Tous droits réservés."
+  },
+  "nav": {
+    "startup": {
+      "myExecutions": "Mes Exécutions",
+      "newExecution": "Nouvelle Exécution",
+      "messages": "Messages",
+      "account": "Compte",
+      "meetups": "Réunions",
+      "contracts": "Contrats",
+      "profile": "Profil",
+      "myCollaborators": "Mes Collaborateurs",
+      "settings": "Paramètres"
+    },
+    "investor": {
+      "myInvestments": "Mes Investissements",
+      "newInvestment": "Nouvel Investissement",
+      "lookUpMatches": "Chercher des Correspondances",
+      "messages": "Messages",
+      "account": "Compte",
+      "meetups": "Réunions",
+      "contracts": "Contrats",
+      "profile": "Profil",
+      "myCollaborators": "Mes Collaborateurs",
+      "settings": "Paramètres"
+    },
+    "evaluator": {
+      "dashboard": "Tableau de bord",
+      "pendingReviews": "Avis en attente",
+      "allReviews": "Tous les avis",
+      "investmentMonitor": "Moniteur d'investissement",
+      "profile": "Profil",
+      "settings": "Paramètres"
+    },
+    "admin": {
+      "dashboard": "Tableau de bord",
+      "homeController": "Contrôleur d'accueil",
+      "userManagement": "Gestion des utilisateurs",
+      "evaluators": "Évaluateurs",
+      "executions": "Exécutions",
+      "escalations": "Escalades",
+      "followUp": "Suivi",
+      "alumniMonitor": "Moniteur des anciens",
+      "investmentMonitor": "Moniteur d'investissement",
+      "analytics": "Analytiques",
+      "auditLogs": "Journaux d'audit",
+      "systemSettings": "Paramètres système"
+    }
+  },
+  "sidebar": {
+    "investmentReadiness": "Préparation à l'investissement",
+    "logout": "Déconnexion"
+  },
+  "dashboard": {
+    "pageTitles": {
+      "myExecutions": "Mes Exécutions",
+      "newExecution": "Nouvelle Exécution",
+      "aiAssessment": "Évaluation IA",
+      "myInvestments": "Mes Investissements",
+      "newInvestmentExecution": "Nouvelle Exécution d'investissement",
+      "evaluatorDashboard": "Tableau de bord Évaluateur",
+      "reviews": "Avis",
+      "adminDashboard": "Tableau de bord Admin",
+      "userManagement": "Gestion des utilisateurs",
+      "evaluatorManagement": "Gestion des évaluateurs",
+      "allExecutions": "Toutes les exécutions",
+      "analytics": "Analytiques",
+      "auditLogs": "Journaux d'audit",
+      "notifications": "Notifications",
+      "systemSettings": "Paramètres système",
+      "messages": "Messages",
+      "alumniMonitor": "Moniteur des anciens",
+      "investmentMonitor": "Moniteur d'investissement",
+      "myProfile": "Mon profil",
+      "settings": "Paramètres",
+      "dashboard": "Tableau de bord"
+    },
+    "header": {
+      "subtitle": "RG Partners · Système d'évaluation de la préparation à l'investissement"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "allCaughtUp": "Vous êtes à jour",
+    "noNotifications": "Aucune notification pour l'instant",
+    "types": {
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "escalated": "Escaladé",
+      "matchFound": "Correspondance trouvée",
+      "update": "Mise à jour"
+    },
+    "timeAgo": {
+      "justNow": "à l'instant",
+      "minutesAgo": "il y a {minutes}min",
+      "hoursAgo": "il y a {hours}h",
+      "daysAgo": "il y a {days}j"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre compte RG Partners",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordLabel": "Mot de passe",
+      "forgotPassword": "Mot de passe oublié ?",
+      "signIn": "Se connecter",
+      "signingIn": "Connexion en cours…",
+      "noAccount": "Nouvelle startup ou investisseur ?",
+      "createAccount": "Créer un compte",
+      "invalidCredentials": "Identifiants invalides. Veuillez réessayer.",
+      "validation": {
+        "invalidEmail": "Entrez une adresse e-mail valide",
+        "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères"
+      }
+    },
+    "register": {
+      "title": "Créer votre compte",
+      "subtitle": "Rejoignez la plateforme RG Partners",
+      "iAmA": "Je suis…",
+      "startup": "Startup",
+      "startupDesc": "À la recherche d'investissement",
+      "investor": "Investisseur",
+      "investorDesc": "Cherche à investir",
+      "fullNameLabel": "Nom complet",
+      "fullNamePlaceholder": "Jean Dupont",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "phoneLabel": "Numéro de téléphone",
+      "phonePlaceholder": "+250 7XX XXX XXX",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Au moins 8 caractères",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Répéter le mot de passe",
+      "createAccount": "Créer un compte",
+      "creatingAccount": "Création du compte…",
+      "alreadyHaveAccount": "Vous avez déjà un compte ?",
+      "signIn": "Se connecter",
+      "registrationFailed": "Échec de l'inscription. Veuillez réessayer.",
+      "validation": {
+        "fullNameRequired": "Le nom complet est requis",
+        "invalidEmail": "Entrez une adresse e-mail valide",
+        "invalidPhone": "Entrez un numéro de téléphone valide",
+        "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+        "passwordsMustMatch": "Les mots de passe ne correspondent pas"
+      }
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié ?",
+      "subtitle": "Entrez votre e-mail et nous vous enverrons un lien de réinitialisation",
+      "emailLabel": "Adresse e-mail",
+      "sendLink": "Envoyer le lien",
+      "backToLogin": "Retour à la connexion",
+      "checkEmail": "Vérifiez votre e-mail",
+      "resetSent": "Nous avons envoyé un lien de réinitialisation à votre e-mail."
+    },
+    "verify2fa": {
+      "title": "Vérification en deux étapes",
+      "subtitle": "Entrez le code de votre application d'authentification",
+      "codeLabel": "Code de vérification",
+      "verify": "Vérifier",
+      "verifying": "Vérification…"
+    }
+  },
+  "auth_layout": {
+    "badge": "Plateforme propulsée par l'IA",
+    "heading1": "Évaluation de la préparation",
+    "heading2": "à l'investissement par IA",
+    "description": "Connecter les startups prometteuses aux bons investisseurs grâce à une évaluation et un matching intelligents.",
+    "stats": {
+      "startupsAssessed": "Startups évaluées",
+      "investorsMatched": "Investisseurs associés",
+      "successRate": "Taux de réussite"
+    }
+  },
+  "account": {
+    "title": "Compte",
+    "investor": {
+      "subtitle": "Gérez votre portefeuille d'investissement",
+      "availableBalance": "Solde disponible",
+      "deposit": "Dépôt",
+      "invest": "Investir",
+      "addFunds": "Ajouter des fonds",
+      "accountNumber": "Numéro de compte",
+      "amount": "Montant (USD)",
+      "paymentMethod": "Méthode de paiement",
+      "investInStartup": "Investir dans une Startup"
+    },
+    "startup": {
+      "subtitle": "Gérez votre compte"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Tableau de bord Admin",
+      "subtitle": "Vue d'ensemble du système et analytiques",
+      "totalExecutions": "Total des exécutions",
+      "approved": "Approuvé",
+      "matched": "Associé",
+      "pending": "En attente",
+      "executionTrend": "Tendance des exécutions",
+      "readinessClassification": "Classification de préparation",
+      "manageUsers": "Gérer les utilisateurs",
+      "auditLogs": "Journaux d'audit",
+      "allExecutions": "Toutes les exécutions"
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "createUser": "Créer un utilisateur",
+      "name": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "createdAt": "Créé le",
+      "lastActive": "Dernière activité"
+    },
+    "evaluators": { "title": "Gestion des évaluateurs" },
+    "executions": { "title": "Toutes les exécutions" },
+    "escalations": { "title": "Escalades" },
+    "analytics": { "title": "Analytiques" },
+    "auditLogs": { "title": "Journaux d'audit" },
+    "settings": { "title": "Paramètres système" },
+    "notifications": { "title": "Notifications" },
+    "alumni": { "title": "Moniteur des anciens" },
+    "investmentMonitor": { "title": "Moniteur d'investissement" }
+  },
+  "startup": {
+    "executions": {
+      "title": "Mes Exécutions",
+      "newExecution": "Nouvelle Exécution",
+      "noExecutions": "Aucune exécution pour l'instant",
+      "startFirst": "Commencez votre première exécution"
+    },
+    "execute": { "title": "Nouvelle Exécution" },
+    "ai": { "title": "Évaluation IA" },
+    "contracts": { "title": "Contrats" },
+    "meetups": { "title": "Réunions" },
+    "messages": { "title": "Messages" },
+    "collaborators": { "title": "Mes Collaborateurs" }
+  },
+  "investor": {
+    "executions": {
+      "title": "Mes Investissements",
+      "newExecution": "Nouvel Investissement",
+      "noInvestments": "Aucun investissement pour l'instant"
+    },
+    "execute": { "title": "Nouvelle Exécution d'investissement" },
+    "ai": { "title": "Évaluation IA" },
+    "contracts": { "title": "Contrats" },
+    "meetups": { "title": "Réunions" },
+    "messages": { "title": "Messages" },
+    "collaborators": { "title": "Mes Collaborateurs" }
+  },
+  "evaluator": {
+    "dashboard": { "title": "Tableau de bord Évaluateur" },
+    "reviews": {
+      "title": "Avis",
+      "pending": "Avis en attente",
+      "all": "Tous les avis"
+    },
+    "investmentMonitor": { "title": "Moniteur d'investissement" }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "editProfile": "Modifier le profil",
+    "fullName": "Nom complet",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "role": "Rôle",
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe"
+  },
+  "home": {
+    "hero": {
+      "badge": "Plateforme IA",
+      "title1": "Évaluation de la préparation",
+      "title2": "à l'investissement par IA",
+      "subtitle": "Connecter les startups prometteuses aux bons investisseurs grâce à une évaluation intelligente.",
+      "getStarted": "Commencer",
+      "learnMore": "En savoir plus"
+    },
+    "stats": {
+      "startupsAssessed": "Startups évaluées",
+      "investorsMatched": "Investisseurs associés",
+      "successRate": "Taux de réussite"
+    }
+  },
+  "language": {
+    "select": "Choisir la langue",
+    "en": "English",
+    "fr": "Français",
+    "rw": "Kinyarwanda"
+  }
+}

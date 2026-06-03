@@ -1,0 +1,382 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "confirm": "Confirm",
+    "actions": "Actions",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "active": "Active",
+      "inactive": "Inactive",
+      "matched": "Matched",
+      "escalated": "Escalated"
+    },
+    "roles": {
+      "startup": "Startup",
+      "investor": "Investor",
+      "evaluator": "Evaluator",
+      "admin": "Admin"
+    },
+    "copyright": "© {year} RG Partners Financial Services. All rights reserved."
+  },
+  "nav": {
+    "startup": {
+      "myExecutions": "My Executions",
+      "newExecution": "New Execution",
+      "messages": "Messages",
+      "account": "Account",
+      "meetups": "Meetups",
+      "contracts": "Contracts",
+      "profile": "Profile",
+      "myCollaborators": "My Collaborators",
+      "settings": "Settings"
+    },
+    "investor": {
+      "myInvestments": "My Investments",
+      "newInvestment": "New Investment",
+      "lookUpMatches": "Look Up Matches",
+      "messages": "Messages",
+      "account": "Account",
+      "meetups": "Meetups",
+      "contracts": "Contracts",
+      "profile": "Profile",
+      "myCollaborators": "My Collaborators",
+      "settings": "Settings"
+    },
+    "evaluator": {
+      "dashboard": "Dashboard",
+      "pendingReviews": "Pending Reviews",
+      "allReviews": "All Reviews",
+      "investmentMonitor": "Investment Monitor",
+      "profile": "Profile",
+      "settings": "Settings"
+    },
+    "admin": {
+      "dashboard": "Dashboard",
+      "homeController": "Home Controller",
+      "userManagement": "User Management",
+      "evaluators": "Evaluators",
+      "executions": "Executions",
+      "escalations": "Escalations",
+      "followUp": "Follow Up",
+      "alumniMonitor": "Alumni Monitor",
+      "investmentMonitor": "Investment Monitor",
+      "analytics": "Analytics",
+      "auditLogs": "Audit Logs",
+      "systemSettings": "System Settings"
+    }
+  },
+  "sidebar": {
+    "investmentReadiness": "Investment Readiness",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "pageTitles": {
+      "myExecutions": "My Executions",
+      "newExecution": "New Execution",
+      "aiAssessment": "AI Assessment",
+      "myInvestments": "My Investments",
+      "newInvestmentExecution": "New Investment Execution",
+      "evaluatorDashboard": "Evaluator Dashboard",
+      "reviews": "Reviews",
+      "adminDashboard": "Admin Dashboard",
+      "userManagement": "User Management",
+      "evaluatorManagement": "Evaluator Management",
+      "allExecutions": "All Executions",
+      "analytics": "Analytics",
+      "auditLogs": "Audit Logs",
+      "notifications": "Notifications",
+      "systemSettings": "System Settings",
+      "messages": "Messages",
+      "alumniMonitor": "Alumni Monitor",
+      "investmentMonitor": "Investment Monitor",
+      "myProfile": "My Profile",
+      "settings": "Settings",
+      "dashboard": "Dashboard"
+    },
+    "header": {
+      "subtitle": "RG Partners · Investment Readiness Assessment System"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "allCaughtUp": "All caught up",
+    "noNotifications": "No notifications yet",
+    "types": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "escalated": "Escalated",
+      "matchFound": "Match Found",
+      "update": "Update"
+    },
+    "timeAgo": {
+      "justNow": "just now",
+      "minutesAgo": "{minutes}m ago",
+      "hoursAgo": "{hours}h ago",
+      "daysAgo": "{days}d ago"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your RG Partners account",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign In",
+      "signingIn": "Signing in…",
+      "noAccount": "New startup or investor?",
+      "createAccount": "Create an account",
+      "invalidCredentials": "Invalid credentials. Please try again.",
+      "validation": {
+        "invalidEmail": "Enter a valid email address",
+        "passwordMinLength": "Password must be at least 6 characters"
+      }
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Join the RG Partners platform",
+      "iAmA": "I am a…",
+      "startup": "Startup",
+      "startupDesc": "Seeking investment",
+      "investor": "Investor",
+      "investorDesc": "Looking to invest",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "John Doe",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "+250 7XX XXX XXX",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Repeat password",
+      "createAccount": "Create Account",
+      "creatingAccount": "Creating account…",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "registrationFailed": "Registration failed. Please try again.",
+      "validation": {
+        "fullNameRequired": "Full name is required",
+        "invalidEmail": "Enter a valid email address",
+        "invalidPhone": "Enter a valid phone number",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "passwordsMustMatch": "Passwords do not match"
+      }
+    },
+    "forgotPassword": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "emailLabel": "Email address",
+      "sendLink": "Send Reset Link",
+      "backToLogin": "Back to login",
+      "checkEmail": "Check your email",
+      "resetSent": "We've sent a password reset link to your email."
+    },
+    "verify2fa": {
+      "title": "Two-Factor Verification",
+      "subtitle": "Enter the code from your authenticator app",
+      "codeLabel": "Verification Code",
+      "verify": "Verify",
+      "verifying": "Verifying…"
+    }
+  },
+  "auth_layout": {
+    "badge": "AI-Powered Platform",
+    "heading1": "AI-Powered Investment",
+    "heading2": "Readiness Assessment",
+    "description": "Connecting promising startups with the right investors through intelligent assessment and matching.",
+    "stats": {
+      "startupsAssessed": "Startups Assessed",
+      "investorsMatched": "Investors Matched",
+      "successRate": "Success Rate"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "investor": {
+      "subtitle": "Manage your investment wallet",
+      "availableBalance": "Available Balance",
+      "deposit": "Deposit",
+      "invest": "Invest",
+      "addFunds": "Add Funds",
+      "accountNumber": "Account Number",
+      "amount": "Amount (USD)",
+      "paymentMethod": "Payment Method",
+      "investInStartup": "Invest in a Startup"
+    },
+    "startup": {
+      "subtitle": "Manage your account"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "subtitle": "System overview and analytics",
+      "totalExecutions": "Total Executions",
+      "approved": "Approved",
+      "matched": "Matched",
+      "pending": "Pending",
+      "executionTrend": "Execution Trend",
+      "readinessClassification": "Readiness Classification",
+      "manageUsers": "Manage Users",
+      "auditLogs": "Audit Logs",
+      "allExecutions": "All Executions"
+    },
+    "users": {
+      "title": "User Management",
+      "createUser": "Create User",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "createdAt": "Created At",
+      "lastActive": "Last Active"
+    },
+    "evaluators": {
+      "title": "Evaluator Management"
+    },
+    "executions": {
+      "title": "All Executions"
+    },
+    "escalations": {
+      "title": "Escalations"
+    },
+    "analytics": {
+      "title": "Analytics"
+    },
+    "auditLogs": {
+      "title": "Audit Logs"
+    },
+    "settings": {
+      "title": "System Settings"
+    },
+    "notifications": {
+      "title": "Notifications"
+    },
+    "alumni": {
+      "title": "Alumni Monitor"
+    },
+    "investmentMonitor": {
+      "title": "Investment Monitor"
+    }
+  },
+  "startup": {
+    "executions": {
+      "title": "My Executions",
+      "newExecution": "New Execution",
+      "noExecutions": "No executions yet",
+      "startFirst": "Start your first execution"
+    },
+    "execute": {
+      "title": "New Execution"
+    },
+    "ai": {
+      "title": "AI Assessment"
+    },
+    "contracts": {
+      "title": "Contracts"
+    },
+    "meetups": {
+      "title": "Meetups"
+    },
+    "messages": {
+      "title": "Messages"
+    },
+    "collaborators": {
+      "title": "My Collaborators"
+    }
+  },
+  "investor": {
+    "executions": {
+      "title": "My Investments",
+      "newExecution": "New Investment",
+      "noInvestments": "No investments yet"
+    },
+    "execute": {
+      "title": "New Investment Execution"
+    },
+    "ai": {
+      "title": "AI Assessment"
+    },
+    "contracts": {
+      "title": "Contracts"
+    },
+    "meetups": {
+      "title": "Meetups"
+    },
+    "messages": {
+      "title": "Messages"
+    },
+    "collaborators": {
+      "title": "My Collaborators"
+    }
+  },
+  "evaluator": {
+    "dashboard": {
+      "title": "Evaluator Dashboard"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "pending": "Pending Reviews",
+      "all": "All Reviews"
+    },
+    "investmentMonitor": {
+      "title": "Investment Monitor"
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "editProfile": "Edit Profile",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "saveChanges": "Save Changes"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "security": "Security",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "home": {
+    "hero": {
+      "badge": "AI-Powered Platform",
+      "title1": "AI-Powered Investment",
+      "title2": "Readiness Assessment",
+      "subtitle": "Connecting promising startups with the right investors through intelligent assessment and matching.",
+      "getStarted": "Get Started",
+      "learnMore": "Learn More"
+    },
+    "stats": {
+      "startupsAssessed": "Startups Assessed",
+      "investorsMatched": "Investors Matched",
+      "successRate": "Success Rate"
+    }
+  },
+  "language": {
+    "select": "Select Language",
+    "en": "English",
+    "fr": "Français",
+    "rw": "Kinyarwanda"
+  }
+}

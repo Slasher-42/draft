@@ -1,5 +1,6 @@
 package com.example.Reporting.and.Notification.Service.service;
 
+import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.AnalyticsResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
 
@@ -20,4 +21,6 @@ public interface NotificationService {
     long countUnread(Long userId);
 
     AnalyticsResponse getAnalytics();
+
+    NotificationResponse createFundRequestNotification(AskForFundRequest request);
 }

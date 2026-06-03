@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,24 +29,27 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const schema = z
-  .object({
-    fullName: z.string().min(2, "Full name is required"),
-    email: z.string().email("Enter a valid email address"),
-    phoneNumber: z.string().min(8, "Enter a valid phone number"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-    role: z.enum(["STARTUP", "INVESTOR"]),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof schema>;
+import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth.register");
+
+  const schema = z
+    .object({
+      fullName: z.string().min(2, t("validation.fullNameRequired")),
+      email: z.string().email(t("validation.invalidEmail")),
+      phoneNumber: z.string().min(8, t("validation.invalidPhone")),
+      password: z.string().min(8, t("validation.passwordMinLength")),
+      confirmPassword: z.string(),
+      role: z.enum(["STARTUP", "INVESTOR"]),
+    })
+    .refine((d) => d.password === d.confirmPassword, {
+      message: t("validation.passwordsMustMatch"),
+      path: ["confirmPassword"],
+    });
+
+  type FormValues = z.infer<typeof schema>;
+
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,17 +81,22 @@ export default function RegisterPage() {
         data.role
       );
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+      setError(err.message || t("registrationFailed"));
     } finally {
       setIsLoading(false);
     }
   };
 
+  const roles = [
+    { value: "STARTUP",  label: t("startup"),  icon: Rocket,     desc: t("startupDesc")  },
+    { value: "INVESTOR", label: t("investor"),  icon: TrendingUp, desc: t("investorDesc") },
+  ];
+
   return (
     <Card className="w-full shadow-lg border-[var(--color-border)]">
       <CardHeader className="text-center pb-2">
-        <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
-        <CardDescription>Join the RG Partners platform</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
+        <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4 pt-4">
@@ -102,28 +110,13 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Role selector */}
           <div className="space-y-1.5">
-            <Label>I am a…</Label>
+            <Label>{t("iAmA")}</Label>
             <div className="grid grid-cols-2 gap-3">
-              {[
-                {
-                  value: "STARTUP",
-                  label: "Startup",
-                  icon: Rocket,
-                  desc: "Seeking investment",
-                },
-                {
-                  value: "INVESTOR",
-                  label: "Investor",
-                  icon: TrendingUp,
-                  desc: "Looking to invest",
-                },
-              ].map(({ value, label, icon: Icon, desc }) => (
+              {roles.map(({ value, label, icon: Icon, desc }) => (
                 <button
                   key={value}
                   type="button"
-                  onClick={() =>
-                    setValue("role", value as "STARTUP" | "INVESTOR")
-                  }
+                  onClick={() => setValue("role", value as "STARTUP" | "INVESTOR")}
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-lg border-2 p-3 text-sm font-medium transition-all",
                     selectedRole === value
@@ -133,9 +126,7 @@ export default function RegisterPage() {
                 >
                   <Icon className="h-5 w-5" />
                   <span>{label}</span>
-                  <span className="text-xs font-normal text-[var(--color-neutral-400)]">
-                    {desc}
-                  </span>
+                  <span className="text-xs font-normal text-[var(--color-neutral-400)]">{desc}</span>
                 </button>
               ))}
             </div>
@@ -143,12 +134,12 @@ export default function RegisterPage() {
 
           {/* Full name */}
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="fullName">{t("fullNameLabel")}</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="fullName"
-                placeholder="John Doe"
+                placeholder={t("fullNamePlaceholder")}
                 className={`pl-9 ${errors.fullName ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("fullName")}
@@ -161,13 +152,13 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("emailPlaceholder")}
                 className={`pl-9 ${errors.email ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("email")}
@@ -180,33 +171,31 @@ export default function RegisterPage() {
 
           {/* Phone */}
           <div className="space-y-1.5">
-            <Label htmlFor="phoneNumber">Phone Number</Label>
+            <Label htmlFor="phoneNumber">{t("phoneLabel")}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="phoneNumber"
-                placeholder="+250 7XX XXX XXX"
+                placeholder={t("phonePlaceholder")}
                 className={`pl-9 ${errors.phoneNumber ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("phoneNumber")}
               />
             </div>
             {errors.phoneNumber && (
-              <p className="text-xs text-red-500">
-                {errors.phoneNumber.message}
-              </p>
+              <p className="text-xs text-red-500">{errors.phoneNumber.message}</p>
             )}
           </div>
 
           {/* Password */}
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("passwordLabel")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="password"
                 type={showPass ? "text" : "password"}
-                placeholder="At least 8 characters"
+                placeholder={t("passwordPlaceholder")}
                 className={`pl-9 pr-9 ${errors.password ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("password")}
@@ -216,11 +205,7 @@ export default function RegisterPage() {
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-600)]"
               >
-                {showPass ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {errors.password && (
@@ -230,13 +215,13 @@ export default function RegisterPage() {
 
           {/* Confirm password */}
           <div className="space-y-1.5">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t("confirmPasswordLabel")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="confirmPassword"
                 type={showConfirm ? "text" : "password"}
-                placeholder="Repeat password"
+                placeholder={t("confirmPasswordPlaceholder")}
                 className={`pl-9 pr-9 ${errors.confirmPassword ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("confirmPassword")}
@@ -246,17 +231,11 @@ export default function RegisterPage() {
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-600)]"
               >
-                {showConfirm ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-xs text-red-500">
-                {errors.confirmPassword.message}
-              </p>
+              <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>
             )}
           </div>
 
@@ -264,10 +243,10 @@ export default function RegisterPage() {
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Creating account…
+                {t("creatingAccount")}
               </span>
             ) : (
-              "Create Account"
+              t("createAccount")
             )}
           </Button>
         </form>
@@ -275,13 +254,13 @@ export default function RegisterPage() {
 
       <CardFooter className="text-center">
         <p className="w-full text-sm text-[var(--color-neutral-500)]">
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link
             href="/login"
             className="font-medium hover:underline"
             style={{ color: "var(--color-primary)" }}
           >
-            Sign in
+            {t("signIn")}
           </Link>
         </p>
       </CardFooter>

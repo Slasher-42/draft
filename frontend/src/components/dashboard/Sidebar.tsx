@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { prefetchRoute } from "@/lib/prefetch";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -32,67 +34,78 @@ import {
   FileText,
   Home,
   AlertTriangle,
+  MessageSquare,
+  TrendingUp,
+  GraduationCap,
 } from "lucide-react";
 
-const startupNav = [
-  { name: "My Executions",    href: "/startup/executions",  icon: ClipboardList },
-  { name: "New Execution",    href: "/startup/execute",     icon: PlusCircle    },
-  { name: "Account",          href: "/startup/account",     icon: Wallet        },
-  { name: "Meetups",          href: "/startup/meetups",     icon: Video         },
-  { name: "Contracts",        href: "/startup/contracts",   icon: FileText      },
-  { name: "Profile",          href: "/profile",             icon: User          },
-  { name: "My Collaborators", href: "/startup/collaborators", icon: Users       },
-  { name: "Settings",         href: "/settings",            icon: Settings      },
-];
-
-const investorNav = [
-  { name: "My Investments",    href: "/investor/executions",    icon: Briefcase   },
-  { name: "New Investment",    href: "/investor/execute",       icon: PlusCircle  },
-  { name: "Look Up Matches",   href: "/investor/executions",    icon: Search      },
-  { name: "Account",           href: "/investor/account",       icon: Wallet      },
-  { name: "Meetups",           href: "/investor/meetups",       icon: Video       },
-  { name: "Contracts",         href: "/investor/contracts",     icon: FileText    },
-  { name: "Profile",           href: "/profile",                icon: User        },
-  { name: "My Collaborators",  href: "/investor/collaborators", icon: Users       },
-  { name: "Settings",          href: "/settings",               icon: Settings    },
-];
-
-const evaluatorNav = [
-  { name: "Dashboard",       href: "/evaluator/dashboard", icon: LayoutDashboard },
-  { name: "Pending Reviews", href: "/evaluator/reviews",   icon: Eye             },
-  { name: "All Reviews",     href: "/evaluator/reviews",   icon: ClipboardList   },
-  { name: "Profile",         href: "/profile",             icon: User            },
-  { name: "Settings",        href: "/settings",            icon: Settings        },
-];
-
-const adminNav = [
-  { name: "Dashboard",       href: "/admin/dashboard",       icon: LayoutDashboard },
-  { name: "Home Controller", href: "/admin/home-controller", icon: Home            },
-  { name: "User Management", href: "/admin/users",           icon: Users           },
-  { name: "Evaluators",      href: "/admin/evaluators",      icon: ShieldCheck     },
-  { name: "Executions",      href: "/admin/executions",      icon: ClipboardList   },
-  { name: "Escalations",     href: "/admin/escalations",     icon: AlertTriangle   },
-  { name: "Follow Up",       href: "/admin/followup",        icon: Handshake       },
-  { name: "Analytics",       href: "/admin/analytics",       icon: BarChart2       },
-  { name: "Audit Logs",      href: "/admin/audit-logs",      icon: BookOpen        },
-  { name: "System Settings", href: "/admin/settings",        icon: Settings        },
-];
-
-const navByRole: Record<string, typeof startupNav> = {
-  STARTUP:   startupNav,
-  INVESTOR:  investorNav,
-  EVALUATOR: evaluatorNav,
-  ADMIN:     adminNav,
-};
-
-const roleColors: Record<string, string> = {
-  STARTUP:   "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 text-emerald-300",
-  INVESTOR:  "from-blue-500/20 to-blue-600/10 border-blue-400/30 text-blue-300",
-  EVALUATOR: "from-violet-500/20 to-violet-600/10 border-violet-400/30 text-violet-300",
-  ADMIN:     "from-amber-500/20 to-amber-600/10 border-amber-400/30 text-amber-300",
-};
-
 export function Sidebar() {
+  const t = useTranslations("nav");
+  const ts = useTranslations("sidebar");
+
+  const startupNav = [
+    { name: t("startup.myExecutions"),    href: "/startup/executions",    icon: ClipboardList },
+    { name: t("startup.newExecution"),    href: "/startup/execute",       icon: PlusCircle    },
+    { name: t("startup.messages"),        href: "/startup/messages",      icon: MessageSquare },
+    { name: t("startup.account"),         href: "/startup/account",       icon: Wallet        },
+    { name: t("startup.meetups"),         href: "/startup/meetups",       icon: Video         },
+    { name: t("startup.contracts"),       href: "/startup/contracts",     icon: FileText      },
+    { name: t("startup.profile"),         href: "/profile",               icon: User          },
+    { name: t("startup.myCollaborators"), href: "/startup/collaborators", icon: Users         },
+    { name: t("startup.settings"),        href: "/settings",              icon: Settings      },
+  ];
+
+  const investorNav = [
+    { name: t("investor.myInvestments"),    href: "/investor/executions",    icon: Briefcase      },
+    { name: t("investor.newInvestment"),    href: "/investor/execute",       icon: PlusCircle     },
+    { name: t("investor.lookUpMatches"),    href: "/investor/executions",    icon: Search         },
+    { name: t("investor.messages"),         href: "/investor/messages",      icon: MessageSquare  },
+    { name: t("investor.account"),          href: "/investor/account",       icon: Wallet         },
+    { name: t("investor.meetups"),          href: "/investor/meetups",       icon: Video          },
+    { name: t("investor.contracts"),        href: "/investor/contracts",     icon: FileText       },
+    { name: t("investor.profile"),          href: "/profile",                icon: User           },
+    { name: t("investor.myCollaborators"),  href: "/investor/collaborators", icon: Users          },
+    { name: t("investor.settings"),         href: "/settings",               icon: Settings       },
+  ];
+
+  const evaluatorNav = [
+    { name: t("evaluator.dashboard"),         href: "/evaluator/dashboard",          icon: LayoutDashboard },
+    { name: t("evaluator.pendingReviews"),    href: "/evaluator/reviews",            icon: Eye             },
+    { name: t("evaluator.allReviews"),        href: "/evaluator/reviews",            icon: ClipboardList   },
+    { name: t("evaluator.investmentMonitor"), href: "/evaluator/investment-monitor", icon: TrendingUp      },
+    { name: t("evaluator.profile"),           href: "/profile",                      icon: User            },
+    { name: t("evaluator.settings"),          href: "/settings",                     icon: Settings        },
+  ];
+
+  const adminNav = [
+    { name: t("admin.dashboard"),          href: "/admin/dashboard",          icon: LayoutDashboard },
+    { name: t("admin.homeController"),     href: "/admin/home-controller",    icon: Home            },
+    { name: t("admin.userManagement"),     href: "/admin/users",              icon: Users           },
+    { name: t("admin.evaluators"),         href: "/admin/evaluators",         icon: ShieldCheck     },
+    { name: t("admin.executions"),         href: "/admin/executions",         icon: ClipboardList   },
+    { name: t("admin.escalations"),        href: "/admin/escalations",        icon: AlertTriangle   },
+    { name: t("admin.followUp"),           href: "/admin/followup",           icon: Handshake       },
+    { name: t("admin.alumniMonitor"),      href: "/admin/alumni",             icon: GraduationCap   },
+    { name: t("admin.investmentMonitor"),  href: "/admin/investment-monitor", icon: TrendingUp      },
+    { name: t("admin.analytics"),          href: "/admin/analytics",          icon: BarChart2       },
+    { name: t("admin.auditLogs"),          href: "/admin/audit-logs",         icon: BookOpen        },
+    { name: t("admin.systemSettings"),     href: "/admin/settings",           icon: Settings        },
+  ];
+
+  const navByRole: Record<string, typeof startupNav> = {
+    STARTUP:   startupNav,
+    INVESTOR:  investorNav,
+    EVALUATOR: evaluatorNav,
+    ADMIN:     adminNav,
+  };
+
+  const roleColors: Record<string, string> = {
+    STARTUP:   "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 text-emerald-300",
+    INVESTOR:  "from-blue-500/20 to-blue-600/10 border-blue-400/30 text-blue-300",
+    EVALUATOR: "from-violet-500/20 to-violet-600/10 border-violet-400/30 text-violet-300",
+    ADMIN:     "from-amber-500/20 to-amber-600/10 border-amber-400/30 text-amber-300",
+  };
+
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile]   = useState(false);
   const pathname    = usePathname();
@@ -168,7 +181,7 @@ export function Sidebar() {
                       RG Partners
                     </p>
                     <p className="text-[10px]" style={{ color: "#73A8CF" }}>
-                      Investment Readiness
+                      {ts("investmentReadiness")}
                     </p>
                   </div>
                 </Link>
@@ -249,7 +262,6 @@ export function Sidebar() {
                       }
                     }}
                   >
-                    {/* Active glow dot */}
                     {isActive && (
                       <span
                         className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
@@ -281,7 +293,6 @@ export function Sidebar() {
         >
           {!collapsed ? (
             <div className="flex items-center gap-3">
-              {/* Avatar */}
               <div
                 className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold overflow-hidden"
                 style={{
@@ -300,7 +311,6 @@ export function Sidebar() {
                 )}
               </div>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-white truncate leading-tight">
                   {user?.fullName || "User"}
@@ -310,13 +320,13 @@ export function Sidebar() {
                 </p>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-1">
+                <LanguageSwitcher compact />
                 <ThemeToggle />
                 <button
                   onClick={logout}
                   className="h-7 w-7 flex items-center justify-center rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                  title="Logout"
+                  title={ts("logout")}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                 </button>
@@ -333,11 +343,12 @@ export function Sidebar() {
               >
                 {initials}
               </div>
+              <LanguageSwitcher compact />
               <ThemeToggle />
               <button
                 onClick={logout}
                 className="flex items-center justify-center w-full text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all py-1 rounded-md"
-                title="Logout"
+                title={ts("logout")}
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>

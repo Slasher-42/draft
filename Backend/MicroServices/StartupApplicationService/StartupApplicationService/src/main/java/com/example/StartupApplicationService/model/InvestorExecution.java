@@ -54,6 +54,11 @@ public class InvestorExecution {
 
     private LocalDateTime statusUpdatedAt;
 
+    @Column(nullable = false)
+    private boolean funded = false;
+
+    private LocalDateTime fundedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

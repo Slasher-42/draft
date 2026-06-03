@@ -5,5 +5,6 @@ public enum NotificationType {
     STARTUP_REJECTED,
     STARTUP_ESCALATED,
     MATCH_FOUND,
-    INTERVAL_UPDATE
+    INTERVAL_UPDATE,
+    FUND_REQUEST
 }

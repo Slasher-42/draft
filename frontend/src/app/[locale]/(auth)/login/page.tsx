@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,15 +18,18 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, AlertTriangle } from "lucide-react";
-
-const schema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
+  const t = useTranslations("auth.login");
+
+  const schema = z.object({
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(6, t("validation.passwordMinLength")),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +47,7 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password);
     } catch (err: any) {
-      setError(err.message || "Invalid credentials. Please try again.");
+      setError(err.message || t("invalidCredentials"));
     } finally {
       setIsLoading(false);
     }
@@ -54,10 +57,10 @@ export default function LoginPage() {
     <Card className="w-full shadow-lg border-[var(--color-border)]">
       <CardHeader className="text-center pb-2">
         <CardTitle className="text-2xl font-bold">
-          Welcome back
+          {t("title")}
         </CardTitle>
         <CardDescription>
-          Sign in to your RG Partners account
+          {t("subtitle")}
         </CardDescription>
       </CardHeader>
 
@@ -71,13 +74,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("emailPlaceholder")}
                 className={`pl-9 ${errors.email ? "border-red-500" : ""}`}
                 disabled={isLoading}
                 {...register("email")}
@@ -89,7 +92,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("passwordLabel")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
@@ -105,11 +108,7 @@ export default function LoginPage() {
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] hover:text-[var(--color-neutral-600)]"
               >
-                {showPass ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             {errors.password && (
@@ -123,7 +122,7 @@ export default function LoginPage() {
               className="text-xs hover:underline"
               style={{ color: "var(--color-primary)" }}
             >
-              Forgot password?
+              {t("forgotPassword")}
             </Link>
           </div>
 
@@ -131,10 +130,10 @@ export default function LoginPage() {
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Signing in…
+                {t("signingIn")}
               </span>
             ) : (
-              "Sign In"
+              t("signIn")
             )}
           </Button>
         </form>
@@ -142,13 +141,13 @@ export default function LoginPage() {
 
       <CardFooter className="text-center">
         <p className="w-full text-sm text-[var(--color-neutral-500)]">
-          New startup or investor?{" "}
+          {t("noAccount")}{" "}
           <Link
             href="/register"
             className="font-medium hover:underline"
             style={{ color: "var(--color-primary)" }}
           >
-            Create an account
+            {t("createAccount")}
           </Link>
         </p>
       </CardFooter>

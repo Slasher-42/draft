@@ -1,8 +1,10 @@
 package com.example.Reporting.and.Notification.Service.controller;
 
+import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.ApiResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
 import com.example.Reporting.and.Notification.Service.service.NotificationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,5 +69,14 @@ public class NotificationController {
         Long userId = (Long) authentication.getPrincipal();
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(new ApiResponse<>(true, "All notifications marked as read", null));
+    }
+
+    @PostMapping("/ask-for-fund")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EVALUATOR')")
+    public ResponseEntity<ApiResponse<NotificationResponse>> askForFund(
+            @Valid @RequestBody AskForFundRequest request) {
+        NotificationResponse response = notificationService.createFundRequestNotification(request);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Fund request notification sent to " + request.getInvestorName(), response));
     }
 }

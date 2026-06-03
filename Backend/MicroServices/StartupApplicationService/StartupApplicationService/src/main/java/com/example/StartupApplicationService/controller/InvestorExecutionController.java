@@ -108,4 +108,13 @@ public class InvestorExecutionController {
         investorExecutionService.updateStatusInternal(id, status);
         return ResponseEntity.ok(new ApiResponse<>(true, "Status updated successfully", null));
     }
+
+    @PatchMapping("/{id}/fund")
+    public ResponseEntity<ApiResponse<InvestorExecutionResponse>> markAsFunded(
+            Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = (Long) authentication.getPrincipal();
+        InvestorExecutionResponse response = investorExecutionService.markAsFunded(id, userId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Execution marked as funded", response));
+    }
 }

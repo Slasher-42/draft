@@ -34,7 +34,10 @@ import {
   Users,
   DollarSign,
   Lightbulb,
+  ClipboardList,
 } from "lucide-react";
+import { investorService } from "@/services/investorService";
+import { investmentMonitorService } from "@/services/messageService";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
   { value: "BANK_TRANSFER", label: "Bank Transfer", icon: Building2 },
@@ -85,6 +88,8 @@ export default function InvestorAccountPage() {
 
   const [showInvest, setShowInvest] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
+  const [selectedExecutionId, setSelectedExecutionId] = useState<number | null>(null);
+  const [myExecutions, setMyExecutions] = useState<any[]>([]);
   const [investAmount, setInvestAmount] = useState("");
   const [investDesc, setInvestDesc] = useState("");
   const [investing, setInvesting] = useState(false);
@@ -164,6 +169,14 @@ export default function InvestorAccountPage() {
     setStartupInfoMap(accountData.startupInfoMap);
   }, [accountData]);
 
+  // Load investor's own executions when invest panel opens
+  useEffect(() => {
+    if (!showInvest || myExecutions.length > 0) return;
+    investorService.getExecutions()
+      .then((res) => setMyExecutions(res.data?.data ?? []))
+      .catch(() => {});
+  }, [showInvest]);
+
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
@@ -193,11 +206,21 @@ export default function InvestorAccountPage() {
       setTransactions((prev) => [res.data.data, ...prev]);
       const accRes = await followupService.getMyAccount();
       setAccount(accRes.data.data);
+      // Mark the selected execution as funded
+      if (selectedExecutionId) {
+        try {
+          await investmentMonitorService.markAsFunded(selectedExecutionId);
+          setMyExecutions((prev) =>
+            prev.map((e) => e.id === selectedExecutionId ? { ...e, funded: true } : e)
+          );
+        } catch {}
+      }
       toast.success("Investment transferred successfully");
       setShowInvest(false);
       setInvestAmount("");
       setInvestDesc("");
       setSelectedMatchId(null);
+      setSelectedExecutionId(null);
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? "Investment failed");
     } finally {
@@ -339,9 +362,68 @@ export default function InvestorAccountPage() {
             <CardTitle className="text-base text-[var(--color-primary-800)]">Invest in a Startup</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
+            {/* Step 1: Select your investor execution */}
+            <div>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-2">
+                <span className="inline-flex items-center gap-1.5">
+                  <ClipboardList className="h-4 w-4 text-[var(--color-primary)]" />
+                  Step 1 — Select your investment execution
+                </span>
+              </label>
+              {myExecutions.length === 0 ? (
+                <p className="text-sm text-[var(--color-neutral-400)] py-3 text-center border border-dashed border-[var(--color-border)] rounded-lg">
+                  No executions found
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {myExecutions.filter((e) => !e.funded).map((exec) => {
+                    const isSelected = selectedExecutionId === exec.id;
+                    return (
+                      <button
+                        key={exec.id}
+                        onClick={() => {
+                          setSelectedExecutionId(isSelected ? null : exec.id);
+                          if (!isSelected && exec.investmentBudget) {
+                            setInvestAmount(String(exec.investmentBudget));
+                          } else if (isSelected) {
+                            setInvestAmount("");
+                          }
+                        }}
+                        className={`w-full text-left rounded-xl border p-3 transition-all ${
+                          isSelected
+                            ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)]"
+                            : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] bg-[var(--color-card)]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-[var(--color-primary-800)]">
+                              Execution #{exec.id} — {exec.preferredIndustry ?? "Investment"}
+                            </p>
+                            <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">
+                              Budget: ${Number(exec.investmentBudget ?? 0).toLocaleString()} · {exec.status}
+                            </p>
+                          </div>
+                          {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {myExecutions.every((e) => e.funded) && (
+                    <p className="text-sm text-green-600 py-3 text-center border border-green-200 rounded-lg bg-green-50">
+                      All your executions are already funded! 🎉
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-3">
-                Select a matched startup
+                <span className="inline-flex items-center gap-1.5">
+                  <Briefcase className="h-4 w-4 text-[var(--color-primary)]" />
+                  Step 2 — Select a matched startup
+                </span>
               </label>
               {matches.length === 0 ? (
                 <p className="text-sm text-[var(--color-neutral-400)] py-4 text-center border border-dashed border-[var(--color-border)] rounded-lg">
@@ -460,6 +542,8 @@ export default function InvestorAccountPage() {
               )}
             </div>
 
+            </div>
+
             {selectedMatchId && selectedStartup && (
               <div className="rounded-lg bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] p-3 text-sm text-[var(--color-primary-800)]">
                 Investing in <span className="font-semibold">{selectedStartup.fullName}</span>
@@ -497,7 +581,7 @@ export default function InvestorAccountPage() {
                 {investing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpFromLine className="h-4 w-4" />}
                 Transfer Investment
               </Button>
-              <Button variant="outline" onClick={() => { setShowInvest(false); setSelectedMatchId(null); }}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setShowInvest(false); setSelectedMatchId(null); setSelectedExecutionId(null); setInvestAmount(""); }}>Cancel</Button>
             </div>
           </CardContent>
         </Card>

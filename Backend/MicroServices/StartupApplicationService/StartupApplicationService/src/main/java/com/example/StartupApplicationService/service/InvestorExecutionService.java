@@ -26,4 +26,6 @@ public interface InvestorExecutionService {
     InvestorExecutionResponse getByIdInternal(Long id);
 
     void updateStatusInternal(Long id, String status);
+
+    InvestorExecutionResponse markAsFunded(Long id, Long userId);
 }

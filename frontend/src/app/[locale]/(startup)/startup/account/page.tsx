@@ -32,6 +32,7 @@ import {
   ChevronUp,
   Banknote,
 } from "lucide-react";
+import { matchingService } from "@/services/matchingService";
 
 const txStatusIcon: Record<string, React.ElementType> = {
   COMPLETED: CheckCircle2,
@@ -68,6 +69,7 @@ export default function StartupAccountPage() {
   const [settleAmount, setSettleAmount] = useState("");
   const [settleAccountNumber, setSettleAccountNumber] = useState("");
   const [settling, setSettling] = useState(false);
+  const [matchedExecutions, setMatchedExecutions] = useState<any[]>([]);
 
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["startup-account", user?.id],
@@ -124,10 +126,21 @@ export default function StartupAccountPage() {
           });
         }
 
+        // Build matched executions list with funded status
+        const execList = uniqueMatches.map((m: any) => ({
+          investorUserId: m.investorUserId,
+          investorExecutionId: m.investorExecutionId,
+          matchScore: m.matchScore,
+          matchedAt: m.matchedAt,
+          investorName: (map[m.investorUserId as number] as any)?.fullName ?? `Investor #${m.investorUserId}`,
+          funded: (map[m.investorUserId as number] as any)?._executionFunded ?? null,
+        }));
+
         return {
           account: accRes.data?.data,
           transactions: loadedTx,
           investorInfoMap: map,
+          matchedExecutions: execList,
         };
       } catch {
         toast.error("Failed to load account data");
@@ -143,6 +156,7 @@ export default function StartupAccountPage() {
     setAccount(accountData.account);
     setTransactions(accountData.transactions);
     setInvestorInfoMap(accountData.investorInfoMap);
+    setMatchedExecutions((accountData as any).matchedExecutions ?? []);
   }, [accountData]);
 
   const handleSettle = async () => {
@@ -290,6 +304,70 @@ export default function StartupAccountPage() {
               {settling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
               {settling ? "Processing..." : "Confirm Settlement"}
             </button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Matched Investment Status */}
+      {matchedExecutions.length > 0 && (
+        <Card className="border border-[var(--color-border)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-[var(--color-primary-800)]">
+              Matched Investment Status
+            </CardTitle>
+            <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">
+              Investors matched to your startup — see which executions are funded
+            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2">
+              {matchedExecutions.map((item: any, i: number) => {
+                const info = investorInfoMap[item.investorUserId];
+                const isFunded = item.funded === true;
+                const isUnknown = item.funded === null || item.funded === undefined;
+                return (
+                  <div key={i}
+                    className={`flex items-center gap-3 p-3 rounded-xl border ${
+                      isFunded ? "border-green-200 bg-green-50" : isUnknown ? "border-[var(--color-border)] bg-[var(--color-neutral-50)]" : "border-amber-200 bg-amber-50"
+                    }`}>
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isFunded ? "bg-green-100" : isUnknown ? "bg-[var(--color-neutral-100)]" : "bg-amber-100"
+                    }`}>
+                      {isFunded
+                        ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        : <Clock className={`h-4 w-4 ${isUnknown ? "text-[var(--color-neutral-400)]" : "text-amber-600"}`} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
+                        {info?.fullName ?? item.investorName}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {item.matchScore && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-neutral-400)]">
+                            <Star className="h-2.5 w-2.5" />
+                            {Number(item.matchScore).toFixed(0)}% match
+                          </span>
+                        )}
+                        {item.matchedAt && (
+                          <span className="text-[10px] text-[var(--color-neutral-400)]">
+                            {new Date(item.matchedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                      isFunded
+                        ? "bg-green-100 text-green-700"
+                        : isUnknown
+                        ? "bg-[var(--color-neutral-100)] text-[var(--color-neutral-500)]"
+                        : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {isFunded ? "FUNDED" : isUnknown ? "UNKNOWN" : "NOT FUNDED"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}
