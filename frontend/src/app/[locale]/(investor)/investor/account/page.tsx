@@ -98,7 +98,6 @@ export default function InvestorAccountPage() {
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["investor-account", user?.id],
     queryFn: async () => {
-      // Use allSettled so one slow service never kills the whole page
       const [accResult, txResult, matchResult] = await Promise.allSettled([
         followupService.getMyAccount(),
         followupService.getMyTransactions(),

@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi } from "lucide-react";
 
-// Ping the Vercel API proxy routes — these wake the Render backends without
-// needing auth and without triggering CORS errors.
 const SERVICES = [
   { name: "Users",     url: "/api/config" },
   { name: "Startup",   url: "/api/startup/executions/health-check" },
@@ -15,7 +13,7 @@ const SERVICES = [
   { name: "Notif",     url: "/api/notifications/health" },
 ];
 
-const SLOW_THRESHOLD_MS = 3000; // show banner only if any service takes >3s
+const SLOW_THRESHOLD_MS = 3000;
 
 export function ServiceWarmer() {
   const [slow, setSlow] = useState(false);
@@ -39,7 +37,6 @@ export function ServiceWarmer() {
       clearTimeout(timer);
       setSlow(false);
       setReady(true);
-      // Hide the "ready" banner after 2s
       setTimeout(() => setReady(false), 2000);
     });
 

@@ -82,7 +82,6 @@ export default function AdminExecutionsPage() {
     },
   });
 
-  // Force-trigger AI scoring for a stuck PENDING startup execution
   const handleTriggerScoring = async (executionId: number) => {
     setTriggeringId(executionId);
     try {
@@ -95,7 +94,6 @@ export default function AdminExecutionsPage() {
         minimum_passing_score: 50,
       });
       toast.success(`Scoring triggered for execution #${executionId}. The evaluator review will appear shortly.`);
-      // Invalidate so the list refreshes and shows updated status
       queryClient.invalidateQueries({ queryKey: ["admin-executions"] });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.message ?? "Scoring failed";

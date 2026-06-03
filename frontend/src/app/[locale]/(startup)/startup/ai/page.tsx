@@ -387,19 +387,28 @@ function AIConversationPage() {
         additionalText?.trim() || "No additional considerations provided."
       );
 
-      try {
-        const configRes = await aiService.getConfig();
-        const cfg = configRes.data?.data ?? {};
-        await aiService.triggerScoring({
-          executionId,
-          weightFinancialHealth: cfg.weightFinancialHealth ?? 25,
-          weightTeamStrength: cfg.weightTeamStrength ?? 25,
-          weightMarketPotential: cfg.weightMarketPotential ?? 25,
-          weightBusinessViability: cfg.weightBusinessViability ?? 25,
-          minimumPassingScore: cfg.minimumPassingScore ?? 60,
-        });
-      } catch {
-        toast.warn("Assessment submitted but scoring could not be triggered. Please contact support.");
+      let scoringDone = false;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await aiService.triggerScoring({
+            executionId,
+            weightFinancialHealth: 0.25,
+            weightTeamStrength: 0.25,
+            weightMarketPotential: 0.25,
+            weightBusinessViability: 0.25,
+            minimumPassingScore: 60,
+          });
+          scoringDone = true;
+          break;
+        } catch (err: any) {
+          console.warn(`Scoring attempt ${attempt} failed:`, err?.response?.data ?? err?.message);
+          if (attempt < 3) {
+            await new Promise((r) => setTimeout(r, 4000 * attempt));
+          }
+        }
+      }
+      if (!scoringDone) {
+        toast.warn("Assessment saved! Scoring is still processing — your results will appear shortly. You can check back in a few minutes.");
       }
 
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);

@@ -134,7 +134,6 @@ export default function StartupAccountPage() {
           });
         }
 
-        // Build matched executions list with funded status
         const execList = uniqueMatches.map((m: any) => ({
           investorUserId: m.investorUserId,
           investorExecutionId: m.investorExecutionId,
