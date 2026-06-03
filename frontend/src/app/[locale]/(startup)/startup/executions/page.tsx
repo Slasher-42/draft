@@ -643,10 +643,18 @@ export default function StartupExecutionsPage() {
                   )}
 
                   {exec.status === "PENDING" && (
-                    <p className="text-xs text-blue-600 flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      Under review — you will be notified when there is an update
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-xs text-blue-600 flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        AI assessment may still be pending — complete it below
+                      </p>
+                      <Link href={`/startup/ai?executionId=${exec.id}`}>
+                        <Button size="sm" className="gap-1.5 w-full bg-violet-600 hover:bg-violet-700 text-white border-0">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Complete AI Assessment
+                        </Button>
+                      </Link>
+                    </div>
                   )}
 
                   {exec.status === "REJECTED" && exec.statusReason && (

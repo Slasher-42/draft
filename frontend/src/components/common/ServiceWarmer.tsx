@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
 
-// All Render backend URLs to wake up
+// Ping the Vercel API proxy routes — these wake the Render backends without
+// needing auth and without triggering CORS errors.
 const SERVICES = [
-  { name: "Users",        url: "https://user-management-service-2zr5.onrender.com/api/config" },
-  { name: "Startup",      url: "https://startup-application-service.onrender.com/actuator/health" },
-  { name: "AI",           url: "https://ai-assessment-service.onrender.com/actuator/health" },
-  { name: "Evaluator",    url: "https://evaluation-decision-service.onrender.com/actuator/health" },
-  { name: "Matching",     url: "https://investor-matching-service.onrender.com/actuator/health" },
-  { name: "Admin",        url: "https://audit-compliance-service.onrender.com/actuator/health" },
-  { name: "Notif",        url: "https://reporting-notification-service.onrender.com/actuator/health" },
+  { name: "Users",     url: "/api/config" },
+  { name: "Startup",   url: "/api/startup/executions/health-check" },
+  { name: "AI",        url: "/api/ai/health" },
+  { name: "Evaluator", url: "/api/evaluator/health" },
+  { name: "Matching",  url: "/api/matching/health" },
+  { name: "Admin",     url: "/api/admin/health" },
+  { name: "Notif",     url: "/api/notifications/health" },
 ];
 
 const SLOW_THRESHOLD_MS = 3000; // show banner only if any service takes >3s
@@ -27,8 +28,11 @@ export function ServiceWarmer() {
 
     const timer = setTimeout(() => setSlow(true), SLOW_THRESHOLD_MS);
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
     const pings = SERVICES.map(({ url }) =>
-      fetch(url, { method: "GET", signal: AbortSignal.timeout(60_000) }).catch(() => null)
+      fetch(url, { method: "GET", headers, signal: AbortSignal.timeout(60_000) }).catch(() => null)
     );
 
     Promise.allSettled(pings).then(() => {

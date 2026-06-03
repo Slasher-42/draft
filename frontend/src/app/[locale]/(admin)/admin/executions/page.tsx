@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ClipboardList, Clock, CheckCircle2, XCircle, TrendingUp, AlertCircle } from "lucide-react";
+import {
+  Loader2, ClipboardList, Clock, CheckCircle2, XCircle,
+  TrendingUp, AlertCircle, Zap,
+} from "lucide-react";
 
 const execApi = axios.create({ baseURL: "https://startup-application-service.onrender.com", timeout: 30000 });
 execApi.interceptors.request.use((config) => {
@@ -15,6 +19,13 @@ execApi.interceptors.request.use((config) => {
 
 const evalApi = axios.create({ baseURL: "https://evaluation-decision-service.onrender.com", timeout: 30000 });
 evalApi.interceptors.request.use((config) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+const aiApi = axios.create({ baseURL: "https://ai-assessment-service.onrender.com", timeout: 120000 });
+aiApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
@@ -31,6 +42,8 @@ const statusConfig: Record<string, { label: string; icon: any; classes: string }
 
 export default function AdminExecutionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [triggeringId, setTriggeringId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-executions"],
@@ -47,7 +60,10 @@ export default function AdminExecutionsPage() {
       reviews.forEach((r: any) => { if (r.decision) reviewStatusMap[r.executionId] = r.decision; });
 
       const startups = startupRes.status === "fulfilled"
-        ? (startupRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "STARTUP", status: reviewStatusMap[e.id] ?? e.status }))
+        ? (startupRes.value.data?.data ?? []).map((e: any) => ({
+            ...e, type: "STARTUP",
+            status: reviewStatusMap[e.id] ?? e.status,
+          }))
         : [];
       const investors = investorRes.status === "fulfilled"
         ? (investorRes.value.data?.data ?? []).map((e: any) => ({ ...e, type: "INVESTOR" }))
@@ -60,11 +76,34 @@ export default function AdminExecutionsPage() {
       return {
         allExecutions: combined,
         fetchError: combined.length === 0 && startupRes.status === "rejected" && investorRes.status === "rejected"
-          ? "Could not load executions. Check that the StartupApplicationService (port 8082) is running and your token has ROLE_ADMIN."
+          ? "Could not load executions. Check that the StartupApplicationService is running."
           : null,
       };
     },
   });
+
+  // Force-trigger AI scoring for a stuck PENDING startup execution
+  const handleTriggerScoring = async (executionId: number) => {
+    setTriggeringId(executionId);
+    try {
+      await aiApi.post("/api/assessment/score", {
+        execution_id: executionId,
+        weight_financial_health: 0.25,
+        weight_team_strength: 0.25,
+        weight_market_potential: 0.25,
+        weight_business_viability: 0.25,
+        minimum_passing_score: 50,
+      });
+      toast.success(`Scoring triggered for execution #${executionId}. The evaluator review will appear shortly.`);
+      // Invalidate so the list refreshes and shows updated status
+      queryClient.invalidateQueries({ queryKey: ["admin-executions"] });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? "Scoring failed";
+      toast.error(`Failed to trigger scoring: ${msg}`);
+    } finally {
+      setTriggeringId(null);
+    }
+  };
 
   const allExecutions = data?.allExecutions ?? [];
   const fetchError = data?.fetchError ?? null;
@@ -139,6 +178,7 @@ export default function AdminExecutionsPage() {
             const cfg = statusConfig[exec.status] ?? statusConfig.PENDING;
             const Icon = cfg.icon;
             const isStartup = exec.type === "STARTUP";
+            const isPending = exec.status === "PENDING";
 
             return (
               <Card key={`${exec.type}-${exec.id}`} className="border border-[var(--color-border)] hover:shadow-sm transition-shadow">
@@ -181,6 +221,21 @@ export default function AdminExecutionsPage() {
                           <p className="text-xs text-[var(--color-neutral-500)] mt-1 italic truncate">
                             Reason: {exec.statusReason}
                           </p>
+                        )}
+
+                        {/* Trigger scoring button — only for PENDING startup executions */}
+                        {isStartup && isPending && (
+                          <button
+                            onClick={() => handleTriggerScoring(exec.id)}
+                            disabled={triggeringId === exec.id}
+                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-60"
+                          >
+                            {triggeringId === exec.id ? (
+                              <><Loader2 className="h-3 w-3 animate-spin" />Triggering…</>
+                            ) : (
+                              <><Zap className="h-3 w-3" />Trigger AI Scoring</>
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>
