@@ -346,11 +346,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: "#F8FAFC" }}>
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "#052654" }}>
+      <section ref={heroRef} className="relative min-h-screen flex flex-col overflow-hidden" style={{ backgroundColor: "#0d1b2e" }}>
         {heroVideoUrl && (
           <video ref={videoRef} autoPlay muted loop playsInline
-            className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: 0, opacity: 0.55 }}>
+            className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: 0, opacity: 0.82 }}>
             <source src={heroVideoUrl} />
           </video>
         )}
@@ -358,8 +357,8 @@ export default function HomePage() {
         <div className="absolute inset-0" style={{
           zIndex: 1,
           background: heroVideoUrl
-            ? "linear-gradient(135deg,rgba(5,38,84,0.72) 0%,rgba(7,54,106,0.45) 50%,rgba(2,19,42,0.78) 100%)"
-            : "linear-gradient(135deg,rgba(5,38,84,0.97) 0%,rgba(7,54,106,0.90) 50%,rgba(2,19,42,0.98) 100%)",
+            ? "linear-gradient(135deg,rgba(13,27,46,0.48) 0%,rgba(13,27,46,0.18) 50%,rgba(13,27,46,0.55) 100%)"
+            : "linear-gradient(135deg,rgba(13,27,46,0.98) 0%,rgba(13,27,46,0.94) 50%,rgba(13,27,46,0.99) 100%)",
         }} />
 
         <div className="absolute top-0 right-0 rounded-full pointer-events-none"
@@ -369,7 +368,7 @@ export default function HomePage() {
 
         {/* ── Nav bar ─────────────────────────────────────────────────────── */}
         <nav className="relative flex items-center justify-between px-6 md:px-12 py-4"
-          style={{ zIndex: 10, background: "rgba(2,12,27,0.25)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(115,168,207,0.1)" }}>
+          style={{ zIndex: 10, background: "rgba(13,27,46,0.30)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(115,168,207,0.1)" }}>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
               <Image src="/logo.png" alt="RG Partners" width={40} height={40} className="object-cover w-full h-full" />
@@ -558,7 +557,7 @@ export default function HomePage() {
       )}
 
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="py-10 text-center" style={{ backgroundColor: "#052654" }}>
+      <footer className="py-10 text-center" style={{ backgroundColor: "#0d1b2e" }}>
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="h-8 w-8 rounded-lg overflow-hidden">
             <Image src="/logo.png" alt="RG Partners" width={32} height={32} className="object-cover w-full h-full" />
