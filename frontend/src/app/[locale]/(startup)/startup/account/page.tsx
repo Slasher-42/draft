@@ -74,14 +74,23 @@ export default function StartupAccountPage() {
     queryKey: ["startup-account", user?.id],
     queryFn: async () => {
       try {
-        const [accRes, txRes, matchRes] = await Promise.all([
+        const [accSettled, txSettled, matchSettled] = await Promise.allSettled([
           followupService.getMyAccount(),
           followupService.getMyTransactions(),
           matchingService.getMatchesForStartup(Number(user!.id)),
         ]);
 
-        const loadedTx: Transaction[] = txRes.data?.data ?? [];
-        const loadedMatches: any[] = matchRes.data?.data ?? [];
+        if (accSettled.status === "rejected" && txSettled.status === "rejected") {
+          toast.error("Failed to load account data. Please refresh.");
+          throw new Error("Failed to load account data");
+        }
+
+        const accRes = accSettled.status === "fulfilled" ? accSettled.value : null;
+        const txRes = txSettled.status === "fulfilled" ? txSettled.value : null;
+        const matchRes = matchSettled.status === "fulfilled" ? matchSettled.value : null;
+
+        const loadedTx: Transaction[] = txRes?.data?.data ?? [];
+        const loadedMatches: any[] = matchRes?.data?.data ?? [];
 
         const uniqueMatches = loadedMatches.filter(
           (m, i, arr) => arr.findIndex((x: any) => x.investorUserId === m.investorUserId) === i
@@ -136,7 +145,7 @@ export default function StartupAccountPage() {
         }));
 
         return {
-          account: accRes.data?.data,
+          account: accRes?.data?.data ?? null,
           transactions: loadedTx,
           investorInfoMap: map,
           matchedExecutions: execList,
@@ -147,7 +156,8 @@ export default function StartupAccountPage() {
       }
     },
     enabled: !!user?.id,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(3000 * 2 ** attempt, 15_000),
   });
 
   useEffect(() => {

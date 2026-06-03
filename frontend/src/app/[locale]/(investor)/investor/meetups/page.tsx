@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { followupService } from "@/services/followupService";
 import { Meetup } from "@/types/followup";
 import { PageSkeleton } from "@/components/ui/skeleton";

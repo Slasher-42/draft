@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { evaluatorService } from "@/services/evaluatorService";
 import { EvaluatorReview } from "@/types/review";
 import { Button } from "@/components/ui/button";

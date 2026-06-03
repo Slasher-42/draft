@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { userService } from "@/services/userService";
 import { User, UserRole } from "@/types/user";
 import { Button } from "@/components/ui/button";

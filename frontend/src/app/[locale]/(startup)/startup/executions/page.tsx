@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { startupService } from "@/services/startupService";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";

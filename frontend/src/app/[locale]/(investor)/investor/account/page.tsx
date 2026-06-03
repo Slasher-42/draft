@@ -90,6 +90,7 @@ export default function InvestorAccountPage() {
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedExecutionId, setSelectedExecutionId] = useState<number | null>(null);
   const [myExecutions, setMyExecutions] = useState<any[]>([]);
+  const [loadingExecutions, setLoadingExecutions] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
   const [investDesc, setInvestDesc] = useState("");
   const [investing, setInvesting] = useState(false);
@@ -97,68 +98,72 @@ export default function InvestorAccountPage() {
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["investor-account", user?.id],
     queryFn: async () => {
-      try {
-        const [accRes, txRes, matchRes] = await Promise.all([
-          followupService.getMyAccount(),
-          followupService.getMyTransactions(),
-          matchingService.getMatchesForInvestor(Number(user!.id)),
-        ]);
-        const loadedMatches: any[] = matchRes.data?.data ?? [];
+      // Use allSettled so one slow service never kills the whole page
+      const [accResult, txResult, matchResult] = await Promise.allSettled([
+        followupService.getMyAccount(),
+        followupService.getMyTransactions(),
+        matchingService.getMatchesForInvestor(Number(user!.id)),
+      ]);
 
-        const uniqueMatches = loadedMatches.filter(
-          (m, i, arr) => arr.findIndex((x: any) => x.startupUserId === m.startupUserId) === i
-        );
-        let map: Record<number, StartupInfo> = {};
-        if (uniqueMatches.length > 0) {
-          const infos = await Promise.allSettled(
-            uniqueMatches.map(async (m) => {
-              const [userResult, execResult] = await Promise.allSettled([
-                userService.getUserById(m.startupUserId),
-                m.startupExecutionId
-                  ? startupService.getExecutionByIdInternal(m.startupExecutionId)
-                  : Promise.resolve(null),
-              ]);
-              const u = userResult.status === "fulfilled" ? userResult.value : null;
-              const exec = execResult.status === "fulfilled" ? execResult.value?.data?.data ?? execResult.value?.data : null;
-              const profile = u?.startupProfile;
-              return {
-                id: m.startupUserId as number,
-                info: {
-                  fullName: profile?.companyName ?? u?.fullName ?? `Startup #${m.startupUserId}`,
-                  email: u?.email ?? "",
-                  phoneNumber: u?.phoneNumber,
-                  industry: exec?.industry ?? profile?.industry,
-                  country: profile?.country,
-                  city: profile?.city,
-                  website: profile?.website,
-                  problemStatement: exec?.problemStatement,
-                  businessModel: exec?.businessModel,
-                  targetMarket: exec?.targetMarket,
-                  fundingNeeded: exec?.fundingNeeded,
-                  suggestedFundingRange: exec?.suggestedFundingRange,
-                  teamDetails: exec?.teamDetails,
-                } as StartupInfo,
-              };
-            })
-          );
-          infos.forEach((r) => {
-            if (r.status === "fulfilled") map[r.value.id] = r.value.info;
-          });
-        }
-
-        return {
-          account: accRes.data?.data,
-          transactions: txRes.data?.data ?? [],
-          matches: loadedMatches,
-          startupInfoMap: map,
-        };
-      } catch {
-        toast.error("Failed to load account data");
+      if (accResult.status === "rejected" && txResult.status === "rejected") {
+        toast.error("Failed to load account data. Please refresh.");
         throw new Error("Failed to load account data");
       }
+
+      const loadedMatches: any[] =
+        matchResult.status === "fulfilled" ? (matchResult.value.data?.data ?? []) : [];
+
+      const uniqueMatches = loadedMatches.filter(
+        (m, i, arr) => arr.findIndex((x: any) => x.startupUserId === m.startupUserId) === i
+      );
+      let map: Record<number, StartupInfo> = {};
+      if (uniqueMatches.length > 0) {
+        const infos = await Promise.allSettled(
+          uniqueMatches.map(async (m) => {
+            const [userResult, execResult] = await Promise.allSettled([
+              userService.getUserById(m.startupUserId),
+              m.startupExecutionId
+                ? startupService.getExecutionByIdInternal(m.startupExecutionId)
+                : Promise.resolve(null),
+            ]);
+            const u = userResult.status === "fulfilled" ? userResult.value : null;
+            const exec = execResult.status === "fulfilled" ? execResult.value?.data?.data ?? execResult.value?.data : null;
+            const profile = u?.startupProfile;
+            return {
+              id: m.startupUserId as number,
+              info: {
+                fullName: profile?.companyName ?? u?.fullName ?? `Startup #${m.startupUserId}`,
+                email: u?.email ?? "",
+                phoneNumber: u?.phoneNumber,
+                industry: exec?.industry ?? profile?.industry,
+                country: profile?.country,
+                city: profile?.city,
+                website: profile?.website,
+                problemStatement: exec?.problemStatement,
+                businessModel: exec?.businessModel,
+                targetMarket: exec?.targetMarket,
+                fundingNeeded: exec?.fundingNeeded,
+                suggestedFundingRange: exec?.suggestedFundingRange,
+                teamDetails: exec?.teamDetails,
+              } as StartupInfo,
+            };
+          })
+        );
+        infos.forEach((r) => {
+          if (r.status === "fulfilled") map[r.value.id] = r.value.info;
+        });
+      }
+
+      return {
+        account: accResult.status === "fulfilled" ? accResult.value.data?.data : null,
+        transactions: txResult.status === "fulfilled" ? (txResult.value.data?.data ?? []) : [],
+        matches: loadedMatches,
+        startupInfoMap: map,
+      };
     },
     enabled: !!user?.id,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(3000 * 2 ** attempt, 15_000),
   });
 
   useEffect(() => {
@@ -171,10 +176,12 @@ export default function InvestorAccountPage() {
 
   // Load investor's own executions when invest panel opens
   useEffect(() => {
-    if (!showInvest || myExecutions.length > 0) return;
+    if (!showInvest || myExecutions.length > 0 || loadingExecutions) return;
+    setLoadingExecutions(true);
     investorService.getExecutions()
       .then((res) => setMyExecutions(res.data?.data ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingExecutions(false));
   }, [showInvest]);
 
   const handleDeposit = async () => {
@@ -370,7 +377,12 @@ export default function InvestorAccountPage() {
                   Step 1 — Select your investment execution
                 </span>
               </label>
-              {myExecutions.length === 0 ? (
+              {loadingExecutions ? (
+                <div className="flex items-center justify-center gap-2 py-4 text-sm text-[var(--color-neutral-400)] border border-dashed border-[var(--color-border)] rounded-lg">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading your executions…
+                </div>
+              ) : myExecutions.length === 0 ? (
                 <p className="text-sm text-[var(--color-neutral-400)] py-3 text-center border border-dashed border-[var(--color-border)] rounded-lg">
                   No executions found
                 </p>
