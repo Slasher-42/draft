@@ -85,7 +85,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(HttpServletRequest request) {
+        // Try standard Authorization header first
         String bearer = request.getHeader("Authorization");
+        if (!StringUtils.hasText(bearer)) {
+            // Some reverse proxies (e.g. Render) strip the Authorization header;
+            // fall back to the custom X-Token header sent by the frontend as a backup.
+            bearer = request.getHeader("X-Token");
+            if (StringUtils.hasText(bearer) && !bearer.startsWith("Bearer ")) {
+                return bearer; // X-Token carries the raw token (no "Bearer " prefix)
+            }
+        }
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }

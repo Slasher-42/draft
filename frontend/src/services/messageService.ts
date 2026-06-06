@@ -8,7 +8,9 @@ function authHeader() {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token")
     ?? (api.defaults.headers.common["Authorization"] as string | undefined)?.replace("Bearer ", "");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  // Send token in both Authorization and X-Token headers.
+  // Render's reverse proxy strips Authorization on some services, so X-Token is the fallback.
+  return token ? { Authorization: `Bearer ${token}`, "X-Token": token } : {};
 }
 
 export const messageService = {
