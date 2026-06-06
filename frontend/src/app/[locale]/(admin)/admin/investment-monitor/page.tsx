@@ -28,7 +28,8 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
     queryKey: ["investment-monitor-executions"],
     queryFn: async () => {
       const res = await adminService.getAllExecutions({});
-      const investorExecs: any[] = res.investorExecutions ?? [];
+      const allExecs: any[] = res.data?.data ?? [];
+      const investorExecs: any[] = allExecs.filter((e: any) => e.type === "INVESTOR");
       // Enrich with investor user info
       const uniqueUserIds = [...new Set(investorExecs.map((e: any) => e.userId))];
       const userMap: Record<number, any> = {};
