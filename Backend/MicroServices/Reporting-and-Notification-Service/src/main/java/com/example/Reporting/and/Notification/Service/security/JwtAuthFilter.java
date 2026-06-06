@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 @Component
@@ -43,6 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .header("Authorization", "Bearer " + token)
                         .retrieve()
                         .bodyToMono(new ParameterizedTypeReference<ApiResponse<TokenValidationResponse>>() {})
+                        .timeout(Duration.ofSeconds(60))
                         .block();
 
                 TokenValidationResponse validation = (validationResult != null)
@@ -59,14 +61,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             );
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token invalid or expired");
+                    return;
                 }
 
             } catch (Exception e) {
                 logger.error("Token validation failed: " + e.getMessage());
+                sendError(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                        "Authentication service unavailable, please try again in a moment");
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"success\":false,\"message\":\"" + message + "\"}");
     }
 
     private String extractToken(HttpServletRequest request) {

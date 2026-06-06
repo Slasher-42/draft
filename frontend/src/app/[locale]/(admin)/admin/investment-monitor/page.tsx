@@ -68,8 +68,15 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
         executionTitle: exec.preferredIndustry,
       });
       toast.success(`Fund request sent to ${inv.fullName ?? inv.email}`);
-    } catch {
-      toast.error("Failed to send fund request");
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 503) {
+        toast.error("Service is waking up — please try again in a moment");
+      } else if (status === 401) {
+        toast.error("Session expired — please log in again");
+      } else {
+        toast.error("Failed to send fund request");
+      }
     } finally {
       setAskingId(null);
     }

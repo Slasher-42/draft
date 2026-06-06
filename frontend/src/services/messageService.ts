@@ -1,10 +1,13 @@
 import axios from "axios";
+import { api } from "@/lib/api";
 import { Message, ConversationSummary, BondStatus } from "@/types/message";
 
 const BASE_URL = "https://followup-service.onrender.com";
 
 function authHeader() {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("token")
+    ?? (api.defaults.headers.common["Authorization"] as string | undefined)?.replace("Bearer ", "");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -60,7 +63,7 @@ export const investmentMonitorService = {
     axios.post(
       "https://reporting-notification-service.onrender.com/api/notifications/ask-for-fund",
       payload,
-      { headers: authHeader() }
+      { headers: authHeader(), timeout: 65000 }
     ),
 
   markAsFunded: (executionId: number) =>
