@@ -60,16 +60,15 @@ export const investmentMonitorService = {
     fundingAmount?: number;
     executionTitle?: string;
   }) =>
-    axios.post(
+    api.post(
       "https://reporting-notification-service.onrender.com/api/notifications/ask-for-fund",
       payload,
-      { headers: authHeader(), timeout: 65000 }
+      { timeout: 65000 }
     ),
 
   markAsFunded: (executionId: number) =>
-    axios.patch(
+    api.patch(
       `https://startup-application-service.onrender.com/api/executions/investor/${executionId}/fund`,
-      {},
-      { headers: authHeader() }
+      {}
     ),
 };
