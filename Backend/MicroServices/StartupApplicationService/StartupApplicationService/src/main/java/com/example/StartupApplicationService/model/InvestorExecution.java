@@ -54,8 +54,8 @@ public class InvestorExecution {
 
     private LocalDateTime statusUpdatedAt;
 
-    @Column(nullable = false)
-    private boolean funded = false;
+    @Column
+    private Boolean funded = false;
 
     private LocalDateTime fundedAt;
 

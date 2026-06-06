@@ -130,7 +130,7 @@ return toResponse(saved);
         if (!execution.getUserId().equals(userId)) {
             throw new ResourceNotFoundException("Execution not found with id: " + id);
         }
-        execution.setFunded(true);
+        execution.setFunded(Boolean.TRUE);
         execution.setFundedAt(LocalDateTime.now());
         return toResponse(investorExecutionRepository.save(execution));
     }
@@ -149,7 +149,7 @@ return toResponse(saved);
         response.setStatus(e.getStatus());
         response.setStatusReason(e.getStatusReason());
         response.setStatusUpdatedAt(e.getStatusUpdatedAt());
-        response.setFunded(e.isFunded());
+        response.setFunded(Boolean.TRUE.equals(e.getFunded()));
         response.setFundedAt(e.getFundedAt());
         response.setCreatedAt(e.getCreatedAt());
         response.setUpdatedAt(e.getUpdatedAt());
