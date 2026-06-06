@@ -27,9 +27,10 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
   const { data: executions = [], isLoading } = useQuery({
     queryKey: ["investment-monitor-executions"],
     queryFn: async () => {
-      const res = await adminService.getAllExecutions({});
-      const allExecs: any[] = res.data?.data ?? [];
-      const investorExecs: any[] = allExecs.filter((e: any) => e.type === "INVESTOR");
+      // Fetch investor executions directly — avoids the ADMIN-only startup/all endpoint
+      // so both ADMIN and EVALUATOR can use this view.
+      const res = await adminService.getAllInvestorExecutions();
+      const investorExecs: any[] = res.data?.data ?? [];
       // Enrich with investor user info
       const uniqueUserIds = [...new Set(investorExecs.map((e: any) => e.userId))];
       const userMap: Record<number, any> = {};
