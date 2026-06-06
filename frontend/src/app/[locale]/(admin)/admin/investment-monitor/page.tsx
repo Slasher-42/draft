@@ -74,6 +74,8 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
         toast.error("Service is waking up — please try again in a moment");
       } else if (status === 401) {
         toast.error("Session expired — please log in again");
+      } else if (status === 403) {
+        toast.error("You don't have permission to send fund requests");
       } else {
         toast.error("Failed to send fund request");
       }
