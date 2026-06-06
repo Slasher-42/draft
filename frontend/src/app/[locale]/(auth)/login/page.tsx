@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,9 +29,6 @@ export default function LoginPage() {
   });
 
   type FormValues = z.infer<typeof schema>;
-
-  const searchParams = useSearchParams();
-  const sessionExpired = searchParams.get("reason") === "session_expired";
 
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,12 +65,6 @@ export default function LoginPage() {
       </CardHeader>
 
       <CardContent className="space-y-4 pt-4">
-        {sessionExpired && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <AlertDescription>Your session has expired. Please log in again.</AlertDescription>
-          </Alert>
-        )}
         {error && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4 flex-shrink-0" />
