@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,6 +51,7 @@ const industries = [
 
 export default function InvestorExecutePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -76,6 +78,7 @@ export default function InvestorExecutePage() {
 
     const execution = execRes.data.data;
 
+    queryClient.invalidateQueries({ queryKey: ["investor-executions"] });
     router.push(`/investor/ai?executionId=${execution.id}`);
   } catch {
     toast.error("Failed to save execution. Please try again.");

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { aiService } from "@/services/aiService";
 import { investorService } from "@/services/investorService";
@@ -124,6 +125,7 @@ function TypingDots() {
 function InvestorAIConversation() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const executionId = Number(searchParams.get("executionId"));
 
@@ -532,7 +534,7 @@ function InvestorAIConversation() {
           </button>
           <button className={`icon-btn ${isFullscreen ? "active" : ""}`} onClick={() => setIsFullscreen(!isFullscreen)} title="Fullscreen">⛶</button>
           <button
-            onClick={() => router.push("/investor/executions")}
+            onClick={() => { queryClient.invalidateQueries({ queryKey: ["investor-executions"] }); router.push("/investor/executions"); }}
             style={{
               background: "transparent", border: "1px solid #1f1f1f", borderRadius: 8,
               color: "#555", padding: "6px 12px", cursor: "pointer", fontSize: 12,
@@ -713,7 +715,7 @@ function InvestorAIConversation() {
                 <button
                   className="gold-btn"
                   style={{ marginTop: 16 }}
-                  onClick={() => router.push("/investor/executions")}
+                  onClick={() => { queryClient.invalidateQueries({ queryKey: ["investor-executions"] }); router.push("/investor/executions"); }}
                 >
                   Return to Dashboard →
                 </button>
