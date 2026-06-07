@@ -3,11 +3,6 @@ from app.config import settings
 
 _producer = None
 
-from kafka import KafkaProducer
-from app.config import settings
-
-_producer = None
-
 def get_producer():
     global _producer
     if _producer is None:
