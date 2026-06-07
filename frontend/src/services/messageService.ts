@@ -62,10 +62,10 @@ export const investmentMonitorService = {
     fundingAmount?: number;
     executionTitle?: string;
   }) => {
-    // Render strips the Authorization/X-Token headers before they reach this service,
-    // so the token rides along in the JSON body instead — bodies pass through untouched.
-    // The backend validates it manually (see NotificationController#askForFund).
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      return Promise.reject({ response: { status: 401 }, message: "Not authenticated" });
+    }
     return axios.post(
       "https://reporting-notification-service.onrender.com/api/notifications/ask-for-fund",
       { ...payload, token },
