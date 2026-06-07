@@ -42,6 +42,11 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
+                        // Render strips the Authorization/X-Token headers before they reach this
+                        // service, so this endpoint validates the JWT it receives in the request
+                        // body itself (see NotificationController#askForFund) instead of relying
+                        // on the header-based JwtAuthFilter.
+                        .requestMatchers("/api/notifications/ask-for-fund").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
