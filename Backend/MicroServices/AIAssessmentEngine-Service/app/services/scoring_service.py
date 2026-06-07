@@ -1,6 +1,7 @@
 import json
 from groq import Groq
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.models import AISession, AssessmentScore, Classification, SessionStatus
 from app.config import settings
 
@@ -25,6 +26,13 @@ def compute_score(
 
     if not session:
         raise ValueError(f"No completed session found for execution {execution_id}")
+
+    existing_score = db.query(AssessmentScore).filter(
+        AssessmentScore.execution_id == execution_id
+    ).first()
+
+    if existing_score:
+        return existing_score
 
     conversation_text = "\n".join([
         f"{'Applicant' if msg['role'] == 'user' else 'Aria'}: {msg['content']}"
@@ -127,7 +135,16 @@ Respond ONLY with this exact JSON structure and nothing else:
     )
 
     db.add(score)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing_score = db.query(AssessmentScore).filter(
+            AssessmentScore.execution_id == execution_id
+        ).first()
+        if existing_score:
+            return existing_score
+        raise
     db.refresh(score)
 
     return score
