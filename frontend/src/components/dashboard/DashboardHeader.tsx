@@ -124,6 +124,7 @@ export function DashboardHeader() {
         <ThemeToggle />
 
         {/* Bell */}
+        {user?.role !== "ADMIN" && user?.role !== "EVALUATOR" && (
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen((prev) => !prev)}
@@ -218,6 +219,7 @@ export function DashboardHeader() {
             </div>
           )}
         </div>
+        )}
 
         {/* User avatar */}
         <div
