@@ -7,6 +7,7 @@ import com.example.Reporting.and.Notification.Service.dto.response.TokenValidati
 import com.example.Reporting.and.Notification.Service.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -85,6 +87,11 @@ public class NotificationController {
     @PostMapping("/ask-for-fund")
     public ResponseEntity<ApiResponse<NotificationResponse>> askForFund(
             @Valid @RequestBody AskForFundRequest request) {
+        // Marker log line — search Render logs for "ASK-FOR-FUND-V2-HIT" to confirm
+        // this build is actually live and the request reaches this controller at all.
+        log.info("ASK-FOR-FUND-V2-HIT investorUserId={} executionId={} hasToken={}",
+                request.getInvestorUserId(), request.getExecutionId(), StringUtils.hasText(request.getToken()));
+
         // Render strips the Authorization/X-Token headers before they reach this service
         // (confirmed via diagnostics — the JwtAuthFilter never sees a token), so this
         // endpoint is permitAll and validates the JWT carried in the request body instead.
