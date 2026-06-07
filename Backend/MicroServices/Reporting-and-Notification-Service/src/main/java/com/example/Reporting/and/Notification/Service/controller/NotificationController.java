@@ -113,6 +113,8 @@ public class NotificationController {
                     .block();
             validation = (result != null) ? result.getData() : null;
         } catch (Exception e) {
+            log.error("ASK-FOR-FUND-V2 validate call to {} failed: {} - {}",
+                    userManagementUrl + "/api/auth/validate", e.getClass().getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(new ApiResponse<>(false, "Authentication service unavailable, please try again in a moment", null));
         }
