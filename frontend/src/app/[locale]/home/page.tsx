@@ -526,11 +526,11 @@ export default function HomePage() {
 
                   <div className="pt-6 flex flex-col sm:flex-row gap-3">
                     <Link href="/register" className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-6 py-3 text-sm text-white transition-all hover:opacity-90" style={{ backgroundColor: "#0B4A8B" }}>
-                      {config.ctaPrimaryText}
+                      {t("hero.ctaPrimary")}
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <Link href="/login" className="inline-flex items-center justify-center gap-2 font-semibold rounded-xl px-6 py-3 text-sm border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all">
-                      {config.ctaSecondaryText}
+                      {t("hero.ctaSecondary")}
                     </Link>
                   </div>
                 </div>
@@ -594,20 +594,20 @@ function HeroContent({
       </div>
 
       <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">
-        {config.heroTitle}
+        {t("hero.title")}
       </h1>
 
       <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto" style={{ color: "#A2C3DF" }}>
-        {config.heroSubtitle}
+        {t("hero.subtitle")}
       </p>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link href="/register" className="inline-flex items-center gap-2 font-bold rounded-2xl px-8 py-4 text-base text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200" style={{ backgroundColor: "#2F72A5" }}>
-          {config.ctaPrimaryText}
+          {t("hero.ctaPrimary")}
           <ArrowRight className="w-5 h-5" />
         </Link>
         <button onClick={() => scrollToSection("investors")} className="inline-flex items-center gap-2 font-semibold rounded-2xl px-8 py-4 text-base border transition-all duration-200 hover:bg-white/10" style={{ color: "#A2C3DF", borderColor: "rgba(162,195,223,0.3)" }}>
-          {config.ctaSecondaryText}
+          {t("hero.ctaSecondary")}
         </button>
       </div>
 

@@ -104,10 +104,19 @@
       "investmentMonitor": "Moniteur d'investissement",
       "myProfile": "Mon profil",
       "settings": "Paramètres",
-      "dashboard": "Tableau de bord"
+      "dashboard": "Tableau de bord",
+      "account": "Compte",
+      "meetups": "Réunions",
+      "contracts": "Contrats",
+      "collaborators": "Collaborateurs",
+      "followUp": "Suivi",
+      "escalations": "Escalades",
+      "homeController": "Contrôleur d'accueil",
+      "executionDetail": "Détail de l'exécution",
+      "reviewDetail": "Détail de l'évaluation"
     },
     "header": {
-      "subtitle": "RG Partners · Système d'évaluation de la préparation à l'investissement"
+      "subtitle": "RG Partners · Préparation à l'investissement"
     }
   },
   "notifications": {
@@ -1457,7 +1466,11 @@
       "logout": "Déconnexion"
     },
     "hero": {
-      "badge": "Plateforme d'évaluation de la préparation à l'investissement par IA"
+      "badge": "Plateforme de préparation à l'investissement basée sur l'IA",
+      "title": "Renforcer la prochaine génération d'investisseurs et de startups africains",
+      "subtitle": "RG Partners connecte des startups visionnaires avec des investisseurs stratégiques grâce à des évaluations de préparation à l'investissement basées sur l'IA.",
+      "ctaPrimary": "Commencer",
+      "ctaSecondary": "En savoir plus"
     },
     "trust": {
       "users": "Approuvé par plus de 250 utilisateurs",

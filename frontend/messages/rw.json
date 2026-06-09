@@ -104,7 +104,16 @@
       "investmentMonitor": "Gukurikirana Ishoramari",
       "myProfile": "Umwirondoro Wanjye",
       "settings": "Igenamiterere",
-      "dashboard": "Ikibaho cy'amakuru"
+      "dashboard": "Ikibaho cy'amakuru",
+      "account": "Konti",
+      "meetups": "Inama",
+      "contracts": "Amasezerano",
+      "collaborators": "Abafatanyabikorwa",
+      "followUp": "Gukurikirana",
+      "escalations": "Amakuru y'Ikibazo",
+      "homeController": "Ugenzura Urupapuro",
+      "executionDetail": "Amakuru y'Isuzuma",
+      "reviewDetail": "Amakuru y'Isuzuma"
     },
     "header": {
       "subtitle": "RG Partners · Uruhinja rwo Gusuzuma Ishoramari"
@@ -1457,7 +1466,11 @@
       "logout": "Sohoka"
     },
     "hero": {
-      "badge": "Uruhinja rwo Gusuzuma Ishoramari Rwonywe na AI"
+      "badge": "Urubuga rw'Ubwiteguzi bw'Inkunga rw'Ubuhanga bwa AI",
+      "title": "Gutera inkunga ubutangwa bushya bw'abatotsinda n'ibikorwa bya Afurika",
+      "subtitle": "RG Partners ihuriza ibikorwa bishya n'abatotsinda b'ingenzi binyuze mu isuzuma ry'ubwiteguzi bw'inkunga ryinginga ubukorikori bwa AI.",
+      "ctaPrimary": "Tangira",
+      "ctaSecondary": "Menya byinshi"
     },
     "trust": {
       "users": "Bizewe na 250+ bakoresha",

@@ -104,10 +104,19 @@
       "investmentMonitor": "Investment Monitor",
       "myProfile": "My Profile",
       "settings": "Settings",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "account": "Account",
+      "meetups": "Meetups",
+      "contracts": "Contracts",
+      "collaborators": "Collaborators",
+      "followUp": "Follow Up",
+      "escalations": "Escalations",
+      "homeController": "Home Controller",
+      "executionDetail": "Execution Detail",
+      "reviewDetail": "Review Detail"
     },
     "header": {
-      "subtitle": "RG Partners · Investment Readiness Assessment System"
+      "subtitle": "RG Partners · Investment Readiness"
     }
   },
   "notifications": {
@@ -1457,7 +1466,11 @@
       "logout": "Logout"
     },
     "hero": {
-      "badge": "AI-Powered Investment Readiness Platform"
+      "badge": "AI-Powered Investment Readiness Platform",
+      "title": "Empowering Africa's Next Generation of Investors & Startups",
+      "subtitle": "RG Partners connects visionary startups with strategic investors through AI-powered investment readiness assessments.",
+      "ctaPrimary": "Get Started",
+      "ctaSecondary": "Learn More"
     },
     "trust": {
       "users": "Trusted by 250+ users",
