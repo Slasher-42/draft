@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
@@ -17,32 +18,34 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const ROLES = [
-  {
-    value: "EVALUATOR",
-    label: "Evaluator",
-    description: "Reviews AI scores and makes final approval decisions on startup executions.",
-    icon: ShieldCheck,
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    selectedBg: "bg-amber-50",
-    selectedBorder: "border-amber-500",
-    selectedRing: "ring-amber-500/20",
-  },
-  {
-    value: "ADMIN",
-    label: "Admin",
-    description: "Full system access — manage users, configure settings, and view all data.",
-    icon: Shield,
-    color: "text-[var(--color-primary-700)]",
-    bg: "bg-[var(--color-primary-50)]",
-    border: "border-[var(--color-primary-200)]",
-    selectedBg: "bg-[var(--color-primary-50)]",
-    selectedBorder: "border-[var(--color-primary)]",
-    selectedRing: "ring-[var(--color-primary)]/20",
-  },
-];
+function getRoles(t: ReturnType<typeof useTranslations<"admin.usersCreate">>) {
+  return [
+    {
+      value: "EVALUATOR",
+      label: t("roleEvaluator"),
+      description: t("roleEvaluatorDesc"),
+      icon: ShieldCheck,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      selectedBg: "bg-amber-50",
+      selectedBorder: "border-amber-500",
+      selectedRing: "ring-amber-500/20",
+    },
+    {
+      value: "ADMIN",
+      label: t("roleAdmin"),
+      description: t("roleAdminDesc"),
+      icon: Shield,
+      color: "text-[var(--color-primary-700)]",
+      bg: "bg-[var(--color-primary-50)]",
+      border: "border-[var(--color-primary-200)]",
+      selectedBg: "bg-[var(--color-primary-50)]",
+      selectedBorder: "border-[var(--color-primary)]",
+      selectedRing: "ring-[var(--color-primary)]/20",
+    },
+  ];
+}
 
 function generatePassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
@@ -50,9 +53,13 @@ function generatePassword() {
 }
 
 export default function AdminCreateUserPage() {
+  const t = useTranslations("admin.usersCreate");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const ROLES = getRoles(t);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -65,14 +72,14 @@ export default function AdminCreateUserPage() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!form.fullName.trim()) newErrors.fullName = "Full name is required.";
-    if (!form.email.trim()) newErrors.email = "Email is required.";
+    if (!form.fullName.trim()) newErrors.fullName = t("fullNameRequired");
+    if (!form.email.trim()) newErrors.email = t("emailRequired");
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      newErrors.email = "Enter a valid email address.";
+      newErrors.email = t("emailInvalid");
     if (!form.temporaryPassword.trim())
-      newErrors.temporaryPassword = "Temporary password is required.";
+      newErrors.temporaryPassword = t("passwordRequired");
     else if (form.temporaryPassword.length < 8)
-      newErrors.temporaryPassword = "Password must be at least 8 characters.";
+      newErrors.temporaryPassword = t("passwordTooShort");
     return newErrors;
   };
 
@@ -97,12 +104,12 @@ export default function AdminCreateUserPage() {
         temporaryPassword: form.temporaryPassword,
         role: form.role,
       });
-      toast.success(`${form.role === "ADMIN" ? "Admin" : "Evaluator"} account created. Credentials sent via email.`);
+      toast.success(t("createdSuccess", { role: form.role === "ADMIN" ? t("roleAdmin") : t("roleEvaluator") }));
       router.push("/admin/users");
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
-        "Failed to create user. Please try again.";
+        t("createFailedDefault");
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -117,16 +124,16 @@ export default function AdminCreateUserPage() {
         className="flex items-center gap-2 text-sm text-[var(--color-neutral-500)] hover:text-[var(--color-primary)] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to users
+        {t("backToUsers")}
       </button>
 
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          Create User Account
+          {t("pageTitle")}
         </h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-1">
-          Create accounts for Evaluators and Admins. Credentials will be sent to their email automatically.
+          {t("pageSubtitle")}
         </p>
       </div>
 
@@ -135,7 +142,7 @@ export default function AdminCreateUserPage() {
         <Card className="border border-[var(--color-border)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[var(--color-neutral-700)]">
-              Select Role
+              {t("selectRole")}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3">
@@ -175,20 +182,20 @@ export default function AdminCreateUserPage() {
         <Card className="border border-[var(--color-border)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-[var(--color-neutral-700)]">
-              Account Details
+              {t("accountDetails")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Full name */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--color-neutral-700)]">
-                Full Name <span className="text-red-500">*</span>
+                {t("fullName")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={form.fullName}
                 onChange={(e) => handleChange("fullName", e.target.value)}
-                placeholder="e.g. Jean-Pierre Habimana"
+                placeholder={t("fullNamePlaceholder")}
                 className={`w-full h-10 px-3 rounded-lg border text-sm bg-white outline-none transition-colors
                   focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]
                   ${errors.fullName ? "border-red-400 bg-red-50" : "border-[var(--color-border)]"}`}
@@ -201,13 +208,13 @@ export default function AdminCreateUserPage() {
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--color-neutral-700)]">
-                Email Address <span className="text-red-500">*</span>
+                {t("emailAddress")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="e.g. jean@rgpartners.rw"
+                placeholder={t("emailPlaceholder")}
                 className={`w-full h-10 px-3 rounded-lg border text-sm bg-white outline-none transition-colors
                   focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]
                   ${errors.email ? "border-red-400 bg-red-50" : "border-[var(--color-border)]"}`}
@@ -220,7 +227,7 @@ export default function AdminCreateUserPage() {
             {/* Temporary password */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--color-neutral-700)]">
-                Temporary Password <span className="text-red-500">*</span>
+                {t("temporaryPassword")} <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -228,7 +235,7 @@ export default function AdminCreateUserPage() {
                     type={showPassword ? "text" : "password"}
                     value={form.temporaryPassword}
                     onChange={(e) => handleChange("temporaryPassword", e.target.value)}
-                    placeholder="Minimum 8 characters"
+                    placeholder={t("passwordPlaceholder")}
                     className={`w-full h-10 px-3 pr-10 rounded-lg border text-sm bg-white outline-none font-mono transition-colors
                       focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]
                       ${errors.temporaryPassword ? "border-red-400 bg-red-50" : "border-[var(--color-border)]"}`}
@@ -244,7 +251,7 @@ export default function AdminCreateUserPage() {
                 <button
                   type="button"
                   onClick={() => handleChange("temporaryPassword", generatePassword())}
-                  title="Generate a new password"
+                  title={t("generatePasswordTitle")}
                   className="h-10 w-10 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-neutral-500)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary-200)] transition-colors bg-white"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -254,7 +261,7 @@ export default function AdminCreateUserPage() {
                 <p className="text-xs text-red-500">{errors.temporaryPassword}</p>
               )}
               <p className="text-xs text-[var(--color-neutral-400)]">
-                This password will be emailed to the user. They must change it after first login.
+                {t("passwordHint")}
               </p>
             </div>
           </CardContent>
@@ -266,8 +273,9 @@ export default function AdminCreateUserPage() {
             i
           </div>
           <p className="text-sm text-blue-700">
-            Once created, the system will automatically email the login credentials to{" "}
-            <strong>{form.email || "the user"}</strong>. They will be able to log in immediately.
+            {t.rich("infoBanner", {
+              email: () => <strong>{form.email || t("infoBannerDefaultUser")}</strong>,
+            })}
           </p>
         </div>
 
@@ -279,18 +287,18 @@ export default function AdminCreateUserPage() {
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button type="submit" disabled={isSubmitting} className="gap-2 min-w-[160px]">
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Creating…
+                {t("creating")}
               </>
             ) : (
               <>
                 <UserPlus className="h-4 w-4" />
-                Create {form.role === "ADMIN" ? "Admin" : "Evaluator"}
+                {form.role === "ADMIN" ? t("createAdmin") : t("createEvaluator")}
               </>
             )}
           </Button>

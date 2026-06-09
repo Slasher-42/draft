@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { toast } from "react-toastify";
 import { Loader2, Save, User, Building2, MapPin, Globe, Users, Calendar, Camera } from "lucide-react";
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,19 +76,19 @@ export default function ProfilePage() {
 
         if (user!.role === "STARTUP") {
           try { sp = await userService.getStartupProfile(user!.id); }
-          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load startup profile."); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error(t("toastLoadStartupFailed")); }
         }
         if (user!.role === "INVESTOR") {
           try { ip = await userService.getInvestorProfile(user!.id); }
-          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load investor profile."); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error(t("toastLoadInvestorFailed")); }
         }
         if (user!.role === "EVALUATOR") {
           try { ep = await userService.getEvaluatorProfile(user!.id); }
-          catch (err: any) { if (err.response?.status !== 404) toast.error("Failed to load evaluator profile."); }
+          catch (err: any) { if (err.response?.status !== 404) toast.error(t("toastLoadEvaluatorFailed")); }
         }
         return { userData, sp, ip, ep };
       } catch {
-        toast.error("Failed to load profile.");
+        toast.error(t("toastLoadFailed"));
         throw new Error("Failed to load profile");
       }
     },
@@ -147,44 +149,44 @@ export default function ProfilePage() {
   const validate = (): boolean => {
     const e: Record<string, string> = {};
 
-    if (!fullName.trim()) e.fullName = "Full name is required.";
-    else if (fullName.trim().length < 2) e.fullName = "Full name must be at least 2 characters.";
+    if (!fullName.trim()) e.fullName = t("errFullNameRequired");
+    else if (fullName.trim().length < 2) e.fullName = t("errFullNameShort");
 
     if (phoneNumber && !/^\+?[\d\s\-()\\.]{7,15}$/.test(phoneNumber))
-      e.phoneNumber = "Enter a valid phone number.";
+      e.phoneNumber = t("errPhoneInvalid");
 
     if (user?.role === "STARTUP") {
-      if (!companyName.trim()) e.companyName = "Company name is required.";
-      if (!industry) e.industry = "Please select an industry.";
-      if (!country.trim()) e.country = "Country is required.";
-      if (!city.trim()) e.city = "City is required.";
+      if (!companyName.trim()) e.companyName = t("errCompanyRequired");
+      if (!industry) e.industry = t("errIndustryRequired");
+      if (!country.trim()) e.country = t("errCountryRequired");
+      if (!city.trim()) e.city = t("errCityRequired");
       if (website.trim() && !/^https?:\/\/.+\..+/.test(website.trim()))
-        e.website = "Must be a valid URL starting with http:// or https://";
+        e.website = t("errWebsiteInvalid");
       if (teamSize && (isNaN(Number(teamSize)) || Number(teamSize) < 1))
-        e.teamSize = "Team size must be a positive number.";
+        e.teamSize = t("errTeamSizeInvalid");
       if (foundedYear) {
         const yr = Number(foundedYear);
         const now = new Date().getFullYear();
         if (isNaN(yr) || yr < 1900 || yr > now)
-          e.foundedYear = `Founded year must be between 1900 and ${now}.`;
+          e.foundedYear = t("errFoundedYearInvalid", { year: now });
       }
       if (fundingNeeded && (isNaN(Number(fundingNeeded)) || Number(fundingNeeded) < 0))
-        e.fundingNeeded = "Enter a valid positive number.";
+        e.fundingNeeded = t("errFundingInvalid");
     }
 
     if (user?.role === "INVESTOR") {
-      if (!organizationName.trim()) e.organizationName = "Organization name is required.";
-      if (!preferredIndustry) e.preferredIndustry = "Please select a preferred industry.";
+      if (!organizationName.trim()) e.organizationName = t("errOrgNameRequired");
+      if (!preferredIndustry) e.preferredIndustry = t("errPreferredIndustryRequired");
       if (!investmentBudget || isNaN(Number(investmentBudget)) || Number(investmentBudget) <= 0)
-        e.investmentBudget = "Enter a valid budget greater than 0.";
-      if (!country.trim()) e.country = "Country is required.";
-      if (!city.trim()) e.city = "City is required.";
+        e.investmentBudget = t("errBudgetInvalid");
+      if (!country.trim()) e.country = t("errCountryRequired");
+      if (!city.trim()) e.city = t("errCityRequired");
     }
 
     if (user?.role === "EVALUATOR") {
-      if (!department.trim()) e.department = "Department is required.";
-      if (!country.trim()) e.country = "Country is required.";
-      if (!city.trim()) e.city = "City is required.";
+      if (!department.trim()) e.department = t("errDeptRequired");
+      if (!country.trim()) e.country = t("errCountryRequired");
+      if (!city.trim()) e.city = t("errCityRequired");
     }
 
     setErrors(e);
@@ -198,9 +200,9 @@ export default function ProfilePage() {
     try {
       const updated = await userService.uploadProfilePicture(user.id, file);
       updateUser({ profilePictureUrl: updated.profilePictureUrl });
-      toast.success("Profile picture updated.");
+      toast.success(t("toastPictureSaved"));
     } catch {
-      toast.error("Failed to upload profile picture.");
+      toast.error(t("toastPictureFailed"));
     } finally {
       setIsUploadingPicture(false);
     }
@@ -242,7 +244,7 @@ export default function ProfilePage() {
       }
 
       updateUser({ fullName, phoneNumber });
-      toast.success("Profile updated successfully.");
+      toast.success(t("toastSaved"));
       setSavedSnapshot({
         fullName,
         phoneNumber,
@@ -261,7 +263,7 @@ export default function ProfilePage() {
         specialization,
       });
     } catch {
-      toast.error("Failed to update profile.");
+      toast.error(t("toastSaveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -279,10 +281,10 @@ export default function ProfilePage() {
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
         <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          My Profile
+          {t("title")}
         </h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Manage your personal information and identity profile
+          {t("subtitle")}
         </p>
       </div>
 
@@ -334,24 +336,24 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-[var(--color-secondary)]" />
-            Basic Information
+            {t("basicInfoTitle")}
           </CardTitle>
-          <CardDescription>Your personal contact details</CardDescription>
+          <CardDescription>{t("basicInfoDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input id="fullName" value={fullName} onChange={(e) => { setFullName(e.target.value); setErrors((p) => ({ ...p, fullName: "" })); }} placeholder="Your full name" className={errors.fullName ? "border-red-500" : ""} />
+            <Label htmlFor="fullName">{t("fullNameLabel")}</Label>
+            <Input id="fullName" value={fullName} onChange={(e) => { setFullName(e.target.value); setErrors((p) => ({ ...p, fullName: "" })); }} placeholder={t("fullNamePlaceholder")} className={errors.fullName ? "border-red-500" : ""} />
             {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <Input id="email" value={user?.email ?? ""} disabled className="opacity-60 cursor-not-allowed" />
-            <p className="text-xs text-[var(--color-neutral-400)]">Email cannot be changed</p>
+            <p className="text-xs text-[var(--color-neutral-400)]">{t("emailHint")}</p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phoneNumber">Phone Number</Label>
-            <Input id="phoneNumber" value={phoneNumber} onChange={(e) => { setPhoneNumber(e.target.value); setErrors((p) => ({ ...p, phoneNumber: "" })); }} placeholder="+250 7XX XXX XXX" className={errors.phoneNumber ? "border-red-500" : ""} />
+            <Label htmlFor="phoneNumber">{t("phoneLabel")}</Label>
+            <Input id="phoneNumber" value={phoneNumber} onChange={(e) => { setPhoneNumber(e.target.value); setErrors((p) => ({ ...p, phoneNumber: "" })); }} placeholder={t("phonePlaceholder")} className={errors.phoneNumber ? "border-red-500" : ""} />
             {errors.phoneNumber && <p className="text-xs text-red-500 mt-1">{errors.phoneNumber}</p>}
           </div>
         </CardContent>
@@ -362,22 +364,22 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[var(--color-secondary)]" />
-              Startup Identity Profile
+              {t("startupProfileTitle")}
             </CardTitle>
-            <CardDescription>Information about your company</CardDescription>
+            <CardDescription>{t("startupProfileDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" value={companyName} onChange={(e) => { setCompanyName(e.target.value); setErrors((p) => ({ ...p, companyName: "" })); }} placeholder="Your company name" className={errors.companyName ? "border-red-500" : ""} />
+              <Label htmlFor="companyName">{t("companyNameLabel")}</Label>
+              <Input id="companyName" value={companyName} onChange={(e) => { setCompanyName(e.target.value); setErrors((p) => ({ ...p, companyName: "" })); }} placeholder={t("companyNamePlaceholder")} className={errors.companyName ? "border-red-500" : ""} />
               {errors.companyName && <p className="text-xs text-red-500 mt-1">{errors.companyName}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="industry">Industry</Label>
+                <Label htmlFor="industry">{t("industryLabel")}</Label>
                 <Select value={industry} onValueChange={(v) => { setIndustry(v); setErrors((p) => ({ ...p, industry: "" })); }}>
                   <SelectTrigger id="industry">
-                    <SelectValue placeholder="Select your industry" />
+                    <SelectValue placeholder={t("industryPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="TECHNOLOGY">Technology</SelectItem>
@@ -399,9 +401,9 @@ export default function ProfilePage() {
               <div className="space-y-1.5">
                 <Label htmlFor="website">
                   <Globe className="h-3.5 w-3.5 inline mr-1" />
-                  Website
+                  {t("websiteLabel")}
                 </Label>
-                <Input id="website" value={website} onChange={(e) => { setWebsite(e.target.value); setErrors((p) => ({ ...p, website: "" })); }} placeholder="https://yoursite.com" className={errors.website ? "border-red-500" : ""} />
+                <Input id="website" value={website} onChange={(e) => { setWebsite(e.target.value); setErrors((p) => ({ ...p, website: "" })); }} placeholder={t("websitePlaceholder")} className={errors.website ? "border-red-500" : ""} />
                 {errors.website && <p className="text-xs text-red-500 mt-1">{errors.website}</p>}
               </div>
             </div>
@@ -409,13 +411,13 @@ export default function ProfilePage() {
               <div className="space-y-1.5">
                 <Label htmlFor="country">
                   <MapPin className="h-3.5 w-3.5 inline mr-1" />
-                  Country
+                  {t("countryLabel")}
                 </Label>
                 <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
                 {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">{t("cityLabel")}</Label>
                 <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
@@ -424,7 +426,7 @@ export default function ProfilePage() {
               <div className="space-y-1.5">
                 <Label htmlFor="teamSize">
                   <Users className="h-3.5 w-3.5 inline mr-1" />
-                  Team Size
+                  {t("teamSizeLabel")}
                 </Label>
                 <Input id="teamSize" type="number" value={teamSize} onChange={(e) => { setTeamSize(e.target.value); setErrors((p) => ({ ...p, teamSize: "" })); }} placeholder="5" className={errors.teamSize ? "border-red-500" : ""} />
                 {errors.teamSize && <p className="text-xs text-red-500 mt-1">{errors.teamSize}</p>}
@@ -432,14 +434,14 @@ export default function ProfilePage() {
               <div className="space-y-1.5">
                 <Label htmlFor="foundedYear">
                   <Calendar className="h-3.5 w-3.5 inline mr-1" />
-                  Founded Year
+                  {t("foundedYearLabel")}
                 </Label>
                 <Input id="foundedYear" type="number" value={foundedYear} onChange={(e) => { setFoundedYear(e.target.value); setErrors((p) => ({ ...p, foundedYear: "" })); }} placeholder="2022" className={errors.foundedYear ? "border-red-500" : ""} />
                 {errors.foundedYear && <p className="text-xs text-red-500 mt-1">{errors.foundedYear}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fundingNeeded">Funding Needed (USD)</Label>
+              <Label htmlFor="fundingNeeded">{t("fundingNeededLabel")}</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
                 <Input
@@ -462,21 +464,21 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[var(--color-secondary)]" />
-              Investor Identity Profile
+              {t("investorProfileTitle")}
             </CardTitle>
-            <CardDescription>Information about your organization</CardDescription>
+            <CardDescription>{t("investorProfileDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="organizationName">Organization Name</Label>
-              <Input id="organizationName" value={organizationName} onChange={(e) => { setOrganizationName(e.target.value); setErrors((p) => ({ ...p, organizationName: "" })); }} placeholder="Your organization or fund name" className={errors.organizationName ? "border-red-500" : ""} />
+              <Label htmlFor="organizationName">{t("orgNameLabel")}</Label>
+              <Input id="organizationName" value={organizationName} onChange={(e) => { setOrganizationName(e.target.value); setErrors((p) => ({ ...p, organizationName: "" })); }} placeholder={t("orgNamePlaceholder")} className={errors.organizationName ? "border-red-500" : ""} />
               {errors.organizationName && <p className="text-xs text-red-500 mt-1">{errors.organizationName}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="preferredIndustry">Preferred Industry</Label>
+              <Label htmlFor="preferredIndustry">{t("preferredIndustryLabel")}</Label>
               <Select value={preferredIndustry} onValueChange={(v) => { setPreferredIndustry(v); setErrors((p) => ({ ...p, preferredIndustry: "" })); }}>
                 <SelectTrigger id="preferredIndustry">
-                  <SelectValue placeholder="Select your industry" />
+                  <SelectValue placeholder={t("industryPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TECHNOLOGY">Technology</SelectItem>
@@ -496,7 +498,7 @@ export default function ProfilePage() {
               {errors.preferredIndustry && <p className="text-xs text-red-500 mt-1">{errors.preferredIndustry}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="investmentBudget">Investment Budget (USD)</Label>
+              <Label htmlFor="investmentBudget">{t("investmentBudgetLabel")}</Label>
               <Input
                 id="investmentBudget"
                 type="number"
@@ -509,12 +511,12 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">{t("countryLabel")}</Label>
                 <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
                 {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">{t("cityLabel")}</Label>
                 <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
@@ -528,28 +530,28 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[var(--color-secondary)]" />
-              Evaluator Profile
+              {t("evaluatorProfileTitle")}
             </CardTitle>
-            <CardDescription>Your RG Partners staff information</CardDescription>
+            <CardDescription>{t("evaluatorProfileDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="department">Department</Label>
-              <Input id="department" value={department} onChange={(e) => { setDepartment(e.target.value); setErrors((p) => ({ ...p, department: "" })); }} placeholder="e.g. Investment Analysis" className={errors.department ? "border-red-500" : ""} />
+              <Label htmlFor="department">{t("departmentLabel")}</Label>
+              <Input id="department" value={department} onChange={(e) => { setDepartment(e.target.value); setErrors((p) => ({ ...p, department: "" })); }} placeholder={t("departmentPlaceholder")} className={errors.department ? "border-red-500" : ""} />
               {errors.department && <p className="text-xs text-red-500 mt-1">{errors.department}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="specialization">Specialization</Label>
-              <Input id="specialization" value={specialization} onChange={(e) => setSpecialization(e.target.value)} placeholder="e.g. Fintech, Agritech" />
+              <Label htmlFor="specialization">{t("specializationLabel")}</Label>
+              <Input id="specialization" value={specialization} onChange={(e) => setSpecialization(e.target.value)} placeholder={t("specializationPlaceholder")} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">{t("countryLabel")}</Label>
                 <Input id="country" value={country} onChange={(e) => { setCountry(e.target.value); setErrors((p) => ({ ...p, country: "" })); }} placeholder="Rwanda" className={errors.country ? "border-red-500" : ""} />
                 {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">{t("cityLabel")}</Label>
                 <Input id="city" value={city} onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: "" })); }} placeholder="Kigali" className={errors.city ? "border-red-500" : ""} />
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
@@ -566,12 +568,12 @@ export default function ProfilePage() {
         {isSaving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Saving…
+            {t("saving")}
           </>
         ) : (
           <>
             <Save className="h-4 w-4" />
-            Save Profile
+            {t("saveProfile")}
           </>
         )}
       </Button>

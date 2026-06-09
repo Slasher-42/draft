@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -12,29 +13,10 @@ import { Account, Transaction, PaymentMethod } from "@/types/followup";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Wallet,
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  CreditCard,
-  Building2,
-  Smartphone,
-  Bitcoin,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Briefcase,
-  Mail,
-  Phone,
-  MapPin,
-  BadgePercent,
-  Globe,
-  Target,
-  Users,
-  DollarSign,
-  Lightbulb,
-  ClipboardList,
+  Wallet, ArrowDownToLine, ArrowUpFromLine, CreditCard, Building2,
+  Smartphone, Bitcoin, Loader2, CheckCircle2, XCircle, Clock,
+  TrendingUp, Briefcase, Mail, Phone, MapPin, BadgePercent, Globe,
+  Target, Users, DollarSign, Lightbulb, ClipboardList,
 } from "lucide-react";
 import { investorService } from "@/services/investorService";
 import { investmentMonitorService } from "@/services/messageService";
@@ -75,6 +57,7 @@ interface StartupInfo {
 
 export default function InvestorAccountPage() {
   const { user } = useAuth();
+  const t = useTranslations("investor.account");
   const [account, setAccount] = useState<Account | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
@@ -105,7 +88,7 @@ export default function InvestorAccountPage() {
       ]);
 
       if (accResult.status === "rejected" && txResult.status === "rejected") {
-        toast.error("Failed to load account data. Please refresh.");
+        toast.error(t("toastLoadFailed"));
         throw new Error("Failed to load account data");
       }
 
@@ -173,7 +156,6 @@ export default function InvestorAccountPage() {
     setStartupInfoMap(accountData.startupInfoMap);
   }, [accountData]);
 
-  // Load investor's own executions when invest panel opens
   useEffect(() => {
     if (!showInvest || myExecutions.length > 0 || loadingExecutions) return;
     setLoadingExecutions(true);
@@ -185,18 +167,18 @@ export default function InvestorAccountPage() {
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
-    if (!depositAccountNumber.trim()) { toast.error("Enter your account number"); return; }
+    if (!amount || amount <= 0) { toast.error(t("toastDepositInvalid")); return; }
+    if (!depositAccountNumber.trim()) { toast.error(t("toastAccountRequired")); return; }
     setDepositing(true);
     try {
       const res = await followupService.deposit({ amount, paymentMethod: selectedMethod, accountNumber: depositAccountNumber.trim() });
       setAccount(res.data.data);
-      toast.success("Deposit successful");
+      toast.success(t("toastDepositSuccess"));
       setShowDeposit(false);
       setDepositAmount("");
       setDepositAccountNumber("");
     } catch {
-      toast.error("Deposit failed");
+      toast.error(t("toastDepositFailed"));
     } finally {
       setDepositing(false);
     }
@@ -204,15 +186,14 @@ export default function InvestorAccountPage() {
 
   const handleInvest = async () => {
     const amount = parseFloat(investAmount);
-    if (!amount || amount <= 0) { toast.error("Enter a valid amount"); return; }
-    if (!selectedMatchId) { toast.error("Select a startup to invest in"); return; }
+    if (!amount || amount <= 0) { toast.error(t("toastInvestInvalid")); return; }
+    if (!selectedMatchId) { toast.error(t("toastSelectStartup")); return; }
     setInvesting(true);
     try {
       const res = await followupService.invest({ matchId: selectedMatchId, amount, description: investDesc });
       setTransactions((prev) => [res.data.data, ...prev]);
       const accRes = await followupService.getMyAccount();
       setAccount(accRes.data.data);
-      // Mark the selected execution as funded
       if (selectedExecutionId) {
         try {
           await investmentMonitorService.markAsFunded(selectedExecutionId);
@@ -221,14 +202,14 @@ export default function InvestorAccountPage() {
           );
         } catch {}
       }
-      toast.success("Investment transferred successfully");
+      toast.success(t("toastInvestSuccess"));
       setShowInvest(false);
       setInvestAmount("");
       setInvestDesc("");
       setSelectedMatchId(null);
       setSelectedExecutionId(null);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "Investment failed");
+      toast.error(e?.response?.data?.message ?? t("toastInvestFailed"));
     } finally {
       setInvesting(false);
     }
@@ -244,8 +225,8 @@ export default function InvestorAccountPage() {
 
   const myId = Number(user?.id);
   const totalSent = transactions
-    .filter((t) => t.fromUserId === myId && t.status === "COMPLETED")
-    .reduce((s, t) => s + t.amount, 0);
+    .filter((tx) => tx.fromUserId === myId && tx.status === "COMPLETED")
+    .reduce((s, tx) => s + tx.amount, 0);
 
   const selectedMatch = matches.find((m) => m.id === selectedMatchId);
   const selectedStartup = selectedMatch ? startupInfoMap[selectedMatch.startupUserId] : null;
@@ -253,8 +234,8 @@ export default function InvestorAccountPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Account</h2>
-        <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">Manage your investment wallet</p>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
+        <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">{t("subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -262,13 +243,13 @@ export default function InvestorAccountPage() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Available Balance</p>
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">{t("availableBalance")}</p>
                 <p className="text-4xl font-bold text-white mt-1">
                   ${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </p>
                 {account?.paymentMethod && (
                   <p className="text-xs text-white/50 mt-2">
-                    Payment method: {account.paymentMethod.replace("_", " ")}
+                    {t("paymentMethodLabel", { method: account.paymentMethod.replace("_", " ") })}
                   </p>
                 )}
               </div>
@@ -279,11 +260,11 @@ export default function InvestorAccountPage() {
             <div className="flex gap-3 mt-6">
               <Button size="sm" variant="outline" className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={() => { setShowDeposit((v) => !v); setShowInvest(false); }}>
-                <ArrowDownToLine className="h-4 w-4" />Deposit
+                <ArrowDownToLine className="h-4 w-4" />{t("depositBtn")}
               </Button>
               <Button size="sm" variant="outline" className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={() => { setShowInvest((v) => !v); setShowDeposit(false); }}>
-                <ArrowUpFromLine className="h-4 w-4" />Invest
+                <ArrowUpFromLine className="h-4 w-4" />{t("investBtn")}
               </Button>
             </div>
           </CardContent>
@@ -298,7 +279,7 @@ export default function InvestorAccountPage() {
               <p className="text-2xl font-bold text-[var(--color-primary-800)]">
                 ${totalSent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-xs text-[var(--color-neutral-500)]">Total Invested</p>
+              <p className="text-xs text-[var(--color-neutral-500)]">{t("totalInvested")}</p>
             </div>
           </CardContent>
         </Card>
@@ -307,21 +288,21 @@ export default function InvestorAccountPage() {
       {showDeposit && (
         <Card className="border border-[var(--color-primary-200)]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[var(--color-primary-800)]">Add Funds</CardTitle>
+            <CardTitle className="text-base text-[var(--color-primary-800)]">{t("addFundsTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Account Number</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">{t("accountNumberLabel")}</label>
               <input
                 type="text"
-                placeholder="e.g. 1234567890"
+                placeholder={t("accountNumberPlaceholder")}
                 value={depositAccountNumber}
                 onChange={(e) => setDepositAccountNumber(e.target.value)}
                 className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Amount (USD)</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">{t("amountUSD")}</label>
               <input
                 type="number"
                 min="0.01"
@@ -333,7 +314,7 @@ export default function InvestorAccountPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-2">Payment Method</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-2">{t("paymentMethodTitle")}</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {PAYMENT_METHODS.map((pm) => (
                   <button
@@ -354,9 +335,9 @@ export default function InvestorAccountPage() {
             <div className="flex gap-2">
               <Button onClick={handleDeposit} disabled={depositing} className="gap-2">
                 {depositing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowDownToLine className="h-4 w-4" />}
-                Deposit
+                {t("depositBtn")}
               </Button>
-              <Button variant="outline" onClick={() => setShowDeposit(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setShowDeposit(false)}>{t("cancelBtn")}</Button>
             </div>
           </CardContent>
         </Card>
@@ -365,25 +346,24 @@ export default function InvestorAccountPage() {
       {showInvest && (
         <Card className="border border-[var(--color-primary-200)]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base text-[var(--color-primary-800)]">Invest in a Startup</CardTitle>
+            <CardTitle className="text-base text-[var(--color-primary-800)]">{t("investTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Step 1: Select your investor execution */}
             <div>
               <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-2">
                 <span className="inline-flex items-center gap-1.5">
                   <ClipboardList className="h-4 w-4 text-[var(--color-primary)]" />
-                  Step 1 — Select your investment execution
+                  {t("step1")}
                 </span>
               </label>
               {loadingExecutions ? (
                 <div className="flex items-center justify-center gap-2 py-4 text-sm text-[var(--color-neutral-400)] border border-dashed border-[var(--color-border)] rounded-lg">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading your executions…
+                  {t("loadingExecutions")}
                 </div>
               ) : myExecutions.length === 0 ? (
                 <p className="text-sm text-[var(--color-neutral-400)] py-3 text-center border border-dashed border-[var(--color-border)] rounded-lg">
-                  No executions found
+                  {t("noExecutions")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -409,10 +389,10 @@ export default function InvestorAccountPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-semibold text-[var(--color-primary-800)]">
-                              Execution #{exec.id} — {exec.preferredIndustry ?? "Investment"}
+                              {t("executionLabel", { id: exec.id, industry: exec.preferredIndustry ?? "Investment" })}
                             </p>
                             <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">
-                              Budget: ${Number(exec.investmentBudget ?? 0).toLocaleString()} · {exec.status}
+                              {t("budgetLabel", { budget: Number(exec.investmentBudget ?? 0).toLocaleString() })} · {exec.status}
                             </p>
                           </div>
                           {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
@@ -422,7 +402,7 @@ export default function InvestorAccountPage() {
                   })}
                   {myExecutions.every((e) => e.funded) && (
                     <p className="text-sm text-green-600 py-3 text-center border border-green-200 rounded-lg bg-green-50">
-                      All your executions are already funded! 🎉
+                      {t("allFunded")} 🎉
                     </p>
                   )}
                 </div>
@@ -433,12 +413,12 @@ export default function InvestorAccountPage() {
               <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-3">
                 <span className="inline-flex items-center gap-1.5">
                   <Briefcase className="h-4 w-4 text-[var(--color-primary)]" />
-                  Step 2 — Select a matched startup
+                  {t("step2")}
                 </span>
               </label>
               {matches.length === 0 ? (
                 <p className="text-sm text-[var(--color-neutral-400)] py-4 text-center border border-dashed border-[var(--color-border)] rounded-lg">
-                  No matched startups yet
+                  {t("noMatches")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -482,7 +462,7 @@ export default function InvestorAccountPage() {
                             <div className="flex gap-2">
                               <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Problem they solve</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("problemSolve")}</p>
                                 <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.problemStatement}</p>
                               </div>
                             </div>
@@ -492,7 +472,7 @@ export default function InvestorAccountPage() {
                             <div className="flex gap-2">
                               <Briefcase className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Business model</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("businessModel")}</p>
                                 <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.businessModel}</p>
                               </div>
                             </div>
@@ -502,7 +482,7 @@ export default function InvestorAccountPage() {
                             <div className="flex gap-2">
                               <Target className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Target market</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("targetMarket")}</p>
                                 <p className="text-xs text-[var(--color-neutral-500)] line-clamp-1">{info.targetMarket}</p>
                               </div>
                             </div>
@@ -512,7 +492,7 @@ export default function InvestorAccountPage() {
                             {info?.fundingNeeded && (
                               <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)] font-medium">
                                 <DollarSign className="h-3 w-3 text-green-600" />
-                                Seeking ${info.fundingNeeded.toLocaleString()}
+                                {t("seeking", { amount: info.fundingNeeded.toLocaleString() })}
                                 {info.suggestedFundingRange && (
                                   <span className="text-[var(--color-neutral-400)] font-normal">({info.suggestedFundingRange})</span>
                                 )}
@@ -555,13 +535,13 @@ export default function InvestorAccountPage() {
 
             {selectedMatchId && selectedStartup && (
               <div className="rounded-lg bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] p-3 text-sm text-[var(--color-primary-800)]">
-                Investing in <span className="font-semibold">{selectedStartup.fullName}</span>
+                {t("investingIn", { name: selectedStartup.fullName })}
                 {selectedStartup.industry && <span className="text-[var(--color-neutral-500)]"> · {selectedStartup.industry}</span>}
               </div>
             )}
 
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Amount (USD)</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">{t("amountUSD")}</label>
               <input
                 type="number"
                 min="0.01"
@@ -572,14 +552,14 @@ export default function InvestorAccountPage() {
                 className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               />
               <p className="text-xs text-[var(--color-neutral-400)] mt-1">
-                Available: ${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                {t("available", { amount: (account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 }) })}
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">Note (optional)</label>
+              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-1">{t("noteLabel")}</label>
               <input
                 type="text"
-                placeholder="e.g. Seed round investment"
+                placeholder={t("notePlaceholder")}
                 value={investDesc}
                 onChange={(e) => setInvestDesc(e.target.value)}
                 className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
@@ -588,9 +568,11 @@ export default function InvestorAccountPage() {
             <div className="flex gap-2">
               <Button onClick={handleInvest} disabled={investing || !selectedMatchId} className="gap-2">
                 {investing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpFromLine className="h-4 w-4" />}
-                Transfer Investment
+                {t("transferBtn")}
               </Button>
-              <Button variant="outline" onClick={() => { setShowInvest(false); setSelectedMatchId(null); setSelectedExecutionId(null); setInvestAmount(""); }}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setShowInvest(false); setSelectedMatchId(null); setSelectedExecutionId(null); setInvestAmount(""); }}>
+                {t("cancelBtn")}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -598,11 +580,11 @@ export default function InvestorAccountPage() {
 
       <Card className="border border-[var(--color-border)]">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-[var(--color-primary-800)]">Transaction History</CardTitle>
+          <CardTitle className="text-base text-[var(--color-primary-800)]">{t("transactionHistory")}</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <p className="text-sm text-[var(--color-neutral-400)] text-center py-8">No transactions yet</p>
+            <p className="text-sm text-[var(--color-neutral-400)] text-center py-8">{t("noTransactions")}</p>
           ) : (
             <div className="space-y-2">
               {transactions.map((tx) => {
@@ -624,10 +606,16 @@ export default function InvestorAccountPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[var(--color-primary-800)]">
-                          {isSettlement ? counterpartName : isSent ? `To ${counterpartName}` : `From ${counterpartName}`}
+                          {isSettlement
+                            ? counterpartName
+                            : isSent
+                            ? t("toStartup", { name: counterpartName })
+                            : t("fromInvestor", { name: counterpartName })}
                         </p>
                         <p className="text-xs text-[var(--color-neutral-400)]">
-                          {isSettlement ? new Date(tx.createdAt).toLocaleDateString() : `${tx.description ?? `Match #${tx.matchId}`} · ${new Date(tx.createdAt).toLocaleDateString()}`}
+                          {isSettlement
+                            ? new Date(tx.createdAt).toLocaleDateString()
+                            : `${tx.description ?? `Match #${tx.matchId}`} · ${new Date(tx.createdAt).toLocaleDateString()}`}
                         </p>
                       </div>
                     </div>

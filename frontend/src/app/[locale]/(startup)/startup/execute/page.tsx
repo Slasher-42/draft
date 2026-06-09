@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 import { startupService } from "@/services/startupService";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -53,8 +54,10 @@ const companySizes = [
   { value: "LARGE",      label: "Large (201–500 employees)",   suggested: 10000000  },
   { value: "ENTERPRISE", label: "Enterprise (500+ employees)", suggested: 50000000  },
 ];
+
 export default function StartupExecutePage() {
   const router = useRouter();
+  const t = useTranslations("startup.execute");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -86,19 +89,17 @@ export default function StartupExecutePage() {
 
       const executionId = res.data.data.id;
 
-     
       if (imageFile) {
         try {
           await startupService.uploadExecutionImage(String(executionId), imageFile);
         } catch {
-        
-          toast.error("Image upload failed, but your execution was saved. You can add the image later.");
+          toast.error(t("toastImageFailed"));
         }
       }
 
       router.push(`/startup/ai?executionId=${executionId}`);
     } catch {
-      toast.error("Failed to submit. Please try again.");
+      toast.error(t("toastSubmitFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -108,23 +109,22 @@ export default function StartupExecutePage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          New Execution
+          {t("title")}
         </h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-1">
-          Fill in your startup details. After clicking Verify, our AI will have
-          a short conversation with you to better understand your venture.
+          {t("subtitle")}
         </p>
       </div>
 
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
-          <CardTitle>Startup Execution Details</CardTitle>
-          <CardDescription>All fields are required. Be as detailed as possible.</CardDescription>
+          <CardTitle>{t("cardTitle")}</CardTitle>
+          <CardDescription>{t("cardDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1.5">
-              <Label>Company Stage</Label>
+              <Label>{t("companyStageLabel")}</Label>
               <Select
                 onValueChange={(v) => {
                   setValue("companySize", v);
@@ -134,7 +134,7 @@ export default function StartupExecutePage() {
                 }}
               >
                 <SelectTrigger className={errors.companySize ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select your stage" />
+                  <SelectValue placeholder={t("companyStagePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {companySizes.map((s) => (
@@ -145,16 +145,16 @@ export default function StartupExecutePage() {
               {errors.companySize && <p className="text-xs text-red-500">{errors.companySize.message}</p>}
               {selectedSize && (
                 <p className="text-xs text-[var(--color-primary-600)] bg-[var(--color-primary-50)] px-3 py-1.5 rounded-md">
-                  Suggested funding for this stage: ${companySizes.find((s) => s.value === selectedSize)?.suggested?.toLocaleString()}
+                  {t("suggestedFunding", { amount: companySizes.find((s) => s.value === selectedSize)?.suggested?.toLocaleString() ?? "" })}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label>Industry</Label>
+              <Label>{t("industryLabel")}</Label>
               <Select onValueChange={(v) => setValue("industry", v)}>
                 <SelectTrigger className={errors.industry ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select your industry" />
+                  <SelectValue placeholder={t("industryPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {industries.map((i) => (
@@ -166,9 +166,9 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Location</Label>
+              <Label>{t("locationLabel")}</Label>
               <Input
-                placeholder="e.g. Nairobi, Kenya · Lagos, Nigeria · London, UK"
+                placeholder={t("locationPlaceholder")}
                 className={errors.location ? "border-red-500" : ""}
                 {...register("location")}
               />
@@ -176,9 +176,9 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Problem You Are Solving</Label>
+              <Label>{t("problemLabel")}</Label>
               <Textarea
-                placeholder="Describe the problem your startup addresses…"
+                placeholder={t("problemPlaceholder")}
                 rows={3}
                 className={errors.problemStatement ? "border-red-500" : ""}
                 {...register("problemStatement")}
@@ -187,9 +187,9 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Business Model</Label>
+              <Label>{t("businessModelLabel")}</Label>
               <Textarea
-                placeholder="How does your startup make money? Describe your revenue model…"
+                placeholder={t("businessModelPlaceholder")}
                 rows={3}
                 className={errors.businessModel ? "border-red-500" : ""}
                 {...register("businessModel")}
@@ -198,9 +198,9 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Target Market</Label>
+              <Label>{t("targetMarketLabel")}</Label>
               <Input
-                placeholder="e.g. SMEs in East Africa, B2B SaaS for healthcare…"
+                placeholder={t("targetMarketPlaceholder")}
                 className={errors.targetMarket ? "border-red-500" : ""}
                 {...register("targetMarket")}
               />
@@ -208,9 +208,9 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Team Details</Label>
+              <Label>{t("teamDetailsLabel")}</Label>
               <Textarea
-                placeholder="Describe your founding team, key members, and expertise…"
+                placeholder={t("teamDetailsPlaceholder")}
                 rows={3}
                 className={errors.teamDetails ? "border-red-500" : ""}
                 {...register("teamDetails")}
@@ -219,12 +219,12 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Annual Revenue (USD)</Label>
+              <Label>{t("annualRevenueLabel")}</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
                 <Input
                   type="number"
-                  placeholder="0 if pre-revenue"
+                  placeholder={t("annualRevenuePlaceholder")}
                   className={`pl-7 ${errors.annualRevenue ? "border-red-500" : ""}`}
                   {...register("annualRevenue", { valueAsNumber: true })}
                 />
@@ -233,12 +233,12 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Monthly Burn Rate (USD)</Label>
+              <Label>{t("monthlyBurnLabel")}</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
                 <Input
                   type="number"
-                  placeholder="0 if no burn"
+                  placeholder={t("monthlyBurnPlaceholder")}
                   className={`pl-7 ${errors.monthlyBurnRate ? "border-red-500" : ""}`}
                   {...register("monthlyBurnRate", { valueAsNumber: true })}
                 />
@@ -247,7 +247,7 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Funding Needed (USD)</Label>
+              <Label>{t("fundingNeededLabel")}</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-400)] text-sm font-medium">$</span>
                 <Input
@@ -261,7 +261,7 @@ export default function StartupExecutePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Startup Image or Logo (optional)</Label>
+              <Label>{t("imageLabel")}</Label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -271,11 +271,11 @@ export default function StartupExecutePage() {
                   const f = e.target.files?.[0];
                   if (!f) return;
                   if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
-                    toast.error("Please upload a JPG, PNG, or WebP image.");
+                    toast.error(t("toastImageInvalid"));
                     return;
                   }
                   if (f.size > 10 * 1024 * 1024) {
-                    toast.error("Image must be under 10 MB.");
+                    toast.error(t("toastImageTooLarge"));
                     return;
                   }
                   setImageFile(f);
@@ -300,16 +300,16 @@ export default function StartupExecutePage() {
                   className="w-full h-24 rounded-xl border-2 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center gap-2 text-[var(--color-neutral-400)] hover:border-[var(--color-primary-300)] hover:text-[var(--color-primary)] transition-colors"
                 >
                   <Upload className="h-5 w-5" />
-                  <span className="text-xs">Click to upload a startup image or logo</span>
+                  <span className="text-xs">{t("imageUploadHint")}</span>
                 </button>
               )}
             </div>
 
             <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
               {isSubmitting ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</>
+                <><Loader2 className="h-4 w-4 animate-spin" />{t("submitting")}</>
               ) : (
-                <><ChevronRight className="h-4 w-4" />Verify with AI</>
+                <><ChevronRight className="h-4 w-4" />{t("verifyWithAI")}</>
               )}
             </Button>
           </form>

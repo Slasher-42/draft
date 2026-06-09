@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -40,6 +41,7 @@ function Avatar({ src, name, size = 40 }: { src?: string; name: string; size?: n
 
 export default function StartupMessagesPage() {
   const { user } = useAuth();
+  const t = useTranslations("startup.messages");
   const [selected, setSelected] = useState<Collaborator | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -48,7 +50,6 @@ export default function StartupMessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stompRef = useRef<Client | null>(null);
 
-  // Fetch matched investors
   const { data: collaborators = [], isLoading } = useQuery<Collaborator[]>({
     queryKey: ["startup-message-contacts", user?.id],
     queryFn: async () => {
@@ -81,7 +82,6 @@ export default function StartupMessagesPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // WebSocket for real-time messages
   useEffect(() => {
     if (!user?.id) return;
     const token = localStorage.getItem("token");
@@ -144,16 +144,15 @@ export default function StartupMessagesPage() {
   return (
     <div className="flex h-[calc(100vh-130px)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
 
-      {/* Contacts sidebar */}
       <div className="w-80 flex-shrink-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-card)]">
         <div className="p-4 border-b border-[var(--color-border)]">
-          <h2 className="font-bold text-[var(--color-primary-800)] text-base mb-3">Messages</h2>
+          <h2 className="font-bold text-[var(--color-primary-800)] text-base mb-3">{t("title")}</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search matched investors…"
+              placeholder={t("searchPlaceholder")}
               className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />
           </div>
@@ -166,7 +165,7 @@ export default function StartupMessagesPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-6 text-center text-[var(--color-neutral-400)] text-sm">
-              No matched investors yet
+              {t("noInvestors")}
             </div>
           ) : (
             filtered.map((c) => (
@@ -186,7 +185,6 @@ export default function StartupMessagesPage() {
         </div>
       </div>
 
-      {/* Chat area */}
       {selected ? (
         <div className="flex-1 flex flex-col bg-[var(--color-background)]">
           <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[var(--color-border)] bg-[var(--color-card)]">
@@ -201,7 +199,7 @@ export default function StartupMessagesPage() {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-[var(--color-neutral-400)]">
                 <MessageSquare className="h-10 w-10 opacity-30" />
-                <p className="text-sm">Start the conversation with {selected.fullName}</p>
+                <p className="text-sm">{t("startConversation", { name: selected.fullName })}</p>
               </div>
             )}
             {messages.map((msg) => {
@@ -245,7 +243,7 @@ export default function StartupMessagesPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                placeholder="Type a message… (Enter to send)"
+                placeholder={t("typePlaceholder")}
                 rows={1}
                 className="flex-1 bg-transparent resize-none outline-none text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-neutral-400)] max-h-28 overflow-y-auto"
                 style={{ lineHeight: 1.5 }}
@@ -270,8 +268,8 @@ export default function StartupMessagesPage() {
             <MessageSquare className="h-9 w-9 text-emerald-300" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-[var(--color-foreground)]">Select an investor to message</p>
-            <p className="text-sm mt-1">Choose from your matched investors on the left</p>
+            <p className="font-semibold text-[var(--color-foreground)]">{t("selectInvestor")}</p>
+            <p className="text-sm mt-1">{t("selectHint")}</p>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,8 @@ interface LiveStats {
 }
 
 export default function AdminAnalyticsPage() {
+  const t = useTranslations("admin.analytics");
+  const tCommon = useTranslations("common");
   const { data, isLoading } = useQuery({
     queryKey: ["admin-analytics"],
     queryFn: async () => {
@@ -74,22 +77,22 @@ export default function AdminAnalyticsPage() {
   const aiAnalytics = data?.aiAnalytics ?? null;
 
   const statCards = [
-    { label: "Total Executions",  value: stats?.totalExecutions,    icon: ClipboardList,  bg: "bg-[var(--color-primary-50)]",  color: "text-[var(--color-primary)]"   },
-    { label: "Pending",           value: stats?.totalPending,        icon: Clock,          bg: "bg-blue-50",                    color: "text-blue-600"                 },
-    { label: "Approved",          value: stats?.totalApproved,       icon: CheckCircle2,   bg: "bg-green-50",                   color: "text-green-600"                },
-    { label: "Matched",           value: stats?.totalMatched,        icon: TrendingUp,     bg: "bg-emerald-50",                 color: "text-emerald-600"              },
-    { label: "Rejected",          value: stats?.totalRejected,       icon: XCircle,        bg: "bg-red-50",                     color: "text-red-500"                  },
-    { label: "Startup Execs",     value: stats?.totalStartupExecs,   icon: ClipboardList,  bg: "bg-blue-50",                    color: "text-blue-700"                 },
-    { label: "Investor Execs",    value: stats?.totalInvestorExecs,  icon: ClipboardList,  bg: "bg-purple-50",                  color: "text-purple-700"               },
+    { label: t("totalExecutions"),       value: stats?.totalExecutions,    icon: ClipboardList,  bg: "bg-[var(--color-primary-50)]",  color: "text-[var(--color-primary)]"   },
+    { label: tCommon("status.pending"),  value: stats?.totalPending,        icon: Clock,          bg: "bg-blue-50",                    color: "text-blue-600"                 },
+    { label: tCommon("status.approved"), value: stats?.totalApproved,       icon: CheckCircle2,   bg: "bg-green-50",                   color: "text-green-600"                },
+    { label: tCommon("status.matched"),  value: stats?.totalMatched,        icon: TrendingUp,     bg: "bg-emerald-50",                 color: "text-emerald-600"              },
+    { label: tCommon("status.rejected"), value: stats?.totalRejected,       icon: XCircle,        bg: "bg-red-50",                     color: "text-red-500"                  },
+    { label: t("startupExecs"),          value: stats?.totalStartupExecs,   icon: ClipboardList,  bg: "bg-blue-50",                    color: "text-blue-700"                 },
+    { label: t("investorExecs"),         value: stats?.totalInvestorExecs,  icon: ClipboardList,  bg: "bg-purple-50",                  color: "text-purple-700"               },
   ];
 
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Analytics</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Platform-wide performance metrics and trends
+          {t("subtitle")}
         </p>
       </div>
 
@@ -101,7 +104,7 @@ export default function AdminAnalyticsPage() {
         <>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-neutral-400)] mb-3">
-              Live — from Service 2
+              {t("liveFromService")}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {statCards.map((s) => (
@@ -125,7 +128,7 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card className="border border-[var(--color-border)]">
               <CardHeader>
-                <CardTitle className="text-base">Average Readiness Score by Industry</CardTitle>
+                <CardTitle className="text-base">{t("scoreByIndustry")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {aiAnalytics?.scoreByIndustry?.length > 0 ? (
@@ -141,14 +144,14 @@ export default function AdminAnalyticsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-sm text-[var(--color-neutral-400)] text-center py-10">No score data yet</p>
+                  <p className="text-sm text-[var(--color-neutral-400)] text-center py-10">{t("noScoreData")}</p>
                 )}
               </CardContent>
             </Card>
 
             <Card className="border border-[var(--color-border)]">
               <CardHeader>
-                <CardTitle className="text-base">Execution Trend Over Time</CardTitle>
+                <CardTitle className="text-base">{t("executionTrend")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {aiAnalytics?.executionTrend?.length > 0 ? (
@@ -161,14 +164,14 @@ export default function AdminAnalyticsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-sm text-[var(--color-neutral-400)] text-center py-10">No trend data yet</p>
+                  <p className="text-sm text-[var(--color-neutral-400)] text-center py-10">{t("noTrendData")}</p>
                 )}
               </CardContent>
             </Card>
 
             <Card className="border border-[var(--color-border)]">
               <CardHeader>
-                <CardTitle className="text-base">Match Success Rate</CardTitle>
+                <CardTitle className="text-base">{t("matchSuccessRate")}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center py-6 gap-2">
                 <p className="text-5xl font-bold text-[var(--color-primary)]">
@@ -176,7 +179,7 @@ export default function AdminAnalyticsPage() {
                     ? Math.round((stats.totalMatched / stats.totalApproved) * 100)
                     : 0}%
                 </p>
-                <p className="text-sm text-[var(--color-neutral-500)]">of approved startups were matched</p>
+                <p className="text-sm text-[var(--color-neutral-500)]">{t("matchSuccessRateHint")}</p>
               </CardContent>
             </Card>
           </div>

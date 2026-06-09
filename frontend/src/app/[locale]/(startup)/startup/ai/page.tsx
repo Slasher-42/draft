@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 import { startupService } from "@/services/startupService";
 import { aiService } from "@/services/aiService";
 import { toast } from "react-toastify";
@@ -82,8 +83,7 @@ function AriaAvatar({ speaking }: { speaking: boolean }) {
   );
 }
 
-function ProgressBar({ step }: { step: number }) {
-  const steps = ["Connected", "Assessment", "Review", "Complete"];
+function ProgressBar({ step, steps }: { step: number; steps: string[] }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
       {steps.map((label, i) => (
@@ -153,6 +153,7 @@ function AIConversationPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations("startup.ai");
   const executionId = Number(searchParams.get("executionId"));
 
   const [sessionId, setSessionId] = useState("");
@@ -271,7 +272,7 @@ function AIConversationPage() {
         setMessages([{ role: "ai", content: message, timestamp: new Date() }]);
         setTimeout(() => speakText(message), 500);
       } catch {
-        toast.error("Failed to start conversation. Please try again.");
+        toast.error(t("toastStartFailed"));
         router.push("/startup/execute");
       } finally {
         setIsStarting(false);
@@ -286,7 +287,7 @@ function AIConversationPage() {
     const SR =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      toast.error("Speech recognition not supported in this browser.");
+      toast.error(t("toastNoSpeech"));
       return;
     }
     const recognition = new SR();
@@ -294,11 +295,11 @@ function AIConversationPage() {
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (e: any) => {
-      const t = Array.from(e.results)
+      const tx = Array.from(e.results)
         .map((r: any) => r[0].transcript)
         .join("");
-      setTranscript(t);
-      setUserInput(t);
+      setTranscript(tx);
+      setUserInput(tx);
     };
     recognition.onend = () => setIsRecording(false);
     recognitionRef.current = recognition;
@@ -314,11 +315,11 @@ function AIConversationPage() {
 
   const handlePdfUpload = async (file: File) => {
     if (!file.type.includes("pdf")) {
-      toast.error("Please upload a PDF file.");
+      toast.error(t("toastInvalidPDF"));
       return;
     }
     setPdfFile(file);
-    toast.success(`PDF "${file.name}" attached — Aria will factor this into the assessment.`);
+    toast.success(t("toastPDFAttached", { name: file.name }));
     setPdfText(`[PDF Document: ${file.name} — ${(file.size / 1024).toFixed(1)} KB attached]`);
   };
 
@@ -362,7 +363,7 @@ function AIConversationPage() {
         speakText(reply);
       }
     } catch {
-      toast.error("Failed to send response. Please try again.");
+      toast.error(t("toastSendFailed"));
       setMessages((prev) => prev.slice(0, -1));
       setUserInput(rawAnswer);
     } finally {
@@ -408,7 +409,7 @@ function AIConversationPage() {
         }
       }
       if (!scoringDone) {
-        toast.warn("Assessment saved! Scoring is still processing — your results will appear shortly. You can check back in a few minutes.");
+        toast.warn(t("toastScoringPending"));
       }
 
       setMessages((prev) => [...prev, { role: "ai", content: closing, timestamp: new Date() }]);
@@ -417,7 +418,7 @@ function AIConversationPage() {
       setProgressStep(3);
       speakText(closing);
     } catch {
-      toast.error("Failed to finalise. Please try again.");
+      toast.error(t("toastFinaliseFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -431,6 +432,8 @@ function AIConversationPage() {
   const filteredMessages = searchTerm
     ? messages.filter((m) => m.content.toLowerCase().includes(searchTerm.toLowerCase()))
     : messages;
+
+  const progressSteps = [t("progressConnected"), t("progressAssessment"), t("progressReview"), t("progressComplete")];
 
   if (isStarting) {
     return (
@@ -483,10 +486,10 @@ function AIConversationPage() {
               margin: 0,
             }}
           >
-            Aria is reviewing your submission
+            {t("reviewingSubmission")}
           </p>
           <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>
-            Welcome, {lastName}. Analysing your startup profile…
+            {t("analysingProfile")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -637,7 +640,7 @@ function AIConversationPage() {
           </div>
         </div>
 
-        <ProgressBar step={progressStep} />
+        <ProgressBar step={progressStep} steps={progressSteps} />
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -743,23 +746,23 @@ function AIConversationPage() {
                 padding: "0 14px 8px",
               }}
             >
-              Session Controls
+              {t("sessionControls")}
             </p>
             <div className="sidebar-item" onClick={() => fileInputRef.current?.click()}>
-              <span>📎</span> Attach PDF
+              <span>📎</span> {t("attachPDF")}
             </div>
             <div
               className="sidebar-item"
               onClick={() => setInputMode(inputMode === "voice" ? "text" : "voice")}
             >
               <span>{inputMode === "voice" ? "⌨️" : "🎙️"}</span>
-              {inputMode === "voice" ? "Switch to Text" : "Switch to Voice"}
+              {inputMode === "voice" ? t("switchToText") : t("switchToVoice")}
             </div>
             <div className="sidebar-item" onClick={() => setIsMuted(!isMuted)}>
-              <span>{isMuted ? "🔇" : "🔊"}</span> {isMuted ? "Unmute Aria" : "Mute Aria"}
+              <span>{isMuted ? "🔇" : "🔊"}</span> {isMuted ? t("unmuteAria") : t("muteAria")}
             </div>
             <div className="sidebar-item" onClick={() => setShowTimestamps(!showTimestamps)}>
-              <span>🕐</span> {showTimestamps ? "Hide" : "Show"} Timestamps
+              <span>🕐</span> {showTimestamps ? t("hideTimestamps") : t("showTimestamps")}
             </div>
             <div style={{ borderTop: "1px solid #111120", margin: "8px 0" }} />
             <p
@@ -771,7 +774,7 @@ function AIConversationPage() {
                 padding: "0 14px 8px",
               }}
             >
-              Text Size
+              {t("textSize")}
             </p>
             <div style={{ display: "flex", gap: 6, padding: "0 14px" }}>
               {[12, 14, 16].map((s) => (
@@ -794,13 +797,13 @@ function AIConversationPage() {
                 padding: "0 14px 8px",
               }}
             >
-              Session Stats
+              {t("sessionStats")}
             </p>
             <div style={{ padding: "0 14px" }}>
               {[
-                ["Messages", messageCount],
-                ["Duration", formatDuration(sessionDuration)],
-                ["Status", isDone ? "Complete" : "Active"],
+                [t("messages"), messageCount],
+                [t("duration"), formatDuration(sessionDuration)],
+                [t("status"), isDone ? t("statusComplete") : t("statusActive")],
               ].map(([k, v]) => (
                 <div
                   key={String(k)}
@@ -813,7 +816,7 @@ function AIConversationPage() {
                   }}
                 >
                   <span style={{ color: "#555" }}>{k}</span>
-                  <span style={{ color: isDone && k === "Status" ? "#22c55e" : "#7c6af7" }}>{v}</span>
+                  <span style={{ color: isDone && k === t("status") ? "#22c55e" : "#7c6af7" }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -825,10 +828,10 @@ function AIConversationPage() {
                   .map((m) => `${m.role === "ai" ? "Aria" : "You"}: ${m.content}`)
                   .join("\n\n");
                 navigator.clipboard.writeText(text);
-                toast.success("Transcript copied!");
+                toast.success(t("transcriptCopied"));
               }}
             >
-              <span>📋</span> Copy Transcript
+              <span>📋</span> {t("copyTranscript")}
             </div>
           </div>
         )}
@@ -844,7 +847,7 @@ function AIConversationPage() {
             >
               <input
                 className="dark-input"
-                placeholder="Search messages…"
+                placeholder={t("searchMessages")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ maxWidth: 400 }}
@@ -884,10 +887,10 @@ function AIConversationPage() {
                     fontWeight: 700,
                   }}
                 >
-                  Welcome back, {lastName}
+                  {t("welcomeBack", { name: lastName })}
                 </p>
                 <p style={{ margin: 0, color: "#555", fontSize: 12, marginTop: 3 }}>
-                  Your AI startup assessment session is now active. All responses are confidential.
+                  {t("sessionActive")}
                 </p>
               </div>
             </div>
@@ -1000,17 +1003,17 @@ function AIConversationPage() {
                     fontWeight: 700,
                   }}
                 >
-                  Assessment Complete
+                  {t("assessmentComplete")}
                 </p>
                 <p style={{ color: "#555", fontSize: 13, margin: 0 }}>
-                  Your startup assessment has been saved. You will receive an update soon.
+                  {t("assessmentSaved")}
                 </p>
                 <button
                   className="violet-btn"
                   style={{ marginTop: 16 }}
                   onClick={() => router.push("/startup/executions")}
                 >
-                  View My Executions →
+                  {t("viewExecutions")}
                 </button>
               </div>
             )}
@@ -1071,7 +1074,7 @@ function AIConversationPage() {
                     </div>
                   ) : (
                     <p style={{ color: "#555", fontSize: 12, margin: 0 }}>
-                      Drop PDF here or click to upload
+                      {t("dropPDF")}
                     </p>
                   )}
                 </div>
@@ -1095,7 +1098,7 @@ function AIConversationPage() {
                     <button
                       className="icon-btn"
                       onClick={() => fileInputRef.current?.click()}
-                      title="Attach PDF"
+                      title={t("attachPDF")}
                     >
                       📎
                     </button>
@@ -1103,7 +1106,7 @@ function AIConversationPage() {
                   <button
                     className={`icon-btn ${isMuted ? "active" : ""}`}
                     onClick={() => setIsMuted(!isMuted)}
-                    title={isMuted ? "Unmute" : "Mute Aria"}
+                    title={isMuted ? t("unmuteAria") : t("muteAria")}
                   >
                     {isMuted ? "🔇" : "🔊"}
                   </button>
@@ -1113,7 +1116,7 @@ function AIConversationPage() {
               {awaitingAdditional ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
-                    Optional: Share any additional context for Aria to consider.
+                    {t("additionalContextHint")}
                   </p>
                   <textarea
                     className="dark-input"
@@ -1130,14 +1133,14 @@ function AIConversationPage() {
                       disabled={isSubmitting}
                       style={{ flex: 1 }}
                     >
-                      {isSubmitting ? "Saving…" : "✓ Submit & Complete Assessment"}
+                      {isSubmitting ? t("savingAssessment") : t("submitComplete")}
                     </button>
                     <button
                       className="ghost-btn"
                       onClick={() => submitExecution()}
                       disabled={isSubmitting}
                     >
-                      Skip
+                      {t("skip")}
                     </button>
                   </div>
                 </div>
@@ -1162,7 +1165,7 @@ function AIConversationPage() {
                         color: "#ccc",
                       }}
                     >
-                      <span style={{ color: "#7c6af7", fontSize: 11 }}>Transcript: </span>
+                      <span style={{ color: "#7c6af7", fontSize: 11 }}>{t("transcriptLabel")}</span>
                       {transcript}
                     </div>
                   )}
@@ -1195,7 +1198,7 @@ function AIConversationPage() {
                     <VoiceWave active={isRecording} />
                   </div>
                   <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
-                    {isRecording ? "Recording… click to stop" : "Click to start speaking"}
+                    {isRecording ? t("recordingHint") : t("startSpeaking")}
                   </p>
                   {transcript && (
                     <button
@@ -1203,7 +1206,7 @@ function AIConversationPage() {
                       onClick={sendAnswer}
                       disabled={isSending || !transcript.trim()}
                     >
-                      Send Response →
+                      {t("sendResponse")}
                     </button>
                   )}
                 </div>
@@ -1213,7 +1216,7 @@ function AIConversationPage() {
                     ref={textareaRef}
                     className="dark-input"
                     rows={2}
-                    placeholder="Type your response…  (Enter to send, Shift+Enter for new line)"
+                    placeholder={t("typeResponse")}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
                     onKeyDown={(e) => {

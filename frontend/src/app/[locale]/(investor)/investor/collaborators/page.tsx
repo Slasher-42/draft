@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -12,6 +13,7 @@ import {
 
 export default function InvestorCollaboratorsPage() {
   const { user } = useAuth();
+  const t = useTranslations("investor.collaborators");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const { data, isLoading } = useQuery({
@@ -20,7 +22,6 @@ export default function InvestorCollaboratorsPage() {
       const res = await matchingService.getMatchesForInvestor(Number(user!.id));
       const rawMatches: any[] = res.data.data ?? [];
 
-      // Deduplicate — fetch once per unique startup
       const uniqueStartupIds = [...new Set(rawMatches.map((m) => m.startupUserId))];
       const profileMap: Record<number, any> = {};
       await Promise.allSettled(
@@ -41,7 +42,6 @@ export default function InvestorCollaboratorsPage() {
   const matches  = data?.matches  ?? [];
   const profiles = data?.profiles ?? {};
 
-  // Group all matches by startupUserId → one entry per unique startup
   const collaborators = useMemo(() => {
     const map: Record<number, any[]> = {};
     matches.forEach((m: any) => {
@@ -72,7 +72,6 @@ export default function InvestorCollaboratorsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary-50)] to-transparent rounded-2xl -z-10" />
         <div className="p-6">
@@ -81,30 +80,27 @@ export default function InvestorCollaboratorsPage() {
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-              My Collaborators
+              {t("title")}
             </h2>
             {collaborators.length > 0 && (
               <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                {collaborators.length} startup{collaborators.length !== 1 ? "s" : ""}
+                {collaborators.length === 1
+                  ? t("startupCount", { count: 1 })
+                  : t("startupCountPlural", { count: collaborators.length })}
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-neutral-500)] ml-12">
-            Startups matched to your investment criteria
-          </p>
+          <p className="text-sm text-[var(--color-neutral-500)] ml-12">{t("subtitle")}</p>
         </div>
       </div>
 
-      {/* Empty state */}
       {collaborators.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="h-20 w-20 rounded-full bg-[var(--color-primary-50)] flex items-center justify-center">
             <Users className="h-9 w-9 text-[var(--color-primary-300)]" />
           </div>
-          <p className="text-lg font-semibold text-[var(--color-primary-800)]">No collaborators yet</p>
-          <p className="text-sm text-[var(--color-neutral-400)] text-center max-w-xs">
-            Once a startup matches your investment criteria, their profile will appear here.
-          </p>
+          <p className="text-lg font-semibold text-[var(--color-primary-800)]">{t("noCollaborators")}</p>
+          <p className="text-sm text-[var(--color-neutral-400)] text-center max-w-xs">{t("noCollaboratorsDesc")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -120,7 +116,6 @@ export default function InvestorCollaboratorsPage() {
                 key={startupUserId}
                 className="group relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
-                {/* Banner */}
                 <div className="h-24 bg-gradient-to-br from-[var(--color-primary-600)] via-[var(--color-primary)] to-[var(--color-primary-400)] relative overflow-hidden flex-shrink-0">
                   <div className="absolute inset-0 opacity-20"
                     style={{
@@ -128,12 +123,10 @@ export default function InvestorCollaboratorsPage() {
                       backgroundSize: "30px 30px",
                     }}
                   />
-                  {/* Best score badge */}
                   <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-2.5 py-1">
                     <Star className="h-3 w-3 text-yellow-300 fill-yellow-300" />
                     <span className="text-xs font-bold text-white">{bestScore.toFixed(0)}</span>
                   </div>
-                  {/* Multiple matches badge */}
                   {hasMany && (
                     <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1">
                       <span className="text-[10px] font-bold text-white">{startupMatches.length} matches</span>
@@ -142,7 +135,6 @@ export default function InvestorCollaboratorsPage() {
                 </div>
 
                 <div className="px-5 pb-5 flex flex-col flex-1">
-                  {/* Avatar + badge */}
                   <div className="-mt-8 mb-4 flex items-end justify-between">
                     <div className="relative">
                       {profile?.profilePictureUrl ? (
@@ -160,11 +152,10 @@ export default function InvestorCollaboratorsPage() {
                     </div>
                     <div className="mb-1 flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 border border-green-200">
                       <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-xs font-semibold text-green-700">Matched</span>
+                      <span className="text-xs font-semibold text-green-700">{t("matchedBadge")}</span>
                     </div>
                   </div>
 
-                  {/* Name */}
                   <h3 className="font-bold text-[var(--color-primary-800)] text-base leading-tight mb-0.5">
                     {profile?.fullName ?? "Startup Founder"}
                   </h3>
@@ -176,11 +167,10 @@ export default function InvestorCollaboratorsPage() {
                     </div>
                   )}
 
-                  {/* Profile details */}
                   <div className="space-y-2 mb-4">
                     {sp?.industry && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Industry</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("industryLabel")}</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)] bg-[var(--color-neutral-100)] px-2 py-0.5 rounded-full">
                           {sp.industry}
                         </span>
@@ -188,7 +178,7 @@ export default function InvestorCollaboratorsPage() {
                     )}
                     {(sp?.country || sp?.city) && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Location</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("locationLabel")}</span>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3 text-[var(--color-neutral-400)]" />
                           <span className="text-xs font-medium text-[var(--color-foreground)]">
@@ -199,39 +189,36 @@ export default function InvestorCollaboratorsPage() {
                     )}
                     {sp?.teamSize && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Team Size</span>
-                        <span className="text-xs font-medium text-[var(--color-foreground)]">{sp.teamSize} people</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("teamSizeLabel")}</span>
+                        <span className="text-xs font-medium text-[var(--color-foreground)]">{t("teamSizePeople", { size: sp.teamSize })}</span>
                       </div>
                     )}
                     {sp?.foundedYear && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Founded</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("foundedLabel")}</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)]">{sp.foundedYear}</span>
                       </div>
                     )}
                     {profile?.phoneNumber && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Phone</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("phoneLabel")}</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)]">{profile.phoneNumber}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* ── Matches section ──────────────────────────────── */}
                   <div className="mt-auto pt-3 border-t border-[var(--color-border)]">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-[var(--color-neutral-500)] uppercase tracking-wider">
-                        Matched Executions
+                        {t("matchedExecutions")}
                       </p>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)]">
                         {startupMatches.length}×
                       </span>
                     </div>
 
-                    {/* Always show best match */}
                     <MatchRow match={startupMatches[0]} accentColor="blue" />
 
-                    {/* Collapsible extra matches */}
                     {hasMany && (
                       <>
                         {isOpen && startupMatches.slice(1).map((m: any) => (
@@ -242,9 +229,13 @@ export default function InvestorCollaboratorsPage() {
                           className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-600)] transition-colors py-1 rounded-lg hover:bg-[var(--color-primary-50)]"
                         >
                           {isOpen ? (
-                            <><ChevronUp className="h-3 w-3" /> Hide</>
+                            <><ChevronUp className="h-3 w-3" /> {t("hide")}</>
                           ) : (
-                            <><ChevronDown className="h-3 w-3" /> {startupMatches.length - 1} more match{startupMatches.length - 1 !== 1 ? "es" : ""}</>
+                            <><ChevronDown className="h-3 w-3" />
+                              {startupMatches.length - 1 === 1
+                                ? t("moreMatches", { count: 1 })
+                                : t("moreMatchesPlural", { count: startupMatches.length - 1 })}
+                            </>
                           )}
                         </button>
                       </>
@@ -260,7 +251,6 @@ export default function InvestorCollaboratorsPage() {
   );
 }
 
-/* ── Reusable match row ──────────────────────────────────────────────────── */
 function MatchRow({ match, accentColor }: { match: any; accentColor: "emerald" | "blue" }) {
   const isEmerald = accentColor === "emerald";
   return (

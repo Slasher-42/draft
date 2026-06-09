@@ -3,26 +3,17 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { evaluatorService } from "@/services/evaluatorService";
 import { EvaluatorReview, ReviewDecision } from "@/types/review";
 import { Button } from "@/components/ui/button";
 import { Textarea, Label } from "@/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
 } from "@/components/ui/card";
 import { toast } from "react-toastify";
 import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Loader2,
-  AlertCircle,
-  TrendingUp,
+  ArrowLeft, CheckCircle2, XCircle, AlertTriangle, Loader2, AlertCircle, TrendingUp,
 } from "lucide-react";
 
 const REASONING_SECTIONS = [
@@ -49,9 +40,7 @@ function StructuredReasoning({ text }: { text: string }) {
 
   if (parsed.length === 0) {
     return (
-      <p className="text-sm text-[var(--color-primary-800)] leading-relaxed whitespace-pre-wrap">
-        {text}
-      </p>
+      <p className="text-sm text-[var(--color-primary-800)] leading-relaxed whitespace-pre-wrap">{text}</p>
     );
   }
 
@@ -70,6 +59,7 @@ function StructuredReasoning({ text }: { text: string }) {
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const t = useTranslations("evaluator.reviewDetail");
   const [decision, setDecision] = useState<ReviewDecision | null>(null);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,29 +80,28 @@ export default function ReviewDetailPage() {
   }, [review]);
 
   const handleSubmit = async () => {
-  if (!decision) { toast.error("Please select a decision."); return; }
-  if (!reason.trim()) { toast.error("Please provide a reason for your decision."); return; }
-  setIsSubmitting(true);
-  try {
-    const res = await evaluatorService.submitDecision(id as string, { decision, reason });
-    if (res.data?.success) {
-      toast.success("Decision submitted successfully.");
-      router.push("/evaluator/reviews");
-    } else {
-      toast.error("Failed to submit decision. Please try again.");
+    if (!decision) { toast.error(t("toastSelectDecision")); return; }
+    if (!reason.trim()) { toast.error(t("toastReasonRequired")); return; }
+    setIsSubmitting(true);
+    try {
+      const res = await evaluatorService.submitDecision(id as string, { decision, reason });
+      if (res.data?.success) {
+        toast.success(t("toastSuccess"));
+        router.push("/evaluator/reviews");
+      } else {
+        toast.error(t("toastFailed"));
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 500) {
+        toast.success(t("toastSuccess"));
+        router.push("/evaluator/reviews");
+      } else {
+        toast.error(t("toastFailed"));
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error: any) {
-
-    if (error?.response?.status === 500) {
-      toast.success("Decision submitted. Processing notifications...");
-      router.push("/evaluator/reviews");
-    } else {
-      toast.error("Failed to submit decision. Please try again.");
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   if (isLoading) {
     return (
@@ -126,10 +115,8 @@ export default function ReviewDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <AlertCircle className="h-10 w-10 text-[var(--color-neutral-400)]" />
-        <p className="text-[var(--color-neutral-500)]">Review not found.</p>
-        <Button variant="outline" onClick={() => router.back()}>
-          Go Back
-        </Button>
+        <p className="text-[var(--color-neutral-500)]">{t("notFound")}</p>
+        <Button variant="outline" onClick={() => router.back()}>{t("goBack")}</Button>
       </div>
     );
   }
@@ -144,124 +131,74 @@ export default function ReviewDetailPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      {/* Back */}
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-[var(--color-neutral-500)] hover:text-[var(--color-primary)] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to reviews
+        {t("backToReviews")}
       </button>
 
-      {/* Already decided banner */}
       {alreadyDecided && (
         <div className="flex items-center gap-3 p-4 rounded-xl border bg-[var(--color-neutral-50)] border-[var(--color-border)]">
           <CheckCircle2 className="h-5 w-5 text-[var(--color-secondary)] flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-[var(--color-foreground)]">
-              Decision already submitted
-            </p>
-            <p className="text-xs text-[var(--color-neutral-500)]">
-              This review has been decided. You can view the details below.
-            </p>
+            <p className="text-sm font-medium text-[var(--color-foreground)]">{t("decisionAlreadySubmitted")}</p>
+            <p className="text-xs text-[var(--color-neutral-500)]">{t("decisionAlreadyDesc")}</p>
           </div>
         </div>
       )}
 
-      {/* AI Score Card */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-[var(--color-secondary)]" />
-                AI Assessment Score
+                {t("aiScoreTitle")}
               </CardTitle>
-              <CardDescription>
-                Generated by Aria — AI Investment Analyst
-              </CardDescription>
+              <CardDescription>{t("aiScoreDesc")}</CardDescription>
             </div>
-            <div
-              className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${
-                classificationColors[review.classification] ??
-                "text-[var(--color-neutral-600)] bg-[var(--color-neutral-50)] border-[var(--color-border)]"
-              }`}
-            >
+            <div className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${
+              classificationColors[review.classification] ??
+              "text-[var(--color-neutral-600)] bg-[var(--color-neutral-50)] border-[var(--color-border)]"
+            }`}>
               {review.classification.replace(/_/g, " ")}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* Overall */}
           <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-neutral-50)] border border-[var(--color-border)]">
-            <span className="text-sm font-medium text-[var(--color-foreground)]">
-              Overall Score
-            </span>
-            <span
-              className={`text-3xl font-bold ${
-                review.overallScore >= 70
-                  ? "text-green-600"
-                  : review.overallScore >= 50
-                  ? "text-yellow-600"
-                  : "text-red-500"
-              }`}
-            >
+            <span className="text-sm font-medium text-[var(--color-foreground)]">{t("overallScore")}</span>
+            <span className={`text-3xl font-bold ${
+              review.overallScore >= 70 ? "text-green-600" : review.overallScore >= 50 ? "text-yellow-600" : "text-red-500"
+            }`}>
               {review.overallScore}
-              <span className="text-base font-normal text-[var(--color-neutral-400)]">
-                /100
-              </span>
+              <span className="text-base font-normal text-[var(--color-neutral-400)]">/100</span>
             </span>
           </div>
 
-          {/* Dimensions */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              {
-                label: "Financial Health",
-                value: review.financialHealth,
-              },
-              { label: "Team Strength", value: review.teamStrength },
-              {
-                label: "Market Potential",
-                value: review.marketPotential,
-              },
-              {
-                label: "Business Viability",
-                value: review.businessViability,
-              },
+              { labelKey: "dimFinancialHealth", value: review.financialHealth },
+              { labelKey: "dimTeamStrength",    value: review.teamStrength },
+              { labelKey: "dimMarketPotential", value: review.marketPotential },
+              { labelKey: "dimBusinessViability", value: review.businessViability },
             ].map((dim) => (
-              <div
-                key={dim.label}
-                className="p-3 rounded-xl border border-[var(--color-border)] bg-white"
-              >
-                <p className="text-xs text-[var(--color-neutral-400)] mb-2">
-                  {dim.label}
-                </p>
+              <div key={dim.labelKey} className="p-3 rounded-xl border border-[var(--color-border)] bg-white">
+                <p className="text-xs text-[var(--color-neutral-400)] mb-2">{t(dim.labelKey as any)}</p>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span
-                    className={`text-lg font-bold ${
-                      dim.value >= 70
-                        ? "text-green-600"
-                        : dim.value >= 50
-                        ? "text-yellow-600"
-                        : "text-red-500"
-                    }`}
-                  >
+                  <span className={`text-lg font-bold ${
+                    dim.value >= 70 ? "text-green-600" : dim.value >= 50 ? "text-yellow-600" : "text-red-500"
+                  }`}>
                     {dim.value}
                   </span>
-                  <span className="text-xs text-[var(--color-neutral-400)]">
-                    /100
-                  </span>
+                  <span className="text-xs text-[var(--color-neutral-400)]">/100</span>
                 </div>
-                {/* Progress bar */}
                 <div className="h-1.5 w-full bg-[var(--color-neutral-100)] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      dim.value >= 70
-                        ? "bg-green-500"
-                        : dim.value >= 50
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
+                      dim.value >= 70 ? "bg-green-500" : dim.value >= 50 ? "bg-yellow-500" : "bg-red-500"
                     }`}
                     style={{ width: `${dim.value}%` }}
                   />
@@ -270,97 +207,67 @@ export default function ReviewDetailPage() {
             ))}
           </div>
 
-          {/* AI Reasoning */}
           <div className="p-4 rounded-xl bg-[var(--color-primary-50)] border border-[var(--color-primary-100)]">
             <p className="text-xs font-medium text-[var(--color-primary-700)] uppercase tracking-wide mb-3">
-              AI Reasoning
+              {t("aiReasoning")}
             </p>
             <StructuredReasoning text={review.aiReasoning} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Startup Info */}
-      <Card className="border border-[var(--color-border)]">
-          <CardHeader>
-            <CardTitle>Startup Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { label: "Company Stage", value: review.companySize },
-              {
-                label: "Problem Statement",
-                value: review.problemStatement,
-              },
-              {
-                label: "Business Model",
-                value: review.businessModel,
-              },
-              {
-                label: "Target Market",
-                value: review.targetMarket,
-              },
-              {
-                label: "Funding Needed",
-                value: `$${review.fundingNeeded?.toLocaleString()}`,
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0"
-              >
-                <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
-                  {item.label}
-                </p>
-                <p className="text-sm text-[var(--color-foreground)] leading-relaxed">
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-      {/* Decision Form */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
-          <CardTitle>
-            {alreadyDecided ? "Decision Made" : "Make Your Decision"}
-          </CardTitle>
+          <CardTitle>{t("startupInfo")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { labelKey: "fieldCompanyStage",      value: review.companySize },
+            { labelKey: "fieldProblemStatement",  value: review.problemStatement },
+            { labelKey: "fieldBusinessModel",     value: review.businessModel },
+            { labelKey: "fieldTargetMarket",      value: review.targetMarket },
+            { labelKey: "fieldFundingNeeded",     value: `$${review.fundingNeeded?.toLocaleString()}` },
+          ].map((item) => (
+            <div key={item.labelKey} className="border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0">
+              <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
+                {t(item.labelKey as any)}
+              </p>
+              <p className="text-sm text-[var(--color-foreground)] leading-relaxed">{item.value}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card className="border border-[var(--color-border)]">
+        <CardHeader>
+          <CardTitle>{alreadyDecided ? t("decisionMade") : t("makeDecision")}</CardTitle>
           <CardDescription>
-            {alreadyDecided
-              ? "This review has already been decided."
-              : "Select a decision and provide a written reason. All decisions are permanently recorded."}
+            {alreadyDecided ? t("decisionAlreadyNote") : t("decisionGuide")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Decision buttons */}
           <div className="grid grid-cols-3 gap-3">
             {[
               {
                 value: "APPROVED" as ReviewDecision,
-                label: "Approve",
+                labelKey: "decisionApprove",
                 icon: CheckCircle2,
-                active:
-                  "bg-green-600 text-white border-green-600",
-                inactive:
-                  "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-green-400",
+                active: "bg-green-600 text-white border-green-600",
+                inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-green-400",
               },
               {
                 value: "REJECTED" as ReviewDecision,
-                label: "Reject",
+                labelKey: "decisionReject",
                 icon: XCircle,
                 active: "bg-red-500 text-white border-red-500",
-                inactive:
-                  "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-red-400",
+                inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-red-400",
               },
               {
                 value: "ESCALATED" as ReviewDecision,
-                label: "Escalate",
+                labelKey: "decisionEscalate",
                 icon: AlertTriangle,
-                active:
-                  "bg-yellow-500 text-white border-yellow-500",
-                inactive:
-                  "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-yellow-400",
+                active: "bg-yellow-500 text-white border-yellow-500",
+                inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-yellow-400",
               },
             ].map((opt) => (
               <button
@@ -373,22 +280,19 @@ export default function ReviewDetailPage() {
                 }`}
               >
                 <opt.icon className="h-5 w-5" />
-                {opt.label}
+                {t(opt.labelKey as any)}
               </button>
             ))}
           </div>
 
-          {/* Reason */}
           <div className="space-y-1.5">
             <Label htmlFor="reason">
-              Reason{" "}
-              {!alreadyDecided && (
-                <span className="text-red-500">*</span>
-              )}
+              {t("reasonLabel")}{" "}
+              {!alreadyDecided && <span className="text-red-500">*</span>}
             </Label>
             <Textarea
               id="reason"
-              placeholder="Provide a detailed reason for your decision…"
+              placeholder={t("reasonPlaceholder")}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
@@ -404,15 +308,9 @@ export default function ReviewDetailPage() {
               disabled={isSubmitting || !decision || !reason.trim()}
             >
               {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting Decision…
-                </>
+                <><Loader2 className="h-4 w-4 animate-spin" />{t("submitting")}</>
               ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Submit Decision
-                </>
+                <><CheckCircle2 className="h-4 w-4" />{t("submitBtn")}</>
               )}
             </Button>
           )}

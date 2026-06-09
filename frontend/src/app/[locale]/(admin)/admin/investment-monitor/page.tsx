@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { adminService } from "@/services/adminService";
@@ -20,6 +21,7 @@ export default function AdminInvestmentMonitorPage() {
 }
 
 export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" }) {
+  const t = useTranslations("admin.investmentMonitor");
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [askingId, setAskingId] = useState<number | null>(null);
@@ -55,7 +57,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
   const handleAskForFund = async (exec: any) => {
     const inv = exec.investorInfo;
     if (!inv?.email) {
-      toast.error("Investor email not available");
+      toast.error(t("toastNoEmail"));
       return;
     }
     setAskingId(exec.id);
@@ -68,17 +70,17 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
         fundingAmount: exec.investmentBudget,
         executionTitle: exec.preferredIndustry,
       });
-      toast.success(`Fund request sent to ${inv.fullName ?? inv.email}`);
+      toast.success(t("toastFundRequestSent", { name: inv.fullName ?? inv.email }));
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 503) {
-        toast.error("Service is waking up — please try again in a moment");
+        toast.error(t("toastServiceWakingUp"));
       } else if (status === 401) {
-        toast.error("Your session has expired — please log in again");
+        toast.error(t("toastSessionExpired"));
       } else if (status === 403) {
-        toast.error("You don't have permission to send fund requests");
+        toast.error(t("toastNoPermission"));
       } else {
-        toast.error("Failed to send fund request");
+        toast.error(t("toastFundRequestFailed"));
       }
     } finally {
       setAskingId(null);
@@ -106,9 +108,9 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Investment Monitor</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Track which investor executions have been funded
+          {t("subtitle")}
         </p>
       </div>
 
@@ -122,7 +124,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
           </div>
           <div>
             <p className="text-2xl font-extrabold stat-text-blue">{executions.length}</p>
-            <p className="text-xs font-medium stat-text-blue opacity-75">Total Executions</p>
+            <p className="text-xs font-medium stat-text-blue opacity-75">{t("totalExecutions")}</p>
           </div>
         </div>
         <div className="stat-bg-green rounded-2xl border p-5 flex items-center gap-4"
@@ -133,7 +135,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
           </div>
           <div>
             <p className="text-2xl font-extrabold stat-text-green">{fundedCount}</p>
-            <p className="text-xs font-medium stat-text-green opacity-75">Funded</p>
+            <p className="text-xs font-medium stat-text-green opacity-75">{t("funded")}</p>
           </div>
         </div>
         <div className="stat-bg-amber rounded-2xl border p-5 flex items-center gap-4"
@@ -144,7 +146,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
           </div>
           <div>
             <p className="text-2xl font-extrabold stat-text-amber">{notFundedCount}</p>
-            <p className="text-xs font-medium stat-text-amber opacity-75">Not Funded</p>
+            <p className="text-xs font-medium stat-text-amber opacity-75">{t("notFunded")}</p>
           </div>
         </div>
       </div>
@@ -162,7 +164,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                 : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-200)]"
             }`}
           >
-            {f === "NOT_FUNDED" ? "Not Funded" : f.charAt(0) + f.slice(1).toLowerCase()}
+            {f === "NOT_FUNDED" ? t("notFunded") : f === "ALL" ? t("filterAll") : t("funded")}
           </button>
         ))}
       </div>
@@ -173,7 +175,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
           {filtered.length === 0 ? (
             <div className="py-16 text-center text-[var(--color-neutral-400)]">
               <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>No executions found for this filter</p>
+              <p>{t("noExecutionsFilter")}</p>
             </div>
           ) : (
             <div className="divide-y divide-[var(--color-border)]">
@@ -202,7 +204,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                             ? "bg-green-100 text-green-700"
                             : "bg-amber-100 text-amber-700"
                         }`}>
-                          {isFunded ? "FUNDED" : "NOT FUNDED"}
+                          {isFunded ? t("fundedBadge") : t("notFundedBadge")}
                         </span>
                         {exec.status && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)]">
@@ -228,7 +230,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                         )}
                         {isFunded && exec.fundedAt && (
                           <span className="text-xs text-green-600 font-medium">
-                            Funded {new Date(exec.fundedAt).toLocaleDateString()}
+                            {t("fundedOn", { date: new Date(exec.fundedAt).toLocaleDateString() })}
                           </span>
                         )}
                       </div>
@@ -246,7 +248,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                         {askingId === exec.id
                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           : <Send className="h-3.5 w-3.5" />}
-                        Ask for Fund
+                        {t("askForFund")}
                       </Button>
                     )}
                   </div>

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { followupService } from "@/services/followupService";
 import { Meetup } from "@/types/followup";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -17,14 +18,23 @@ import {
   Loader2,
 } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  SCHEDULED: { label: "Scheduled", color: "text-blue-600 bg-blue-50", icon: Calendar },
-  IN_PROGRESS: { label: "In Progress", color: "text-amber-600 bg-amber-50", icon: Play },
-  COMPLETED: { label: "Completed", color: "text-green-600 bg-green-50", icon: CheckCircle2 },
-  CANCELLED: { label: "Cancelled", color: "text-red-600 bg-red-50", icon: XCircle },
-};
-
 export default function StartupMeetupsPage() {
+  const t = useTranslations("startup.meetups");
+
+  const statusConfig: Record<string, { color: string; icon: React.ElementType }> = {
+    SCHEDULED:   { color: "text-blue-600 bg-blue-50",   icon: Calendar },
+    IN_PROGRESS: { color: "text-amber-600 bg-amber-50", icon: Play },
+    COMPLETED:   { color: "text-green-600 bg-green-50", icon: CheckCircle2 },
+    CANCELLED:   { color: "text-red-600 bg-red-50",     icon: XCircle },
+  };
+
+  const statusLabel: Record<string, string> = {
+    SCHEDULED:   t("statusScheduled"),
+    IN_PROGRESS: t("statusInProgress"),
+    COMPLETED:   t("statusCompleted"),
+    CANCELLED:   t("statusCancelled"),
+  };
+
   const { data: meetups = [], isLoading } = useQuery<Meetup[]>({
     queryKey: ["startup-meetups"],
     queryFn: async () => {
@@ -38,26 +48,26 @@ export default function StartupMeetupsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">My Meetups</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Video meetings with matched investors, scheduled by the admin
+          {t("subtitle")}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total", value: meetups.length, color: "text-[var(--color-primary)]", bg: "bg-[var(--color-primary-50)]", icon: Video },
-          { label: "Upcoming", value: meetups.filter((m) => m.status === "SCHEDULED").length, color: "text-blue-600", bg: "bg-blue-50", icon: Calendar },
-          { label: "Completed", value: meetups.filter((m) => m.status === "COMPLETED").length, color: "text-green-600", bg: "bg-green-50", icon: CheckCircle2 },
+          { labelKey: "statTotal",     value: meetups.length,                                             color: "text-[var(--color-primary)]", bg: "bg-[var(--color-primary-50)]", icon: Video },
+          { labelKey: "statUpcoming",  value: meetups.filter((m) => m.status === "SCHEDULED").length,    color: "text-blue-600",               bg: "bg-blue-50",                   icon: Calendar },
+          { labelKey: "statCompleted", value: meetups.filter((m) => m.status === "COMPLETED").length,    color: "text-green-600",              bg: "bg-green-50",                  icon: CheckCircle2 },
         ].map((s) => (
-          <Card key={s.label} className="border border-[var(--color-border)]">
+          <Card key={s.labelKey} className="border border-[var(--color-border)]">
             <CardContent className="p-4 flex items-center gap-3">
               <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${s.bg}`}>
                 <s.icon className={`h-4 w-4 ${s.color}`} />
               </div>
               <div>
                 <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-[var(--color-neutral-500)]">{s.label}</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{t(s.labelKey as any)}</p>
               </div>
             </CardContent>
           </Card>
@@ -70,9 +80,9 @@ export default function StartupMeetupsPage() {
             <div className="h-14 w-14 rounded-full bg-[var(--color-primary-50)] flex items-center justify-center">
               <Video className="h-7 w-7 text-[var(--color-primary)]" />
             </div>
-            <p className="font-semibold text-[var(--color-primary-800)]">No meetups yet</p>
+            <p className="font-semibold text-[var(--color-primary-800)]">{t("noMeetups")}</p>
             <p className="text-sm text-[var(--color-neutral-500)] text-center max-w-xs">
-              The admin will schedule meetups with matched investors
+              {t("noMeetupsDesc")}
             </p>
           </CardContent>
         </Card>
@@ -89,7 +99,7 @@ export default function StartupMeetupsPage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full ${cfg.color}`}>
-                          <StatusIcon className="h-3 w-3" />{cfg.label}
+                          <StatusIcon className="h-3 w-3" />{statusLabel[m.status] ?? m.status}
                         </span>
                         <span className="text-xs text-[var(--color-neutral-400)]">Meetup #{m.id}</span>
                       </div>
@@ -105,7 +115,7 @@ export default function StartupMeetupsPage() {
                       <Link href={`/meetup/${m.roomId}`}>
                         <Button size="sm" className="gap-2 flex-shrink-0">
                           <Video className="h-4 w-4" />
-                          Join Call
+                          {t("joinCall")}
                         </Button>
                       </Link>
                     )}

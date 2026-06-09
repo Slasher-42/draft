@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useAuth } from "@/context/AuthContext";
@@ -57,6 +58,7 @@ interface SignalMessage {
 }
 
 export default function MeetupRoomPage() {
+  const t = useTranslations("meetup.room");
   const { roomId } = useParams<{ roomId: string }>();
   const router = useRouter();
   const { user } = useAuth();
@@ -130,7 +132,7 @@ export default function MeetupRoomPage() {
         await pc.setLocalDescription(offer);
         sendSignal({ type: "offer", sdp: JSON.stringify(pc.localDescription) });
       } catch {
-        toast.error("Failed to create offer");
+        toast.error(t("toastOfferFailed"));
       } finally {
         makingOfferRef.current = false;
       }
@@ -222,9 +224,7 @@ export default function MeetupRoomPage() {
       try {
         await followupService.getMeetupByRoom(roomId);
       } catch {
-        setRoomError(
-          "This meeting room does not exist or you don't have access."
-        );
+        setRoomError(t("roomNotFound"));
         setIsLoading(false);
         return;
       }
@@ -243,9 +243,7 @@ export default function MeetupRoomPage() {
           });
           setVideoEnabled(false);
         } catch {
-          setRoomError(
-            "Camera and microphone access is required to join this call."
-          );
+          setRoomError(t("accessRequired"));
           setIsLoading(false);
           return;
         }
@@ -300,7 +298,7 @@ export default function MeetupRoomPage() {
           }
         },
         onStompError: () => {
-          if (mounted) toast.error("Signaling connection error");
+          if (mounted) toast.error(t("toastSignalError"));
         },
       });
 
@@ -357,7 +355,7 @@ export default function MeetupRoomPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-950 gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-white" />
-        <p className="text-white/70 text-sm">Joining meeting room…</p>
+        <p className="text-white/70 text-sm">{t("joiningRoom")}</p>
       </div>
     );
   }
@@ -376,7 +374,7 @@ export default function MeetupRoomPage() {
           className="mt-2 text-white border-white/20 hover:bg-white/10"
           onClick={() => router.back()}
         >
-          Go Back
+          {t("goBack")}
         </Button>
       </div>
     );
@@ -391,13 +389,12 @@ export default function MeetupRoomPage() {
               connected ? "bg-green-400" : "bg-red-400"
             }`}
           />
-          <span className="text-sm font-medium">Room: {roomId}</span>
+          <span className="text-sm font-medium">{t("roomLabel")} {roomId}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-white/50">
           <Users className="h-4 w-4" />
           <span>
-            {remoteConnected ? "2" : "1"} participant
-            {remoteConnected ? "s" : ""}
+            {remoteConnected ? t("twoParticipants") : t("oneParticipant")}
           </span>
         </div>
       </div>
@@ -412,7 +409,7 @@ export default function MeetupRoomPage() {
             className="w-full h-full object-cover"
           />
           <div className="absolute bottom-3 left-3 bg-black/50 text-xs text-white px-2 py-1 rounded-md">
-            You
+            {t("youLabel")}
           </div>
           {!videoEnabled && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
@@ -433,7 +430,7 @@ export default function MeetupRoomPage() {
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-3 left-3 bg-black/50 text-xs text-white px-2 py-1 rounded-md">
-                Remote
+                {t("remoteLabel")}
               </div>
             </>
           ) : (
@@ -442,7 +439,7 @@ export default function MeetupRoomPage() {
                 <Users className="h-7 w-7 text-white/30" />
               </div>
               <p className="text-sm text-white/40">
-                Waiting for other participant…
+                {t("waitingForParticipant")}
               </p>
             </div>
           )}
@@ -457,7 +454,7 @@ export default function MeetupRoomPage() {
               ? "bg-gray-700 hover:bg-gray-600"
               : "bg-red-500 hover:bg-red-400"
           }`}
-          title={audioEnabled ? "Mute" : "Unmute"}
+          title={audioEnabled ? t("mute") : t("unmute")}
         >
           {audioEnabled ? (
             <Mic className="h-5 w-5" />
@@ -473,7 +470,7 @@ export default function MeetupRoomPage() {
               ? "bg-gray-700 hover:bg-gray-600"
               : "bg-red-500 hover:bg-red-400"
           }`}
-          title={videoEnabled ? "Stop video" : "Start video"}
+          title={videoEnabled ? t("stopVideo") : t("startVideo")}
         >
           {videoEnabled ? (
             <Video className="h-5 w-5" />
@@ -485,7 +482,7 @@ export default function MeetupRoomPage() {
         <button
           onClick={leaveCall}
           className="h-12 w-12 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-500 transition-colors"
-          title="Leave call"
+          title={t("leaveCall")}
         >
           <PhoneOff className="h-5 w-5" />
         </button>

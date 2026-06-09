@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const roleRedirectMap: Record<string, string> = {
 };
 
 function TwoFAForm() {
+  const t = useTranslations("auth.verify2fa");
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const router = useRouter();
@@ -39,7 +41,7 @@ function TwoFAForm() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
-      setError("Please enter the verification code.");
+      setError(t("codeRequired"));
       return;
     }
     setError(null);
@@ -53,12 +55,11 @@ function TwoFAForm() {
 
       loginWithToken(token, String(data.userId), data.email, role, data.trustedDeviceToken);
 
-      toast.success("Verification successful!");
+      toast.success(t("verifySuccess"));
       router.push(roleRedirectMap[role] || "/");
     } catch (err: any) {
       setError(
-        err.response?.data?.message ||
-          "Invalid or expired code. Please try again."
+        err.response?.data?.message || t("invalidCode")
       );
     } finally {
       setIsLoading(false);
@@ -69,9 +70,9 @@ function TwoFAForm() {
     setResending(true);
     try {
       await api.post(`/api/auth/2fa/send?email=${encodeURIComponent(email)}`);
-      toast.success("New code sent to your email.");
+      toast.success(t("resendSuccess"));
     } catch {
-      toast.error("Failed to resend code.");
+      toast.error(t("resendFailed"));
     } finally {
       setResending(false);
     }
@@ -84,13 +85,10 @@ function TwoFAForm() {
           <ShieldCheck className="h-6 w-6 text-[var(--color-primary)]" />
         </div>
         <CardTitle className="text-2xl font-bold">
-          Two-Factor Verification
+          {t("title")}
         </CardTitle>
         <CardDescription>
-          We sent a verification code to{" "}
-          <span className="font-medium text-[var(--color-foreground)]">
-            {email}
-          </span>
+          {t("sentTo", { email })}
         </CardDescription>
       </CardHeader>
 
@@ -104,13 +102,13 @@ function TwoFAForm() {
 
         <form onSubmit={handleVerify} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="code">Verification Code</Label>
+            <Label htmlFor="code">{t("codeLabel")}</Label>
             <Input
               id="code"
               type="text"
               inputMode="numeric"
               maxLength={8}
-              placeholder="Enter code"
+              placeholder={t("enterCode")}
               className="text-center text-lg tracking-[0.5em] font-mono"
               value={code}
               onChange={(e) =>
@@ -124,23 +122,23 @@ function TwoFAForm() {
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Verifying…
+                {t("verifying")}
               </span>
             ) : (
-              "Verify & Continue"
+              t("verify")
             )}
           </Button>
         </form>
 
         <p className="text-center text-sm text-[var(--color-neutral-500)]">
-          Didn&apos;t receive a code?{" "}
+          {t("noCode")}{" "}
           <button
             onClick={handleResend}
             disabled={resending}
             className="font-medium hover:underline disabled:opacity-50"
             style={{ color: "var(--color-primary)" }}
           >
-            {resending ? "Resending…" : "Resend code"}
+            {resending ? t("resending") : t("resendCode")}
           </button>
         </p>
       </CardContent>

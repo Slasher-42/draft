@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { evaluatorService } from "@/services/evaluatorService";
 import { Button } from "@/components/ui/button";
@@ -40,25 +41,26 @@ interface EscalatedReview {
 }
 
 const REASONING_SECTIONS = [
-  { key: "MARKET & COMPETITIVE LANDSCAPE", color: "text-blue-700" },
-  { key: "FINANCIAL REALISM", color: "text-purple-700" },
-  { key: "GROWTH TRAJECTORY", color: "text-emerald-700" },
-  { key: "KEY STRENGTHS", color: "text-green-700" },
-  { key: "CONCERNS & RED FLAGS", color: "text-red-700" },
-  { key: "OVERALL VERDICT", color: "text-[var(--color-primary-700)]" },
+  { key: "MARKET & COMPETITIVE LANDSCAPE", labelKey: "marketLandscape", color: "text-blue-700" },
+  { key: "FINANCIAL REALISM", labelKey: "financialRealism", color: "text-purple-700" },
+  { key: "GROWTH TRAJECTORY", labelKey: "growthTrajectory", color: "text-emerald-700" },
+  { key: "KEY STRENGTHS", labelKey: "keyStrengths", color: "text-green-700" },
+  { key: "CONCERNS & RED FLAGS", labelKey: "concernsRedFlags", color: "text-red-700" },
+  { key: "OVERALL VERDICT", labelKey: "overallVerdict", color: "text-[var(--color-primary-700)]" },
 ];
 
 function StructuredReasoning({ text }: { text: string }) {
+  const t = useTranslations("admin.escalations.reasoningSections");
   const parsed: { label: string; color: string; content: string }[] = [];
 
   for (let i = 0; i < REASONING_SECTIONS.length; i++) {
-    const { key, color } = REASONING_SECTIONS[i];
+    const { key, labelKey, color } = REASONING_SECTIONS[i];
     const nextKey = REASONING_SECTIONS[i + 1]?.key;
     const pattern = nextKey
       ? new RegExp(`${key}:\\s*([\\s\\S]*?)(?=${nextKey}:)`, "i")
       : new RegExp(`${key}:\\s*([\\s\\S]*)$`, "i");
     const match = text.match(pattern);
-    if (match) parsed.push({ label: key, color, content: match[1].trim() });
+    if (match) parsed.push({ label: t(labelKey), color, content: match[1].trim() });
   }
 
   if (parsed.length === 0) {
@@ -88,6 +90,7 @@ const classificationColors: Record<string, string> = {
 };
 
 export default function AdminEscalationsPage() {
+  const t = useTranslations("admin.escalations");
   const [reviews, setReviews] = useState<EscalatedReview[]>([]);
   const [decisions, setDecisions] = useState<Record<number, "APPROVED" | "REJECTED">>({});
   const [reasons, setReasons] = useState<Record<number, string>>({});
@@ -107,15 +110,18 @@ export default function AdminEscalationsPage() {
   const handleDecision = async (review: EscalatedReview) => {
     const decision = decisions[review.id];
     const reason = reasons[review.id] ?? "";
-    if (!decision) { toast.error("Select Approve or Reject."); return; }
-    if (!reason.trim()) { toast.error("A reason is required."); return; }
+    if (!decision) { toast.error(t("toastSelectDecision")); return; }
+    if (!reason.trim()) { toast.error(t("toastReasonRequired")); return; }
     setSubmitting(review.id);
     try {
       await evaluatorService.submitAdminDecision(String(review.id), { decision, reason });
-      toast.success(`Execution #${review.executionId} has been ${decision === "APPROVED" ? "approved" : "rejected"}.`);
+      toast.success(t("toastDecisionResult", {
+        execId: review.executionId,
+        decision: decision === "APPROVED" ? t("approvedWord") : t("rejectedWord"),
+      }));
       setReviews((prev) => prev.filter((r) => r.id !== review.id));
     } catch {
-      toast.error("Failed to submit decision. Please try again.");
+      toast.error(t("toastSubmitFailed"));
     } finally {
       setSubmitting(null);
     }
@@ -132,9 +138,9 @@ export default function AdminEscalationsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Escalated Reviews</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("pageTitle")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Startups escalated by evaluators awaiting your final decision
+          {t("subtitle")}
         </p>
       </div>
 
@@ -144,9 +150,9 @@ export default function AdminEscalationsPage() {
             <div className="h-14 w-14 rounded-full bg-yellow-50 flex items-center justify-center">
               <AlertTriangle className="h-7 w-7 text-yellow-500" />
             </div>
-            <p className="font-semibold text-[var(--color-primary-800)]">No escalated reviews</p>
+            <p className="font-semibold text-[var(--color-primary-800)]">{t("noEscalations")}</p>
             <p className="text-sm text-[var(--color-neutral-500)] text-center max-w-xs">
-              All escalated cases have been resolved.
+              {t("noEscalationsHint")}
             </p>
           </CardContent>
         </Card>
@@ -164,7 +170,7 @@ export default function AdminEscalationsPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" />
-                          Escalated
+                          {t("escalatedBadge")}
                         </span>
                         <span
                           className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
@@ -172,18 +178,24 @@ export default function AdminEscalationsPage() {
                             "text-neutral-600 bg-neutral-50 border-neutral-200"
                           }`}
                         >
-                          {review.classification?.replace(/_/g, " ")}
+                          {review.classification === "HIGHLY_READY"
+                            ? t("classification.highlyReady")
+                            : review.classification === "MODERATELY_READY"
+                            ? t("classification.moderatelyReady")
+                            : review.classification === "NOT_READY"
+                            ? t("classification.notReady")
+                            : review.classification?.replace(/_/g, " ")}
                         </span>
                       </div>
                       <p className="text-sm font-medium text-[var(--color-foreground)]">
-                        Execution #{review.executionId} · Startup #{review.startupUserId}
+                        {t("executionLabel", { execId: review.executionId, startupId: review.startupUserId })}
                       </p>
                       <p className="text-xs text-[var(--color-neutral-500)]">
-                        Stage: {review.companySize} · Funding: ${review.fundingNeeded?.toLocaleString()}
+                        {t("stage")}: {review.companySize} · {t("funding")}: ${review.fundingNeeded?.toLocaleString()}
                       </p>
                       {review.reason && (
                         <p className="text-xs text-[var(--color-neutral-500)] italic">
-                          Evaluator note: "{review.reason}"
+                          {t("evaluatorNote", { reason: review.reason })}
                         </p>
                       )}
                     </div>
@@ -204,7 +216,7 @@ export default function AdminEscalationsPage() {
                         onClick={() => setExpanded(isExpanded ? null : review.id)}
                         className="text-xs text-[var(--color-primary)] hover:underline"
                       >
-                        {isExpanded ? "Hide details" : "View full details"}
+                        {isExpanded ? t("hideDetails") : t("viewFullDetails")}
                       </button>
                     </div>
                   </div>
@@ -215,10 +227,10 @@ export default function AdminEscalationsPage() {
                       {/* Score dimensions */}
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { label: "Financial Health", value: review.financialHealth },
-                          { label: "Team Strength", value: review.teamStrength },
-                          { label: "Market Potential", value: review.marketPotential },
-                          { label: "Business Viability", value: review.businessViability },
+                          { label: t("dimensions.financialHealth"), value: review.financialHealth },
+                          { label: t("dimensions.teamStrength"), value: review.teamStrength },
+                          { label: t("dimensions.marketPotential"), value: review.marketPotential },
+                          { label: t("dimensions.businessViability"), value: review.businessViability },
                         ].map((dim) => (
                           <div key={dim.label} className="p-3 rounded-xl border border-[var(--color-border)] bg-white">
                             <p className="text-xs text-[var(--color-neutral-400)] mb-1">{dim.label}</p>
@@ -240,16 +252,16 @@ export default function AdminEscalationsPage() {
 
                       {/* AI Reasoning */}
                       <div className="p-4 rounded-xl bg-[var(--color-primary-50)] border border-[var(--color-primary-100)]">
-                        <p className="text-xs font-medium text-[var(--color-primary-700)] uppercase tracking-wide mb-3">AI Reasoning</p>
+                        <p className="text-xs font-medium text-[var(--color-primary-700)] uppercase tracking-wide mb-3">{t("aiReasoning")}</p>
                         <StructuredReasoning text={review.aiReasoning} />
                       </div>
 
                       {/* Startup info */}
                       <div className="space-y-3">
                         {[
-                          { label: "Problem Statement", value: review.problemStatement },
-                          { label: "Business Model", value: review.businessModel },
-                          { label: "Target Market", value: review.targetMarket },
+                          { label: t("problemStatement"), value: review.problemStatement },
+                          { label: t("businessModel"), value: review.businessModel },
+                          { label: t("targetMarket"), value: review.targetMarket },
                         ].map((item) => (
                           <div key={item.label} className="border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0">
                             <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">{item.label}</p>
@@ -263,11 +275,11 @@ export default function AdminEscalationsPage() {
                   {/* Admin decision form */}
                   {!alreadyDecided && (
                     <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-3">
-                      <p className="text-sm font-medium text-[var(--color-primary-800)]">Your Decision</p>
+                      <p className="text-sm font-medium text-[var(--color-primary-800)]">{t("yourDecision")}</p>
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { value: "APPROVED" as const, label: "Approve", icon: CheckCircle2, active: "bg-green-600 text-white border-green-600", inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-green-400" },
-                          { value: "REJECTED" as const, label: "Reject", icon: XCircle, active: "bg-red-500 text-white border-red-500", inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-red-400" },
+                          { value: "APPROVED" as const, label: t("approve"), icon: CheckCircle2, active: "bg-green-600 text-white border-green-600", inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-green-400" },
+                          { value: "REJECTED" as const, label: t("reject"), icon: XCircle, active: "bg-red-500 text-white border-red-500", inactive: "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-red-400" },
                         ].map((opt) => (
                           <button
                             key={opt.value}
@@ -281,9 +293,9 @@ export default function AdminEscalationsPage() {
                         ))}
                       </div>
                       <div className="space-y-1.5">
-                        <Label>Reason <span className="text-red-500">*</span></Label>
+                        <Label>{t("reasonLabel")} <span className="text-red-500">*</span></Label>
                         <Textarea
-                          placeholder="Provide your reason for this decision…"
+                          placeholder={t("reasonPlaceholder")}
                           rows={3}
                           value={reasons[review.id] ?? ""}
                           onChange={(e) => setReasons((r) => ({ ...r, [review.id]: e.target.value }))}
@@ -295,9 +307,9 @@ export default function AdminEscalationsPage() {
                         disabled={submitting === review.id || !decisions[review.id] || !(reasons[review.id] ?? "").trim()}
                       >
                         {submitting === review.id ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</>
+                          <><Loader2 className="h-4 w-4 animate-spin" />{t("submitting")}</>
                         ) : (
-                          <><AlertCircle className="h-4 w-4" />Submit Decision</>
+                          <><AlertCircle className="h-4 w-4" />{t("submitDecision")}</>
                         )}
                       </Button>
                     </div>
@@ -306,7 +318,7 @@ export default function AdminEscalationsPage() {
                   {alreadyDecided && (
                     <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-sm text-[var(--color-neutral-500)]">
                       <CheckCircle2 className="h-4 w-4 text-[var(--color-secondary)]" />
-                      Admin decision already submitted: <strong>{review.decision}</strong>
+                      {t.rich("alreadyDecided", { decision: review.decision, strong: (chunks) => <strong>{chunks}</strong> })}
                     </div>
                   )}
                 </CardContent>

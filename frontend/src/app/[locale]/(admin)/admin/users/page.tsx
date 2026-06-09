@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
@@ -29,6 +30,8 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export default function AdminUsersPage() {
+  const t = useTranslations("admin.users");
+  const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -53,32 +56,32 @@ export default function AdminUsersPage() {
   const handleActivate = async (id: string) => {
     try {
       await userService.activateUser(id);
-      toast.success("User activated.");
+      toast.success(t("toastActivated"));
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
-      toast.error("Failed to activate user.");
+      toast.error(t("toastActivateFailed"));
     }
   };
 
   const handleDeactivate = async (id: string) => {
     try {
       await userService.deactivateUser(id);
-      toast.success("User deactivated.");
+      toast.success(t("toastDeactivated"));
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
-      toast.error("Failed to deactivate user.");
+      toast.error(t("toastDeactivateFailed"));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this user?"))
+    if (!confirm(t("confirmDelete")))
       return;
     try {
       await userService.deleteUser(id);
-      toast.success("User deleted.");
+      toast.success(t("toastDeleted"));
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     } catch {
-      toast.error("Failed to delete user.");
+      toast.error(t("toastDeleteFailed"));
     }
   };
 
@@ -88,16 +91,16 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-            User Management
+            {t("title")}
           </h2>
           <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-            Manage all users across the platform
+            {t("subtitle")}
           </p>
         </div>
         <Link href="/admin/users/create">
           <Button className="gap-2">
             <PlusCircle className="h-4 w-4" />
-            Create User
+            {t("createUser")}
           </Button>
         </Link>
       </div>
@@ -108,14 +111,14 @@ export default function AdminUsersPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
             <Input
-              placeholder="Search by name or email…"
+              placeholder={t("searchPlaceholder")}
               className="pl-9"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
           <Button type="submit" variant="outline">
-            Search
+            {tCommon("search")}
           </Button>
         </form>
 
@@ -131,7 +134,7 @@ export default function AdminUsersPage() {
                     : "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-[var(--color-primary-200)]"
                 }`}
               >
-                {role}
+                {role === "ALL" ? t("allRoles") : tCommon(`roles.${role.toLowerCase()}`)}
               </button>
             )
           )}
@@ -147,7 +150,7 @@ export default function AdminUsersPage() {
         <Card className="border-dashed border-2 border-[var(--color-border)]">
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <Users className="h-10 w-10 text-[var(--color-neutral-400)]" />
-            <p className="text-[var(--color-neutral-500)]">No users found</p>
+            <p className="text-[var(--color-neutral-500)]">{t("noUsersFound")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -173,13 +176,13 @@ export default function AdminUsersPage() {
                             roleColors[user.role]
                           }`}
                         >
-                          {user.role}
+                          {tCommon(`roles.${user.role.toLowerCase()}`)}
                         </span>
                         <Badge
                           variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}
                           className="text-xs"
                         >
-                          {(user.enabled ?? user.isActive) ? "Active" : "Inactive"}
+                          {(user.enabled ?? user.isActive) ? tCommon("status.active") : tCommon("status.inactive")}
                         </Badge>
                       </div>
                       <p className="text-xs text-[var(--color-neutral-400)] truncate">
@@ -190,7 +193,7 @@ export default function AdminUsersPage() {
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Link href={`/admin/users/${user.id}`}>
-                      <Button variant="ghost" size="icon" title="View">
+                      <Button variant="ghost" size="icon" title={t("view")}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
@@ -198,7 +201,7 @@ export default function AdminUsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Deactivate"
+                        title={t("deactivate")}
                         onClick={() => handleDeactivate(user.id)}
                       >
                         <UserX className="h-4 w-4 text-yellow-500" />
@@ -207,7 +210,7 @@ export default function AdminUsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Activate"
+                        title={t("activate")}
                         onClick={() => handleActivate(user.id)}
                       >
                         <UserCheck className="h-4 w-4 text-green-600" />
@@ -216,7 +219,7 @@ export default function AdminUsersPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Delete"
+                      title={t("delete")}
                       onClick={() => handleDelete(user.id)}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { notificationService } from "@/services/notificationService";
 
@@ -25,29 +26,33 @@ const typeColors: Record<string, string> = {
   INTERVAL_UPDATE:   "bg-neutral-100 text-neutral-600 border-neutral-200",
 };
 
-const typeLabels: Record<string, string> = {
-  STARTUP_APPROVED:  "Approved",
-  STARTUP_REJECTED:  "Rejected",
-  STARTUP_ESCALATED: "Escalated",
-  MATCH_FOUND:       "Match Found",
-  INTERVAL_UPDATE:   "Update",
-};
+function getTypeLabels(t: ReturnType<typeof useTranslations<"admin.notifications">>): Record<string, string> {
+  return {
+    STARTUP_APPROVED:  t("types.approved"),
+    STARTUP_REJECTED:  t("types.rejected"),
+    STARTUP_ESCALATED: t("types.escalated"),
+    MATCH_FOUND:       t("types.matchFound"),
+    INTERVAL_UPDATE:   t("types.update"),
+  };
+}
 
 const FILTERS = ["ALL", "UNREAD", "STARTUP_APPROVED", "STARTUP_REJECTED", "MATCH_FOUND", "INTERVAL_UPDATE"] as const;
 type Filter = typeof FILTERS[number];
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: ReturnType<typeof useTranslations<"admin.notifications">>): string {
   const diff  = Date.now() - new Date(dateStr).getTime();
   const mins  = Math.floor(diff / 60_000);
   const hours = Math.floor(diff / 3_600_000);
   const days  = Math.floor(diff / 86_400_000);
-  if (mins < 1)   return "just now";
-  if (mins < 60)  return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${days}d ago`;
+  if (mins < 1)   return t("justNow");
+  if (mins < 60)  return t("minutesAgo", { count: mins });
+  if (hours < 24) return t("hoursAgo", { count: hours });
+  return t("daysAgo", { count: days });
 }
 
 export default function AdminNotificationsPage() {
+  const t = useTranslations("admin.notifications");
+  const typeLabels = getTypeLabels(t);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const { isLoading } = useQuery({
@@ -89,15 +94,15 @@ export default function AdminNotificationsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Notifications</h2>
+          <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
           <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-            All system notifications across every user and execution
+            {t("subtitle")}
           </p>
         </div>
         {unreadCount > 0 && (
           <Button variant="outline" className="gap-2" onClick={markAllAsRead}>
             <CheckCheck className="h-4 w-4" />
-            Mark all as read ({unreadCount})
+            {t("markAllAsRead", { count: unreadCount })}
           </Button>
         )}
       </div>
@@ -142,7 +147,7 @@ export default function AdminNotificationsPage() {
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 gap-3">
           <BellOff className="h-10 w-10 text-[var(--color-neutral-300)]" />
-          <p className="text-sm text-[var(--color-neutral-400)]">No notifications found</p>
+          <p className="text-sm text-[var(--color-neutral-400)]">{t("noNotifications")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -176,11 +181,11 @@ export default function AdminNotificationsPage() {
                       {typeLabels[n.type] ?? n.type}
                     </span>
                     <span className="text-xs text-[var(--color-neutral-400)]">
-                      User #{n.recipientUserId}
+                      {t("userLabel", { id: n.recipientUserId })}
                     </span>
                     {n.relatedExecutionId && (
                       <span className="text-xs text-[var(--color-neutral-400)]">
-                        · Execution #{n.relatedExecutionId}
+                        {t("executionLabel", { id: n.relatedExecutionId })}
                       </span>
                     )}
                   </div>
@@ -191,7 +196,7 @@ export default function AdminNotificationsPage() {
 
                 {/* Time */}
                 <span className="text-xs text-[var(--color-neutral-400)] flex-shrink-0 mt-0.5">
-                  {timeAgo(n.createdAt)}
+                  {timeAgo(n.createdAt, t)}
                 </span>
 
               </CardContent>

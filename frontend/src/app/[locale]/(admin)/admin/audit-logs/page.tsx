@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/adminService";
 import { AuditLog, InvestorMatch } from "@/types/admin";
@@ -403,6 +404,8 @@ function MatchDetailModal({
   match: EnrichedMatch | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("admin.auditLogs");
+  const tCommon = useTranslations("common");
   if (!match) return null;
 
   const s = match.startup;
@@ -416,7 +419,7 @@ function MatchDetailModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[var(--color-primary-800)]">
             <TrendingUp className="h-5 w-5" />
-            Match Details — #{match.id}
+            {t("matchDetailsTitle", { id: match.id })}
           </DialogTitle>
         </DialogHeader>
 
@@ -424,7 +427,7 @@ function MatchDetailModal({
         <div className={`rounded-xl border-2 p-4 flex items-center justify-between ${scoreBg(match.matchScore)}`}>
           <div>
             <p className="text-xs font-medium text-[var(--color-neutral-500)] uppercase tracking-wide">
-              Match Score
+              {t("matchScore")}
             </p>
             <p className={`text-3xl font-bold ${scoreColor(match.matchScore)}`}>
               {match.matchScore.toFixed(1)}
@@ -433,7 +436,7 @@ function MatchDetailModal({
           </div>
           <div className="text-right">
             <Badge variant={match.status === "MATCHED" ? "success" : "secondary"} className="mb-1">
-              {match.status}
+              {tCommon(`status.${match.status?.toLowerCase()}`)}
             </Badge>
             <p className="text-xs text-[var(--color-neutral-400)]">{fmtDate(match.matchedAt)}</p>
           </div>
@@ -443,7 +446,7 @@ function MatchDetailModal({
         {match.matchReason && (
           <div className="bg-[var(--color-primary-50)] border border-[var(--color-primary-100)] rounded-lg p-3">
             <p className="text-xs font-semibold text-[var(--color-primary-700)] mb-1 uppercase tracking-wide">
-              Why they matched
+              {t("whyMatched")}
             </p>
             <p className="text-sm text-[var(--color-foreground)]">{match.matchReason}</p>
           </div>
@@ -456,7 +459,7 @@ function MatchDetailModal({
               <div className="h-7 w-7 rounded-lg bg-blue-100 flex items-center justify-center">
                 <Building2 className="h-4 w-4 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-sm text-[var(--color-foreground)]">Startup</h3>
+              <h3 className="font-semibold text-sm text-[var(--color-foreground)]">{t("startup")}</h3>
             </div>
             {su && (
               <div className="space-y-0.5">
@@ -469,20 +472,20 @@ function MatchDetailModal({
             )}
             {s ? (
               <div className="space-y-2 pt-1 border-t border-[var(--color-border)]">
-                <Row icon={<Target className="h-3.5 w-3.5 text-blue-500" />} label="Industry" value={s.industry ?? "—"} />
-                <Row icon={<Briefcase className="h-3.5 w-3.5 text-blue-500" />} label="Business Model" value={s.businessModel ?? "—"} />
-                <Row icon={<TrendingUp className="h-3.5 w-3.5 text-blue-500" />} label="Target Market" value={s.targetMarket ?? "—"} />
-                <Row icon={<DollarSign className="h-3.5 w-3.5 text-blue-500" />} label="Funding Needed" value={fmt(s.fundingNeeded)} />
-                <Row icon={<BarChart3 className="h-3.5 w-3.5 text-blue-500" />} label="Annual Revenue" value={fmt(s.annualRevenue)} />
+                <Row icon={<Target className="h-3.5 w-3.5 text-blue-500" />} label={t("fields.industry")} value={s.industry ?? "—"} />
+                <Row icon={<Briefcase className="h-3.5 w-3.5 text-blue-500" />} label={t("fields.businessModel")} value={s.businessModel ?? "—"} />
+                <Row icon={<TrendingUp className="h-3.5 w-3.5 text-blue-500" />} label={t("fields.targetMarket")} value={s.targetMarket ?? "—"} />
+                <Row icon={<DollarSign className="h-3.5 w-3.5 text-blue-500" />} label={t("fields.fundingNeeded")} value={fmt(s.fundingNeeded)} />
+                <Row icon={<BarChart3 className="h-3.5 w-3.5 text-blue-500" />} label={t("fields.annualRevenue")} value={fmt(s.annualRevenue)} />
                 {s.problemStatement && (
                   <div className="pt-1">
-                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">Problem Statement</p>
+                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">{t("fields.problemStatement")}</p>
                     <p className="text-xs text-[var(--color-neutral-600)] leading-relaxed">{s.problemStatement}</p>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-xs text-[var(--color-neutral-400)]">Execution #{match.startupExecutionId}</p>
+              <p className="text-xs text-[var(--color-neutral-400)]">{t("execution", { id: match.startupExecutionId })}</p>
             )}
           </div>
 
@@ -492,7 +495,7 @@ function MatchDetailModal({
               <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center">
                 <TrendingUp className="h-4 w-4 text-violet-600" />
               </div>
-              <h3 className="font-semibold text-sm text-[var(--color-foreground)]">Investor</h3>
+              <h3 className="font-semibold text-sm text-[var(--color-foreground)]">{t("investor")}</h3>
             </div>
             {iu && (
               <div className="space-y-0.5">
@@ -502,24 +505,24 @@ function MatchDetailModal({
             )}
             {inv ? (
               <div className="space-y-2 pt-1 border-t border-[var(--color-border)]">
-                <Row icon={<Target className="h-3.5 w-3.5 text-violet-500" />} label="Preferred Industry" value={inv.preferredIndustry ?? "—"} />
-                <Row icon={<DollarSign className="h-3.5 w-3.5 text-violet-500" />} label="Investment Budget" value={fmt(inv.investmentBudget)} />
-                <Row icon={<Calendar className="h-3.5 w-3.5 text-violet-500" />} label="Return Timeline" value={inv.expectedReturnTimeline ?? "—"} />
+                <Row icon={<Target className="h-3.5 w-3.5 text-violet-500" />} label={t("fields.preferredIndustry")} value={inv.preferredIndustry ?? "—"} />
+                <Row icon={<DollarSign className="h-3.5 w-3.5 text-violet-500" />} label={t("fields.investmentBudget")} value={fmt(inv.investmentBudget)} />
+                <Row icon={<Calendar className="h-3.5 w-3.5 text-violet-500" />} label={t("fields.returnTimeline")} value={inv.expectedReturnTimeline ?? "—"} />
                 {inv.investmentReason && (
                   <div className="pt-1">
-                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">Investment Reason</p>
+                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">{t("fields.investmentReason")}</p>
                     <p className="text-xs text-[var(--color-neutral-600)] leading-relaxed">{inv.investmentReason}</p>
                   </div>
                 )}
                 {inv.successCriteria && (
                   <div className="pt-1">
-                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">Success Criteria</p>
+                    <p className="text-[10px] uppercase tracking-wide font-medium text-[var(--color-neutral-400)] mb-1">{t("fields.successCriteria")}</p>
                     <p className="text-xs text-[var(--color-neutral-600)] leading-relaxed">{inv.successCriteria}</p>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-xs text-[var(--color-neutral-400)]">Execution #{match.investorExecutionId}</p>
+              <p className="text-xs text-[var(--color-neutral-400)]">{t("execution", { id: match.investorExecutionId })}</p>
             )}
           </div>
         </div>
@@ -543,6 +546,8 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
 
 
 function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => void }) {
+  const t = useTranslations("admin.auditLogs");
+  const tCommon = useTranslations("common");
   const s = match.startup;
   const inv = match.investor;
   const su = match.startupUser;
@@ -560,7 +565,7 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
               <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5 min-w-0">
                 <Building2 className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-blue-400 tracking-wide leading-none mb-0.5">Startup</p>
+                  <p className="text-[10px] uppercase font-semibold text-blue-400 tracking-wide leading-none mb-0.5">{t("startup")}</p>
                   <p className="text-xs font-medium text-blue-800 truncate">
                     {su?.fullName ?? `User #${match.startupUserId}`}
                   </p>
@@ -573,7 +578,7 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
               <div className="flex items-center gap-2 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1.5 min-w-0">
                 <TrendingUp className="h-3.5 w-3.5 text-violet-500 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-violet-400 tracking-wide leading-none mb-0.5">Investor</p>
+                  <p className="text-[10px] uppercase font-semibold text-violet-400 tracking-wide leading-none mb-0.5">{t("investor")}</p>
                   <p className="text-xs font-medium text-violet-800 truncate">
                     {iu?.fullName ?? `User #${match.investorUserId}`}
                   </p>
@@ -591,13 +596,13 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
               {s?.fundingNeeded != null && (
                 <div className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)]">
                   <DollarSign className="h-3 w-3 text-[var(--color-neutral-400)]" />
-                  <span>Needs {fmt(s.fundingNeeded)}</span>
+                  <span>{t("needs", { amount: fmt(s.fundingNeeded) })}</span>
                 </div>
               )}
               {inv?.investmentBudget != null && (
                 <div className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)]">
                   <DollarSign className="h-3 w-3 text-[var(--color-neutral-400)]" />
-                  <span>Budget {fmt(inv.investmentBudget)}</span>
+                  <span>{t("budget", { amount: fmt(inv.investmentBudget) })}</span>
                 </div>
               )}
               {match.matchedAt && (
@@ -621,7 +626,7 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
               <p className="text-[10px] text-[var(--color-neutral-400)] leading-none mt-0.5">/100</p>
             </div>
             <Badge variant={match.status === "MATCHED" ? "success" : "secondary"} className="text-[10px]">
-              {match.status}
+              {tCommon(`status.${match.status?.toLowerCase()}`)}
             </Badge>
             <ChevronRight className="h-4 w-4 text-[var(--color-neutral-300)] group-hover:text-[var(--color-primary)] transition-colors" />
           </div>
@@ -632,6 +637,7 @@ function MatchCard({ match, onClick }: { match: EnrichedMatch; onClick: () => vo
 }
 
 function MatchesTab() {
+  const t = useTranslations("admin.auditLogs");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<EnrichedMatch | null>(null);
 
@@ -689,7 +695,7 @@ function MatchesTab() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
           <Input
-            placeholder="Search by name, industry, or match reason…"
+            placeholder={t("matchesSearchPlaceholder")}
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -706,12 +712,12 @@ function MatchesTab() {
         <div className="flex items-center gap-4 text-sm text-[var(--color-neutral-500)]">
           <span>
             <strong className="text-[var(--color-foreground)]">{filtered.length}</strong>{" "}
-            match{filtered.length !== 1 ? "es" : ""}
-            {search && ` for "${search}"`}
+            {t("matchCount", { count: filtered.length })}
+            {search && t("matchCountForSearch", { search })}
           </span>
           <span>·</span>
           <span>
-            Avg score:{" "}
+            {t("avgScore")}{" "}
             <strong className="text-[var(--color-foreground)]">
               {(matches.reduce((s, m) => s + m.matchScore, 0) / matches.length).toFixed(1)}
             </strong>
@@ -728,7 +734,7 @@ function MatchesTab() {
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <TrendingUp className="h-10 w-10 text-[var(--color-neutral-400)]" />
             <p className="text-[var(--color-neutral-500)]">
-              {search ? "No matches found for your search" : "No matches yet"}
+              {search ? t("noMatchesSearch") : t("noMatchesYet")}
             </p>
           </CardContent>
         </Card>
@@ -748,6 +754,7 @@ function MatchesTab() {
 
 
 function AuditLogsTab() {
+  const t = useTranslations("admin.auditLogs");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
@@ -777,13 +784,13 @@ function AuditLogsTab() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
             <Input
-              placeholder="Search by user, action, or resource…"
+              placeholder={t("auditSearchPlaceholder")}
               className="pl-9"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
-          <Button type="submit" variant="outline">Search</Button>
+          <Button type="submit" variant="outline">{t("searchButton")}</Button>
         </form>
         <ExportMenu
           disabled={isLoading || logs.length === 0}
@@ -800,7 +807,7 @@ function AuditLogsTab() {
         <Card className="border-dashed border-2 border-[var(--color-border)]">
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <BookOpen className="h-10 w-10 text-[var(--color-neutral-400)]" />
-            <p className="text-[var(--color-neutral-500)]">No audit logs found</p>
+            <p className="text-[var(--color-neutral-500)]">{t("noAuditLogs")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -820,7 +827,7 @@ function AuditLogsTab() {
                         <span className="text-xs text-[var(--color-neutral-400)]">{log.serviceName}</span>
                       </div>
                       <p className="text-xs text-[var(--color-neutral-500)]">
-                        <span className="font-medium">{log.userEmail ?? "Unknown"}</span>{" "}
+                        <span className="font-medium">{log.userEmail ?? t("unknownUser")}</span>{" "}
                         ({log.userRole}) · {log.affectedResource}
                       </p>
                       {log.details && (
@@ -846,14 +853,15 @@ function AuditLogsTab() {
 type Tab = "matches" | "audit";
 
 export default function AuditLogsPage() {
+  const t = useTranslations("admin.auditLogs");
   const [tab, setTab] = useState<Tab>("matches");
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Audit & Matches</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          View all investor-startup matches and the full system activity trail — exportable as CSV or PDF
+          {t("subtitle")}
         </p>
       </div>
 
@@ -868,7 +876,7 @@ export default function AuditLogsPage() {
           }`}
         >
           <TrendingUp className="h-4 w-4" />
-          Investment Matches
+          {t("tabMatches")}
         </button>
         <button
           onClick={() => setTab("audit")}
@@ -879,7 +887,7 @@ export default function AuditLogsPage() {
           }`}
         >
           <Shield className="h-4 w-4" />
-          Audit Logs
+          {t("tabAudit")}
         </button>
       </div>
 

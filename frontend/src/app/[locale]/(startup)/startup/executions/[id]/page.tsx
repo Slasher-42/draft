@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { startupService } from "@/services/startupService";
 import { matchingService } from "@/services/matchingService";
 import { useAuth } from "@/context/AuthContext";
@@ -24,12 +25,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-const statusConfig = {
-  PENDING: { label: "Pending", icon: Clock, variant: "pending" as const },
-  MATCHED: { label: "Matched", icon: CheckCircle2, variant: "success" as const },
-  REJECTED: { label: "Rejected", icon: XCircle, variant: "destructive" as const },
-};
-
 const companySizeLabels: Record<string, string> = {
   PRE_SEED: "Pre-seed",
   SEED: "Seed",
@@ -42,27 +37,34 @@ export default function ExecutionDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations("startup.executionDetail");
   const [execution, setExecution] = useState<StartupExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [matches, setMatches] = useState<any[]>([]);
 
+  const statusConfig = {
+    PENDING:  { label: t("statusPending"),  icon: Clock,        variant: "pending"     as const },
+    MATCHED:  { label: t("statusMatched"),  icon: CheckCircle2, variant: "success"     as const },
+    REJECTED: { label: t("statusRejected"), icon: XCircle,      variant: "destructive" as const },
+  };
+
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
     try {
       await startupService.withdrawExecution(id as string);
-      toast.success("Execution withdrawn successfully.");
+      toast.success(t("toastWithdrawn"));
       router.push("/startup/executions");
     } catch {
-      toast.error("Failed to withdraw execution. Please try again.");
+      toast.error(t("toastWithdrawFailed"));
     } finally {
       setIsWithdrawing(false);
       setShowConfirm(false);
     }
   };
 
- useEffect(() => {
+  useEffect(() => {
     startupService
       .getExecutionById(id as string)
       .then((res) => {
@@ -98,43 +100,54 @@ export default function ExecutionDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <AlertCircle className="h-10 w-10 text-[var(--color-neutral-400)]" />
-        <p className="text-[var(--color-neutral-500)]">Execution not found.</p>
+        <p className="text-[var(--color-neutral-500)]">{t("executionNotFound")}</p>
         <Button variant="outline" onClick={() => router.back()}>
-          Go Back
+          {t("goBack")}
         </Button>
       </div>
     );
   }
 
- const cfg = statusConfig[execution.status] ?? {
-  label: execution.status ?? "Unknown",
-  icon: Clock,
-  variant: "pending" as const,
-};
-const StatusIcon = cfg.icon;
+  const cfg = statusConfig[execution.status as keyof typeof statusConfig] ?? {
+    label: execution.status ?? "Unknown",
+    icon: Clock,
+    variant: "pending" as const,
+  };
+  const StatusIcon = cfg.icon;
+
+  const detailRows = [
+    { labelKey: "companyStage",  value: companySizeLabels[execution.targetCompanySize] || execution.targetCompanySize },
+    { labelKey: "problemStatement", value: execution.problemStatement },
+    { labelKey: "businessModel",    value: execution.businessModel },
+    { labelKey: "targetMarket",     value: execution.targetMarket },
+    { labelKey: "teamDetails",      value: execution.teamDetails },
+    { labelKey: "annualRevenue",    value: `$${execution.annualRevenue?.toLocaleString()}` },
+    { labelKey: "monthlyBurnRate",  value: `$${execution.monthlyBurnRate?.toLocaleString()}` },
+    { labelKey: "fundingNeeded",    value: `$${execution.fundingNeeded?.toLocaleString()}` },
+    ...(execution.additionalConsiderations
+      ? [{ labelKey: "additionalConsiderations", value: execution.additionalConsiderations }]
+      : []),
+  ] as { labelKey: keyof typeof t extends (key: string) => string ? string : string; value: string }[];
 
   return (
     <div className="space-y-6 max-w-3xl">
-      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-[var(--color-neutral-500)] hover:text-[var(--color-primary)] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to executions
+        {t("backToExecutions")}
       </button>
 
-      {/* Status banner */}
       <Card className="border border-[var(--color-border)]">
         <CardContent className="p-5 flex items-center justify-between">
           <div>
             <p className="text-xs text-[var(--color-neutral-400)] mb-1">
-              Submitted on{" "}
-              {new Date(execution.createdAt).toLocaleDateString("en-US", {
+              {t("submittedOn", { date: new Date(execution.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
-              })}
+              }) })}
             </p>
             <Badge variant={cfg.variant} className="gap-1 text-sm px-3 py-1">
               <StatusIcon className="h-4 w-4" />
@@ -144,14 +157,13 @@ const StatusIcon = cfg.icon;
           {execution.status === "PENDING" && (
             <p className="text-xs text-blue-600 flex items-center gap-1.5 max-w-xs text-right">
               <Clock className="h-4 w-4 flex-shrink-0" />
-              Your execution is under review. You will be notified once a
-              decision is made.
+              {t("pendingMsg")}
             </p>
           )}
           {execution.status === "MATCHED" && (
             <p className="text-xs text-green-600 flex items-center gap-1.5 max-w-xs text-right">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              A potential investor match has been found for your startup.
+              {t("matchedMsg")}
             </p>
           )}
           {execution.status === "REJECTED" && execution.statusReason && (
@@ -163,62 +175,18 @@ const StatusIcon = cfg.icon;
         </CardContent>
       </Card>
 
-      {/* Details */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
-          <CardTitle>Execution Details</CardTitle>
+          <CardTitle>{t("executionDetails")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          {[
-            {
-              label: "Company Stage",
-              value:
-                companySizeLabels[execution.targetCompanySize] ||
-                execution.targetCompanySize,
-            },
-            {
-              label: "Problem Statement",
-              value: execution.problemStatement,
-            },
-            {
-              label: "Business Model",
-              value: execution.businessModel,
-            },
-            {
-              label: "Target Market",
-              value: execution.targetMarket,
-            },
-            {
-              label: "Team Details",
-              value: execution.teamDetails,
-            },
-            {
-              label: "Annual Revenue",
-              value: `$${execution.annualRevenue?.toLocaleString()}`,
-            },
-            {
-              label: "Monthly Burn Rate",
-              value: `$${execution.monthlyBurnRate?.toLocaleString()}`,
-            },
-            {
-              label: "Funding Needed",
-              value: `$${execution.fundingNeeded?.toLocaleString()}`,
-            },
-            ...(execution.additionalConsiderations
-              ? [
-                  {
-                    label: "Additional Considerations",
-                    value: execution.additionalConsiderations,
-                  },
-                ]
-              : []),
-          ].map((item) => (
+          {detailRows.map((item) => (
             <div
-              key={item.label}
+              key={item.labelKey}
               className="border-b border-[var(--color-border)] pb-4 last:border-0 last:pb-0"
             >
               <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
-                {item.label}
+                {t(item.labelKey as any)}
               </p>
               <p className="text-sm text-[var(--color-foreground)] leading-relaxed">
                 {item.value}
@@ -227,12 +195,13 @@ const StatusIcon = cfg.icon;
           ))}
         </CardContent>
       </Card>
+
       {execution.status === "MATCHED" && matches.length > 0 && (
         <Card className="border border-green-200 bg-green-50/30">
           <CardHeader>
             <CardTitle className="text-green-800 flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5" />
-              Investor Match Found
+              {t("investorMatchTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -245,7 +214,7 @@ const StatusIcon = cfg.icon;
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                      Match Score
+                      {t("matchScore")}
                     </span>
                     <span className="text-sm font-bold text-green-700">
                       {match.matchScore?.toFixed(1)} / 100
@@ -253,7 +222,7 @@ const StatusIcon = cfg.icon;
                   </div>
                   <div className="border-t border-green-100 pt-3">
                     <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
-                      Why this match
+                      {t("whyThisMatch")}
                     </p>
                     <p className="text-sm text-[var(--color-foreground)] leading-relaxed">
                       {match.matchReason}
@@ -261,7 +230,7 @@ const StatusIcon = cfg.icon;
                   </div>
                   <div className="border-t border-green-100 pt-3">
                     <p className="text-xs font-medium text-[var(--color-neutral-400)] uppercase tracking-wide mb-1">
-                      Matched On
+                      {t("matchedOn")}
                     </p>
                     <p className="text-sm text-[var(--color-foreground)]">
                       {new Date(match.matchedAt).toLocaleDateString("en-US", {
@@ -277,7 +246,6 @@ const StatusIcon = cfg.icon;
         </Card>
       )}
 
-      {/* Withdraw */}
       {!showConfirm ? (
         <div className="flex justify-end">
           <Button
@@ -286,17 +254,17 @@ const StatusIcon = cfg.icon;
             onClick={() => setShowConfirm(true)}
           >
             <XCircle className="h-4 w-4" />
-            Withdraw Execution
+            {t("withdrawExecution")}
           </Button>
         </div>
       ) : (
         <Card className="border border-red-200 bg-red-50">
           <CardContent className="p-5 space-y-3">
             <p className="text-sm font-semibold text-red-700">
-              Are you sure you want to withdraw this execution?
+              {t("withdrawConfirm")}
             </p>
             <p className="text-xs text-red-500">
-              This action is permanent and cannot be undone. The execution will be deleted from the system.
+              {t("withdrawWarning")}
             </p>
             <div className="flex gap-3">
               <Button
@@ -305,7 +273,7 @@ const StatusIcon = cfg.icon;
                 onClick={() => setShowConfirm(false)}
                 disabled={isWithdrawing}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 size="sm"
@@ -314,9 +282,9 @@ const StatusIcon = cfg.icon;
                 disabled={isWithdrawing}
               >
                 {isWithdrawing ? (
-                  <><Loader2 className="h-3 w-3 animate-spin" />Withdrawing…</>
+                  <><Loader2 className="h-3 w-3 animate-spin" />{t("withdrawing")}</>
                 ) : (
-                  "Yes, Withdraw"
+                  t("yesWithdraw")
                 )}
               </Button>
             </div>

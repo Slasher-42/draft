@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/userService";
 import { User } from "@/types/user";
@@ -8,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ShieldCheck, Mail } from "lucide-react";
 
 export default function AdminEvaluatorsPage() {
+  const t = useTranslations("admin.evaluators");
+  const tCommon = useTranslations("common");
   const { data: evaluators = [], isLoading } = useQuery<User[]>({
     queryKey: ["admin-evaluators"],
     queryFn: async () => {
@@ -20,10 +23,10 @@ export default function AdminEvaluatorsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          Evaluator Management
+          {t("title")}
         </h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          View and manage evaluator accounts and assignments
+          {t("subtitle")}
         </p>
       </div>
 
@@ -36,10 +39,10 @@ export default function AdminEvaluatorsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <ShieldCheck className="h-10 w-10 text-[var(--color-neutral-400)]" />
             <p className="text-[var(--color-neutral-500)]">
-              No evaluators found
+              {t("noEvaluators")}
             </p>
             <p className="text-xs text-[var(--color-neutral-400)]">
-              Create evaluator accounts from the User Management page
+              {t("noEvaluatorsHint")}
             </p>
           </CardContent>
         </Card>
@@ -64,7 +67,7 @@ export default function AdminEvaluatorsPage() {
                         variant={(ev.enabled ?? ev.isActive) ? "success" : "destructive"}
                         className="text-xs"
                       >
-                        {(ev.enabled ?? ev.isActive) ? "Active" : "Inactive"}
+                        {(ev.enabled ?? ev.isActive) ? tCommon("status.active") : tCommon("status.inactive")}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -77,12 +80,12 @@ export default function AdminEvaluatorsPage() {
                       <div className="flex gap-3 mt-1">
                         {ev.evaluatorProfile.department && (
                           <span className="text-xs text-[var(--color-neutral-500)]">
-                            Dept: {ev.evaluatorProfile.department}
+                            {t("dept")}: {ev.evaluatorProfile.department}
                           </span>
                         )}
                         {ev.evaluatorProfile.specialization && (
                           <span className="text-xs text-[var(--color-neutral-500)]">
-                            Spec: {ev.evaluatorProfile.specialization}
+                            {t("spec")}: {ev.evaluatorProfile.specialization}
                           </span>
                         )}
                       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -12,6 +13,7 @@ import {
 
 export default function StartupCollaboratorsPage() {
   const { user } = useAuth();
+  const t = useTranslations("startup.collaborators");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const { data, isLoading } = useQuery({
@@ -20,7 +22,6 @@ export default function StartupCollaboratorsPage() {
       const res = await matchingService.getMatchesForStartup(Number(user!.id));
       const rawMatches: any[] = res.data.data ?? [];
 
-      // Deduplicate profiles — fetch once per unique investor
       const uniqueInvestorIds = [...new Set(rawMatches.map((m) => m.investorUserId))];
       const profileMap: Record<number, any> = {};
       await Promise.allSettled(
@@ -41,7 +42,6 @@ export default function StartupCollaboratorsPage() {
   const matches  = data?.matches  ?? [];
   const profiles = data?.profiles ?? {};
 
-  // Group all matches by investorUserId → one entry per unique investor
   const collaborators = useMemo(() => {
     const map: Record<number, any[]> = {};
     matches.forEach((m: any) => {
@@ -72,7 +72,6 @@ export default function StartupCollaboratorsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary-50)] to-transparent rounded-2xl -z-10" />
         <div className="p-6">
@@ -81,29 +80,30 @@ export default function StartupCollaboratorsPage() {
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-              My Collaborators
+              {t("title")}
             </h2>
             {collaborators.length > 0 && (
               <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                {collaborators.length} investor{collaborators.length !== 1 ? "s" : ""}
+                {collaborators.length !== 1
+                  ? t("investorCountPlural", { count: collaborators.length })
+                  : t("investorCount", { count: collaborators.length })}
               </span>
             )}
           </div>
           <p className="text-sm text-[var(--color-neutral-500)] ml-12">
-            Investors matched to your startup
+            {t("subtitle")}
           </p>
         </div>
       </div>
 
-      {/* Empty state */}
       {collaborators.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="h-20 w-20 rounded-full bg-[var(--color-primary-50)] flex items-center justify-center">
             <Users className="h-9 w-9 text-[var(--color-primary-300)]" />
           </div>
-          <p className="text-lg font-semibold text-[var(--color-primary-800)]">No collaborators yet</p>
+          <p className="text-lg font-semibold text-[var(--color-primary-800)]">{t("noCollaborators")}</p>
           <p className="text-sm text-[var(--color-neutral-400)] text-center max-w-xs">
-            Once an investor matches your startup, their profile will appear here.
+            {t("noCollaboratorsDesc")}
           </p>
         </div>
       ) : (
@@ -120,7 +120,6 @@ export default function StartupCollaboratorsPage() {
                 key={investorUserId}
                 className="group relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
-                {/* Banner */}
                 <div className="h-24 bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-400 relative overflow-hidden flex-shrink-0">
                   <div className="absolute inset-0 opacity-20"
                     style={{
@@ -128,12 +127,10 @@ export default function StartupCollaboratorsPage() {
                       backgroundSize: "30px 30px",
                     }}
                   />
-                  {/* Best score badge */}
                   <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-2.5 py-1">
                     <Star className="h-3 w-3 text-yellow-300 fill-yellow-300" />
                     <span className="text-xs font-bold text-white">{bestScore.toFixed(0)}</span>
                   </div>
-                  {/* Multiple matches badge */}
                   {hasMany && (
                     <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1">
                       <span className="text-[10px] font-bold text-white">{investorMatches.length} matches</span>
@@ -142,7 +139,6 @@ export default function StartupCollaboratorsPage() {
                 </div>
 
                 <div className="px-5 pb-5 flex flex-col flex-1">
-                  {/* Avatar + badge */}
                   <div className="-mt-8 mb-4 flex items-end justify-between">
                     <div className="relative">
                       {profile?.profilePictureUrl ? (
@@ -160,11 +156,10 @@ export default function StartupCollaboratorsPage() {
                     </div>
                     <div className="mb-1 flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200">
                       <TrendingUp className="h-3 w-3 text-emerald-600" />
-                      <span className="text-xs font-semibold text-emerald-700">Investor</span>
+                      <span className="text-xs font-semibold text-emerald-700">{t("investorBadge")}</span>
                     </div>
                   </div>
 
-                  {/* Name */}
                   <h3 className="font-bold text-[var(--color-primary-800)] text-base leading-tight mb-0.5">
                     {profile?.fullName ?? "Investor"}
                   </h3>
@@ -176,11 +171,10 @@ export default function StartupCollaboratorsPage() {
                     </div>
                   )}
 
-                  {/* Profile details */}
                   <div className="space-y-2 mb-4">
                     {ip?.preferredIndustry && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Focus</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("focusLabel")}</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)] bg-[var(--color-neutral-100)] px-2 py-0.5 rounded-full">
                           {ip.preferredIndustry}
                         </span>
@@ -188,7 +182,7 @@ export default function StartupCollaboratorsPage() {
                     )}
                     {ip?.investmentBudget && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Budget</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("budgetLabel")}</span>
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-emerald-600" />
                           <span className="text-xs font-medium text-[var(--color-foreground)]">
@@ -199,7 +193,7 @@ export default function StartupCollaboratorsPage() {
                     )}
                     {(ip?.country || ip?.city) && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Location</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("locationLabel")}</span>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3 text-[var(--color-neutral-400)]" />
                           <span className="text-xs font-medium text-[var(--color-foreground)]">
@@ -210,27 +204,24 @@ export default function StartupCollaboratorsPage() {
                     )}
                     {profile?.phoneNumber && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-neutral-400)]">Phone</span>
+                        <span className="text-xs text-[var(--color-neutral-400)]">{t("phoneLabel")}</span>
                         <span className="text-xs font-medium text-[var(--color-foreground)]">{profile.phoneNumber}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* ── Matches section ──────────────────────────────── */}
                   <div className="mt-auto pt-3 border-t border-[var(--color-border)]">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-[var(--color-neutral-500)] uppercase tracking-wider">
-                        Matched Executions
+                        {t("matchedExecutions")}
                       </p>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                         {investorMatches.length}×
                       </span>
                     </div>
 
-                    {/* Always show the best match */}
                     <MatchRow match={investorMatches[0]} accentColor="emerald" />
 
-                    {/* Collapsible additional matches */}
                     {hasMany && (
                       <>
                         {isOpen && investorMatches.slice(1).map((m: any) => (
@@ -241,9 +232,13 @@ export default function StartupCollaboratorsPage() {
                           className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors py-1 rounded-lg hover:bg-emerald-50"
                         >
                           {isOpen ? (
-                            <><ChevronUp className="h-3 w-3" /> Hide</>
+                            <><ChevronUp className="h-3 w-3" /> {t("hide")}</>
                           ) : (
-                            <><ChevronDown className="h-3 w-3" /> {investorMatches.length - 1} more match{investorMatches.length - 1 !== 1 ? "es" : ""}</>
+                            <><ChevronDown className="h-3 w-3" />
+                              {investorMatches.length - 1 !== 1
+                                ? t("moreMatchesPlural", { count: investorMatches.length - 1 })
+                                : t("moreMatches", { count: investorMatches.length - 1 })}
+                            </>
                           )}
                         </button>
                       </>
@@ -259,7 +254,6 @@ export default function StartupCollaboratorsPage() {
   );
 }
 
-/* ── Reusable match row ──────────────────────────────────────────────────── */
 function MatchRow({ match, accentColor }: { match: any; accentColor: "emerald" | "blue" }) {
   const isEmerald = accentColor === "emerald";
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { adminService } from "@/services/adminService";
@@ -30,6 +31,7 @@ import {
 } from "recharts";
 
 export default function AdminDashboardPage() {
+  const t = useTranslations("admin.dashboard");
   const { data: analytics, isLoading, isError: error } = useQuery<AnalyticsData>({
     queryKey: ["admin-dashboard"],
     queryFn: async () => {
@@ -49,10 +51,9 @@ export default function AdminDashboardPage() {
   if (error || !analytics) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <p className="text-sm text-red-500 font-medium">Failed to load dashboard data.</p>
+        <p className="text-sm text-red-500 font-medium">{t("errorTitle")}</p>
         <p className="text-xs text-[var(--color-neutral-400)]">
-          The analytics endpoint <code>/api/admin/analytics</code> is not available yet.
-          Please implement it in your backend.
+          {t("errorEndpointPrefix")} <code>/api/admin/analytics</code> {t("errorEndpointSuffix")}
         </p>
       </div>
     );
@@ -61,17 +62,17 @@ export default function AdminDashboardPage() {
   const pieData = analytics
     ? [
         {
-          name: "Highly Ready",
+          name: t("classification.highlyReady"),
           value: analytics.classificationDistribution.highlyReady,
           color: "#2F72A5",
         },
         {
-          name: "Moderately Ready",
+          name: t("classification.moderatelyReady"),
           value: analytics.classificationDistribution.moderatelyReady,
           color: "#F59E0B",
         },
         {
-          name: "Not Ready",
+          name: t("classification.notReady"),
           value: analytics.classificationDistribution.notReady,
           color: "#EF4444",
         },
@@ -84,16 +85,16 @@ export default function AdminDashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-            Admin Dashboard
+            {t("title")}
           </h2>
           <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-            System overview and analytics
+            {t("subtitle")}
           </p>
         </div>
         <Link href="/admin/settings">
           <Button variant="outline" className="gap-2">
             <BarChart2 className="h-4 w-4" />
-            System Settings
+            {t("systemSettings")}
           </Button>
         </Link>
       </div>
@@ -102,7 +103,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: "Total Executions",
+            label: t("totalExecutions"),
             value: analytics?.totalExecutions ?? 0,
             icon: ClipboardList,
             bgClass: "stat-bg-blue",
@@ -111,7 +112,7 @@ export default function AdminDashboardPage() {
             iconShadow: "rgba(59,130,246,0.35)",
           },
           {
-            label: "Approved",
+            label: t("approved"),
             value: analytics?.totalApproved ?? 0,
             icon: CheckCircle2,
             bgClass: "stat-bg-green",
@@ -120,7 +121,7 @@ export default function AdminDashboardPage() {
             iconShadow: "rgba(16,185,129,0.35)",
           },
           {
-            label: "Matched",
+            label: t("matched"),
             value: analytics?.totalMatched ?? 0,
             icon: TrendingUp,
             bgClass: "stat-bg-teal",
@@ -129,7 +130,7 @@ export default function AdminDashboardPage() {
             iconShadow: "rgba(20,184,166,0.35)",
           },
           {
-            label: "Pending",
+            label: t("pending"),
             value: analytics?.totalPending ?? 0,
             icon: Clock,
             bgClass: "stat-bg-amber",
@@ -162,7 +163,7 @@ export default function AdminDashboardPage() {
         {/* Execution trend */}
         <Card className="border border-[var(--color-border)]">
           <CardHeader>
-            <CardTitle className="text-base">Execution Trend</CardTitle>
+            <CardTitle className="text-base">{t("executionTrend")}</CardTitle>
           </CardHeader>
           <CardContent>
             {analytics?.executionTrend &&
@@ -196,7 +197,7 @@ export default function AdminDashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[200px] flex items-center justify-center text-sm text-[var(--color-neutral-400)]">
-                No data available
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -206,7 +207,7 @@ export default function AdminDashboardPage() {
         <Card className="border border-[var(--color-border)]">
           <CardHeader>
             <CardTitle className="text-base">
-              Readiness Classification
+              {t("readinessClassification")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -251,7 +252,7 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="h-[160px] flex items-center justify-center text-sm text-[var(--color-neutral-400)]">
-                No data available
+                {t("noData")}
               </div>
             )}
           </CardContent>
@@ -262,8 +263,8 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
-            label: "Manage Users",
-            desc: "View, activate or deactivate user accounts",
+            label: t("manageUsers"),
+            desc: t("manageUsersDesc"),
             href: "/admin/users",
             icon: Users,
             bgClass: "stat-bg-blue",
@@ -271,8 +272,8 @@ export default function AdminDashboardPage() {
             iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
           },
           {
-            label: "Audit Logs",
-            desc: "Full system activity trail",
+            label: t("auditLogs"),
+            desc: t("auditLogsDesc"),
             href: "/admin/audit-logs",
             icon: ClipboardList,
             bgClass: "stat-bg-violet",
@@ -280,8 +281,8 @@ export default function AdminDashboardPage() {
             iconBg: "linear-gradient(135deg,#7C3AED,#8B5CF6)",
           },
           {
-            label: "All Executions",
-            desc: "View all startup and investor executions",
+            label: t("allExecutions"),
+            desc: t("allExecutionsDesc"),
             href: "/admin/executions",
             icon: BarChart2,
             bgClass: "stat-bg-teal",

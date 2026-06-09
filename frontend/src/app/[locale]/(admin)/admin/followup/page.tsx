@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { followupService } from "@/services/followupService";
@@ -29,23 +30,24 @@ import {
 const TABS = ["Matches", "Meetups", "Contracts"] as const;
 type Tab = (typeof TABS)[number];
 
-const meetupStatusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  SCHEDULED: { label: "Scheduled", color: "text-blue-600 bg-blue-50", icon: Calendar },
-  IN_PROGRESS: { label: "In Progress", color: "text-amber-600 bg-amber-50", icon: Play },
-  COMPLETED: { label: "Completed", color: "text-green-600 bg-green-50", icon: CheckCircle2 },
-  CANCELLED: { label: "Cancelled", color: "text-red-600 bg-red-50", icon: XCircle },
+const meetupStatusColors: Record<string, { color: string; icon: React.ElementType }> = {
+  SCHEDULED:   { color: "text-blue-600 bg-blue-50", icon: Calendar },
+  IN_PROGRESS: { color: "text-amber-600 bg-amber-50", icon: Play },
+  COMPLETED:   { color: "text-green-600 bg-green-50", icon: CheckCircle2 },
+  CANCELLED:   { color: "text-red-600 bg-red-50", icon: XCircle },
 };
 
-const contractStatusConfig: Record<string, { label: string; color: string }> = {
-  PENDING_SIGNATURES: { label: "Pending Signatures", color: "text-amber-600 bg-amber-50" },
-  INVESTOR_SIGNED: { label: "Investor Signed", color: "text-blue-600 bg-blue-50" },
-  STARTUP_SIGNED: { label: "Startup Signed", color: "text-indigo-600 bg-indigo-50" },
-  BOTH_SIGNED: { label: "Both Signed", color: "text-purple-600 bg-purple-50" },
-  VALIDATED: { label: "Validated", color: "text-green-600 bg-green-50" },
-  REJECTED: { label: "Rejected", color: "text-red-600 bg-red-50" },
+const contractStatusColors: Record<string, string> = {
+  PENDING_SIGNATURES: "text-amber-600 bg-amber-50",
+  INVESTOR_SIGNED:    "text-blue-600 bg-blue-50",
+  STARTUP_SIGNED:     "text-indigo-600 bg-indigo-50",
+  BOTH_SIGNED:        "text-purple-600 bg-purple-50",
+  VALIDATED:          "text-green-600 bg-green-50",
+  REJECTED:           "text-red-600 bg-red-50",
 };
 
 export default function AdminFollowUpPage() {
+  const t = useTranslations("admin.followup");
   const [activeTab, setActiveTab] = useState<Tab>("Matches");
   const [matches, setMatches] = useState<any[]>([]);
   const [meetups, setMeetups] = useState<Meetup[]>([]);
@@ -97,7 +99,7 @@ export default function AdminFollowUpPage() {
         setUserNames(names);
         return { matchData, meetupData, contractData, names };
       } catch {
-        toast.error("Failed to load follow-up data");
+        toast.error(t("toastLoadFailed"));
         throw new Error("Failed to load follow-up data");
       }
     },
@@ -112,11 +114,11 @@ export default function AdminFollowUpPage() {
         ...scheduleForm,
       });
       setMeetups((prev) => [...prev, res.data.data]);
-      toast.success("Meetup scheduled successfully");
+      toast.success(t("toastMeetupScheduled"));
       setSchedulingMatchId(null);
       setScheduleForm(null);
     } catch {
-      toast.error("Failed to schedule meetup");
+      toast.error(t("toastMeetupScheduleFailed"));
     }
   };
 
@@ -125,54 +127,54 @@ export default function AdminFollowUpPage() {
     try {
       const res = await followupService.updateMeetupStatus(meetupId, { status });
       setMeetups((prev) => prev.map((m) => (m.id === meetupId ? res.data.data : m)));
-      toast.success("Status updated");
+      toast.success(t("toastStatusUpdated"));
     } catch {
-      toast.error("Failed to update status");
+      toast.error(t("toastStatusUpdateFailed"));
     } finally {
       setUpdatingStatusId(null);
     }
   };
 
   const handleCreateContract = async (meetupId: number) => {
-    if (!contractDetails.trim()) { toast.error("Contract details are required"); return; }
+    if (!contractDetails.trim()) { toast.error(t("toastContractDetailsRequired")); return; }
     try {
       const res = await followupService.createContract({ meetupId, contractDetails });
       setContracts((prev) => [...prev, res.data.data]);
-      toast.success("Contract created");
+      toast.success(t("toastContractCreated"));
       setCreatingForMeetupId(null);
       setContractDetails("");
     } catch {
-      toast.error("Failed to create contract");
+      toast.error(t("toastContractCreateFailed"));
     }
   };
 
   const handleValidate = async (contractId: number) => {
-    if (!adminSig.trim()) { toast.error("Your signature is required"); return; }
+    if (!adminSig.trim()) { toast.error(t("toastSignatureRequired")); return; }
     try {
       const res = await followupService.validateContract(contractId, adminSig);
       setContracts((prev) => prev.map((c) => (c.id === contractId ? res.data.data : c)));
-      toast.success("Contract validated");
+      toast.success(t("toastContractValidated"));
       setValidatingId(null);
       setAdminSig("");
     } catch {
-      toast.error("Failed to validate contract");
+      toast.error(t("toastContractValidateFailed"));
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Follow Up</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Manage meetups, contracts, and investment outcomes
+          {t("subtitle")}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Matches", value: matches.length, icon: Users, bg: "bg-[var(--color-primary-50)]", color: "text-[var(--color-primary)]" },
-          { label: "Meetups", value: meetups.length, icon: Video, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "Contracts", value: contracts.length, icon: FileText, bg: "bg-purple-50", color: "text-purple-600" },
+          { label: t("statTotalMatches"), value: matches.length, icon: Users, bg: "bg-[var(--color-primary-50)]", color: "text-[var(--color-primary)]" },
+          { label: t("statMeetups"), value: meetups.length, icon: Video, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: t("statContracts"), value: contracts.length, icon: FileText, bg: "bg-purple-50", color: "text-purple-600" },
         ].map((s) => (
           <Card key={s.label} className="border border-[var(--color-border)]">
             <CardContent className="p-4 flex items-center gap-4">
@@ -199,7 +201,7 @@ export default function AdminFollowUpPage() {
                 : "border-transparent text-[var(--color-neutral-500)] hover:text-[var(--color-primary-800)]"
             }`}
           >
-            {tab}
+            {tab === "Matches" ? t("tabMatches") : tab === "Meetups" ? t("tabMeetups") : t("tabContracts")}
           </button>
         ))}
       </div>
@@ -213,7 +215,7 @@ export default function AdminFollowUpPage() {
           {activeTab === "Matches" && (
             <div className="space-y-3">
               {matches.length === 0 ? (
-                <EmptyState icon={Handshake} title="No matches yet" desc="Matches will appear here once the algorithm runs" />
+                <EmptyState icon={Handshake} title={t("noMatches")} desc={t("noMatchesDesc")} />
               ) : (
                 matches.map((m) => (
                   <Card key={m.id} className="border border-[var(--color-border)]">
@@ -221,9 +223,9 @@ export default function AdminFollowUpPage() {
                       <div className="flex items-center justify-between gap-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-[var(--color-primary-800)]">Match #{m.id}</span>
+                            <span className="text-xs font-semibold text-[var(--color-primary-800)]">{t("matchId", { id: m.id })}</span>
                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">
-                              {Math.round((m.matchScore ?? 0) * 100)}% match
+                              {t("matchScore", { score: Math.round((m.matchScore ?? 0) * 100) })}
                             </span>
                           </div>
                           <p className="text-sm text-[var(--color-neutral-600)]">
@@ -244,14 +246,14 @@ export default function AdminFollowUpPage() {
                           }}
                         >
                           <Video className="h-4 w-4" />
-                          Schedule Meetup
+                          {t("scheduleMeetupBtn")}
                         </Button>
                       </div>
 
                       {schedulingMatchId === m.id && scheduleForm && (
                         <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-3">
                           <p className="text-sm font-medium text-[var(--color-primary-800)]">
-                            Schedule Meetup — {userNames[m.investorUserId] ?? `Investor #${m.investorUserId}`} &amp; {userNames[m.startupUserId] ?? `Startup #${m.startupUserId}`}
+                            {t("scheduleMeetupTitle")} — {userNames[m.investorUserId] ?? `Investor #${m.investorUserId}`} &amp; {userNames[m.startupUserId] ?? `Startup #${m.startupUserId}`}
                           </p>
                           <input
                             type="datetime-local"
@@ -260,15 +262,15 @@ export default function AdminFollowUpPage() {
                             className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                           />
                           <textarea
-                            placeholder="Admin notes (optional)"
+                            placeholder={t("adminNotesPlaceholder")}
                             rows={2}
                             value={scheduleForm.adminNotes}
                             onChange={(e) => setScheduleForm({ ...scheduleForm, adminNotes: e.target.value })}
                             className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                           />
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={handleSchedule} disabled={!scheduleForm.scheduledAt}>Confirm</Button>
-                            <Button size="sm" variant="outline" onClick={() => { setSchedulingMatchId(null); setScheduleForm(null); }}>Cancel</Button>
+                            <Button size="sm" onClick={handleSchedule} disabled={!scheduleForm.scheduledAt}>{t("confirm")}</Button>
+                            <Button size="sm" variant="outline" onClick={() => { setSchedulingMatchId(null); setScheduleForm(null); }}>{t("cancel")}</Button>
                           </div>
                         </div>
                       )}
@@ -282,11 +284,18 @@ export default function AdminFollowUpPage() {
           {activeTab === "Meetups" && (
             <div className="space-y-3">
               {meetups.length === 0 ? (
-                <EmptyState icon={Video} title="No meetups scheduled" desc="Schedule meetups from the Matches tab" />
+                <EmptyState icon={Video} title={t("noMeetups")} desc={t("noMeetupsDesc")} />
               ) : (
                 meetups.map((m) => {
-                  const cfg = meetupStatusConfig[m.status] ?? meetupStatusConfig.SCHEDULED;
+                  const cfg = meetupStatusColors[m.status] ?? meetupStatusColors.SCHEDULED;
                   const StatusIcon = cfg.icon;
+                  const meetupStatusLabels: Record<string, string> = {
+                    SCHEDULED: t("meetupStatus.scheduled"),
+                    IN_PROGRESS: t("meetupStatus.inProgress"),
+                    COMPLETED: t("meetupStatus.completed"),
+                    CANCELLED: t("meetupStatus.cancelled"),
+                  };
+                  const cfgLabel = meetupStatusLabels[m.status] ?? m.status;
                   return (
                     <Card key={m.id} className="border border-[var(--color-border)]">
                       <CardContent className="p-5 space-y-3">
@@ -294,9 +303,9 @@ export default function AdminFollowUpPage() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full ${cfg.color}`}>
-                                <StatusIcon className="h-3 w-3" />{cfg.label}
+                                <StatusIcon className="h-3 w-3" />{cfgLabel}
                               </span>
-                              <span className="text-xs text-[var(--color-neutral-400)]">Room: {m.roomId.slice(0, 8)}…</span>
+                              <span className="text-xs text-[var(--color-neutral-400)]">{t("roomLabel", { id: m.roomId.slice(0, 8) })}</span>
                             </div>
                             <p className="text-sm text-[var(--color-neutral-600)]">
                               <span className="font-medium">{userNames[m.investorUserId] ?? `#${m.investorUserId}`}</span>
@@ -313,7 +322,7 @@ export default function AdminFollowUpPage() {
                                 onClick={() => handleUpdateStatus(m.id, "IN_PROGRESS")}
                                 disabled={updatingStatusId === m.id}>
                                 {updatingStatusId === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-                                Start
+                                {t("start")}
                               </Button>
                             )}
                             {m.status === "IN_PROGRESS" && (
@@ -321,20 +330,20 @@ export default function AdminFollowUpPage() {
                                 onClick={() => handleUpdateStatus(m.id, "COMPLETED")}
                                 disabled={updatingStatusId === m.id}>
                                 {updatingStatusId === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                                Complete
+                                {t("complete")}
                               </Button>
                             )}
                             {(m.status === "SCHEDULED" || m.status === "IN_PROGRESS") && (
                               <Button size="sm" variant="outline" className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50"
                                 onClick={() => handleUpdateStatus(m.id, "CANCELLED")}
                                 disabled={updatingStatusId === m.id}>
-                                <XCircle className="h-3.5 w-3.5" />Cancel
+                                <XCircle className="h-3.5 w-3.5" />{t("cancel")}
                               </Button>
                             )}
                             {m.status === "COMPLETED" && (
                               <Button size="sm" className="gap-1.5"
                                 onClick={() => setCreatingForMeetupId(m.id)}>
-                                <FileText className="h-3.5 w-3.5" />Contract Follow-up
+                                <FileText className="h-3.5 w-3.5" />{t("contractFollowup")}
                               </Button>
                             )}
                           </div>
@@ -342,17 +351,17 @@ export default function AdminFollowUpPage() {
 
                         {creatingForMeetupId === m.id && (
                           <div className="pt-3 border-t border-[var(--color-border)] space-y-3">
-                            <p className="text-sm font-medium text-[var(--color-primary-800)]">Create Contract</p>
+                            <p className="text-sm font-medium text-[var(--color-primary-800)]">{t("createContractTitle")}</p>
                             <textarea
-                              placeholder="Contract details and terms..."
+                              placeholder={t("contractDetailsPlaceholder")}
                               rows={4}
                               value={contractDetails}
                               onChange={(e) => setContractDetails(e.target.value)}
                               className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                             />
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleCreateContract(m.id)}>Create</Button>
-                              <Button size="sm" variant="outline" onClick={() => { setCreatingForMeetupId(null); setContractDetails(""); }}>Cancel</Button>
+                              <Button size="sm" onClick={() => handleCreateContract(m.id)}>{t("create")}</Button>
+                              <Button size="sm" variant="outline" onClick={() => { setCreatingForMeetupId(null); setContractDetails(""); }}>{t("cancel")}</Button>
                             </div>
                           </div>
                         )}
@@ -367,18 +376,27 @@ export default function AdminFollowUpPage() {
           {activeTab === "Contracts" && (
             <div className="space-y-3">
               {contracts.length === 0 ? (
-                <EmptyState icon={FileText} title="No contracts yet" desc="Create contracts from the Meetups tab after a meetup completes" />
+                <EmptyState icon={FileText} title={t("noContracts")} desc={t("noContractsDesc")} />
               ) : (
                 contracts.map((c) => {
-                  const cfg = contractStatusConfig[c.status] ?? contractStatusConfig.PENDING_SIGNATURES;
+                  const contractStatusLabels: Record<string, string> = {
+                    PENDING_SIGNATURES: t("contractStatus.pendingSignatures"),
+                    INVESTOR_SIGNED: t("contractStatus.investorSigned"),
+                    STARTUP_SIGNED: t("contractStatus.startupSigned"),
+                    BOTH_SIGNED: t("contractStatus.bothSigned"),
+                    VALIDATED: t("contractStatus.validated"),
+                    REJECTED: t("contractStatus.rejected"),
+                  };
+                  const cfgLabel = contractStatusLabels[c.status] ?? c.status;
+                  const cfgColor = contractStatusColors[c.status] ?? contractStatusColors.PENDING_SIGNATURES;
                   return (
                     <Card key={c.id} className="border border-[var(--color-border)]">
                       <CardContent className="p-5 space-y-3">
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>{cfg.label}</span>
-                              <span className="text-xs text-[var(--color-neutral-400)]">Contract #{c.id}</span>
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfgColor}`}>{cfgLabel}</span>
+                              <span className="text-xs text-[var(--color-neutral-400)]">{t("contractId", { id: c.id })}</span>
                             </div>
                             <p className="text-sm text-[var(--color-neutral-600)]">
                               <span className="font-medium">{userNames[c.investorUserId] ?? `#${c.investorUserId}`}</span>
@@ -386,36 +404,36 @@ export default function AdminFollowUpPage() {
                               <span className="font-medium">{userNames[c.startupUserId] ?? `#${c.startupUserId}`}</span>
                             </p>
                             <div className="flex gap-4 text-xs text-[var(--color-neutral-400)]">
-                              <span>Investor sig: {c.investorSignature ?? "—"}</span>
-                              <span>Startup sig: {c.startupSignature ?? "—"}</span>
+                              <span>{t("investorSig", { val: c.investorSignature ?? "—" })}</span>
+                              <span>{t("startupSig", { val: c.startupSignature ?? "—" })}</span>
                             </div>
                           </div>
                           {c.status === "BOTH_SIGNED" && (
                             <Button size="sm" className="gap-1.5 flex-shrink-0"
                               onClick={() => setValidatingId(c.id)}>
-                              <ShieldCheck className="h-3.5 w-3.5" />Validate
+                              <ShieldCheck className="h-3.5 w-3.5" />{t("validateBtn")}
                             </Button>
                           )}
                           {c.status === "VALIDATED" && (
                             <span className="text-xs text-green-600 flex items-center gap-1 font-medium flex-shrink-0">
-                              <CheckCircle2 className="h-4 w-4" />Validated
+                              <CheckCircle2 className="h-4 w-4" />{t("validatedLabel")}
                             </span>
                           )}
                         </div>
 
                         {validatingId === c.id && (
                           <div className="pt-3 border-t border-[var(--color-border)] space-y-3">
-                            <p className="text-sm font-medium text-[var(--color-primary-800)]">Your Validation Signature</p>
+                            <p className="text-sm font-medium text-[var(--color-primary-800)]">{t("validationSigTitle")}</p>
                             <input
                               type="text"
-                              placeholder="Enter your full name as signature"
+                              placeholder={t("sigPlaceholder")}
                               value={adminSig}
                               onChange={(e) => setAdminSig(e.target.value)}
                               className="w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                             />
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleValidate(c.id)}>Validate Contract</Button>
-                              <Button size="sm" variant="outline" onClick={() => { setValidatingId(null); setAdminSig(""); }}>Cancel</Button>
+                              <Button size="sm" onClick={() => handleValidate(c.id)}>{t("validateContractBtn")}</Button>
+                              <Button size="sm" variant="outline" onClick={() => { setValidatingId(null); setAdminSig(""); }}>{t("cancel")}</Button>
                             </div>
                           </div>
                         )}

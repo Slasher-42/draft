@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -23,14 +25,18 @@ interface SystemConfig {
 
 const INTERVAL_UNITS = ["MINUTES", "HOURS", "DAYS"];
 
-const WEIGHT_FIELDS: { key: keyof SystemConfig; label: string; desc: string }[] = [
-  { key: "weightFinancialHealth",   label: "Financial Health",    desc: "Revenue, burn rate, financial projections" },
-  { key: "weightTeamStrength",      label: "Team Strength",       desc: "Founder experience, team composition" },
-  { key: "weightMarketPotential",   label: "Market Potential",    desc: "Market size, growth opportunity" },
-  { key: "weightBusinessViability", label: "Business Viability",  desc: "Business model clarity, competitive advantage" },
-];
+function getWeightFields(t: ReturnType<typeof useTranslations<"admin.settings">>) {
+  return [
+    { key: "weightFinancialHealth"   as const, label: t("weightFinancialHealth"),   desc: t("weightFinancialHealthDesc") },
+    { key: "weightTeamStrength"      as const, label: t("weightTeamStrength"),       desc: t("weightTeamStrengthDesc") },
+    { key: "weightMarketPotential"   as const, label: t("weightMarketPotential"),    desc: t("weightMarketPotentialDesc") },
+    { key: "weightBusinessViability" as const, label: t("weightBusinessViability"),  desc: t("weightBusinessViabilityDesc") },
+  ] as { key: keyof SystemConfig; label: string; desc: string }[];
+}
 
 export default function AdminSettingsPage() {
+  const t = useTranslations("admin.settings");
+  const locale = useLocale();
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,9 +76,9 @@ export default function AdminSettingsPage() {
         weightBusinessViability:  config.weightBusinessViability,
         minimumPassingScore:      config.minimumPassingScore,
       });
-      toast.success("System configuration saved successfully.");
+      toast.success(t("toastSaved"));
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? "Failed to save configuration.";
+      const msg = err?.response?.data?.message ?? t("toastSaveFailed");
       toast.error(msg);
     } finally {
       setIsSaving(false);
@@ -82,11 +88,11 @@ export default function AdminSettingsPage() {
   const handleFileSelect = (file: File) => {
     const validTypes = ["video/mp4", "video/webm", "video/ogg"];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please upload an MP4, WebM, or OGG video file.");
+      toast.error(t("toastInvalidVideoType"));
       return;
     }
     if (file.size > 150 * 1024 * 1024) {
-      toast.error("Video must be smaller than 150 MB.");
+      toast.error(t("toastVideoTooLarge"));
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -109,9 +115,9 @@ export default function AdminSettingsPage() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      toast.success("Hero video uploaded successfully.");
+      toast.success(t("toastVideoUploaded"));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed to upload video.");
+      toast.error(err?.response?.data?.message ?? t("toastVideoUploadFailed"));
     } finally {
       setIsUploadingVideo(false);
     }
@@ -122,9 +128,9 @@ export default function AdminSettingsPage() {
     try {
       await api.delete("/api/config/hero-video");
       setConfig((prev) => prev ? { ...prev, heroVideoUrl: null } : prev);
-      toast.success("Hero video removed.");
+      toast.success(t("toastVideoRemoved"));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed to remove video.");
+      toast.error(err?.response?.data?.message ?? t("toastVideoRemoveFailed"));
     } finally {
       setIsRemovingVideo(false);
     }
@@ -153,17 +159,19 @@ export default function AdminSettingsPage() {
   if (!config) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-[var(--color-neutral-500)]">Failed to load configuration.</p>
+        <p className="text-sm text-[var(--color-neutral-500)]">{t("failedToLoad")}</p>
       </div>
     );
   }
 
+  const weightFields = getWeightFields(t);
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">System Settings</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Configure system-wide rules for assessment and notifications
+          {t("subtitle")}
         </p>
       </div>
 
@@ -172,18 +180,17 @@ export default function AdminSettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Video className="h-5 w-5 text-[var(--color-secondary)]" />
-            Hero Background Video
+            {t("heroVideoTitle")}
           </CardTitle>
           <CardDescription>
-            Upload a video that plays as the background on all authentication pages.
-            Recommended: MP4, 1920×1080, under 50 MB, loopable.
+            {t("heroVideoDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
 
           {config.heroVideoUrl && !selectedFile && (
             <div className="space-y-3">
-              <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">Current Video</p>
+              <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">{t("currentVideo")}</p>
               <div className="relative rounded-xl overflow-hidden border border-[var(--color-border)] bg-black aspect-video">
                 <video
                   key={config.heroVideoUrl}
@@ -208,7 +215,7 @@ export default function AdminSettingsPage() {
                 disabled={isRemovingVideo}
               >
                 {isRemovingVideo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Remove Video
+                {t("removeVideo")}
               </Button>
             </div>
           )}
@@ -227,10 +234,10 @@ export default function AdminSettingsPage() {
             >
               <Upload className="h-8 w-8 mx-auto mb-3 text-[var(--color-neutral-400)]" />
               <p className="text-sm font-medium text-[var(--color-neutral-700)]">
-                {config.heroVideoUrl ? "Replace video" : "Upload a background video"}
+                {config.heroVideoUrl ? t("replaceVideo") : t("uploadVideo")}
               </p>
               <p className="text-xs text-[var(--color-neutral-400)] mt-1">
-                Drag & drop or click to browse · MP4, WebM, OGG · Max 150 MB
+                {t("dropOrClick")}
               </p>
               <input
                 ref={fileInputRef}
@@ -245,17 +252,19 @@ export default function AdminSettingsPage() {
           {selectedFile && previewUrl && (
             <div className="space-y-3">
               <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">
-                Preview — {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
+                {t("previewLabel", { name: selectedFile.name, size: (selectedFile.size / 1024 / 1024).toFixed(1) })}
               </p>
               <div className="rounded-xl overflow-hidden border border-[var(--color-primary-200)] bg-black aspect-video">
                 <video src={previewUrl} autoPlay muted loop playsInline className="w-full h-full object-cover" />
               </div>
               <div className="flex gap-2">
                 <Button className="gap-2 flex-1" onClick={handleUploadVideo} disabled={isUploadingVideo}>
-                  {isUploadingVideo ? <><Loader2 className="h-4 w-4 animate-spin" />Uploading…</> : <><Upload className="h-4 w-4" />Upload Video</>}
+                  {isUploadingVideo
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t("uploading")}</>
+                    : <><Upload className="h-4 w-4" />{t("uploadVideoBtn")}</>}
                 </Button>
                 <Button variant="outline" onClick={() => { setSelectedFile(null); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </div>
             </div>
@@ -269,17 +278,16 @@ export default function AdminSettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Clock className="h-5 w-5 text-[var(--color-secondary)]" />
-            Update Interval
+            {t("updateIntervalTitle")}
           </CardTitle>
           <CardDescription>
-            How long after submission before startups and investors receive a status update.
-            This value is shown to users in AI confirmation messages.
+            {t("updateIntervalDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
             <div className="space-y-1.5 flex-1">
-              <Label htmlFor="intervalValue">Value</Label>
+              <Label htmlFor="intervalValue">{t("intervalValueLabel")}</Label>
               <Input
                 id="intervalValue"
                 type="number"
@@ -290,7 +298,7 @@ export default function AdminSettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Unit</Label>
+              <Label>{t("intervalUnitLabel")}</Label>
               <div className="flex gap-2">
                 {INTERVAL_UNITS.map((unit) => (
                   <button
@@ -303,18 +311,14 @@ export default function AdminSettingsPage() {
                         : "bg-white text-[var(--color-neutral-600)] border-[var(--color-border)] hover:border-[var(--color-primary-200)]"
                     }`}
                   >
-                    {unit.charAt(0) + unit.slice(1).toLowerCase()}
+                    {unit === "MINUTES" ? t("unitMinutes") : unit === "HOURS" ? t("unitHours") : t("unitDays")}
                   </button>
                 ))}
               </div>
             </div>
           </div>
           <p className="text-xs text-[var(--color-neutral-400)] mt-3">
-            Current: users will be told{" "}
-            <strong>
-              "{config.updateIntervalValue} {config.updateIntervalUnit.toLowerCase()}"
-            </strong>{" "}
-            in AI confirmation messages.
+            {t("intervalCurrentHint", { value: config.updateIntervalValue, unit: config.updateIntervalUnit.toLowerCase() })}
           </p>
         </CardContent>
       </Card>
@@ -324,15 +328,14 @@ export default function AdminSettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <BarChart2 className="h-5 w-5 text-[var(--color-secondary)]" />
-            Scoring Dimension Weights
+            {t("scoringWeightsTitle")}
           </CardTitle>
           <CardDescription>
-            Set the percentage weight for each dimension used by the AI Assessment Engine.
-            All four must add up to exactly 100%.
+            {t("scoringWeightsDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {WEIGHT_FIELDS.map((dim) => (
+          {weightFields.map((dim) => (
             <div key={dim.key} className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <div>
@@ -365,13 +368,13 @@ export default function AdminSettingsPage() {
               ? "bg-green-50 border-green-200 text-green-700"
               : "bg-red-50 border-red-200 text-red-600"
           }`}>
-            <span className="text-sm font-medium">Total Weight</span>
+            <span className="text-sm font-medium">{t("totalWeight")}</span>
             <span className="text-lg font-bold">{totalWeight.toFixed(1)}%</span>
           </div>
 
           {!weightsValid && (
             <p className="text-xs text-red-500">
-              Weights must add up to exactly 100% before saving.
+              {t("weightsInvalid")}
             </p>
           )}
         </CardContent>
@@ -382,15 +385,14 @@ export default function AdminSettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ShieldCheck className="h-5 w-5 text-[var(--color-secondary)]" />
-            Minimum Passing Score
+            {t("minScoreTitle")}
           </CardTitle>
           <CardDescription>
-            Startups scoring below this threshold will be classified as Not Ready
-            by the AI Assessment Engine.
+            {t("minScoreDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Label htmlFor="minScore">Minimum Score (out of 100)</Label>
+          <Label htmlFor="minScore">{t("minScoreLabel")}</Label>
           <div className="flex items-center gap-3">
             <Input
               id="minScore"
@@ -404,15 +406,14 @@ export default function AdminSettingsPage() {
             <span className="text-sm text-[var(--color-neutral-500)]">/ 100</span>
           </div>
           <p className="text-xs text-[var(--color-neutral-400)]">
-            Current threshold: <strong>{config.minimumPassingScore}</strong>. Startups below this
-            score are classified as Not Ready and will not be sent to evaluators.
+            {t("minScoreHint", { score: config.minimumPassingScore })}
           </p>
         </CardContent>
       </Card>
 
       {config.updatedAt && (
         <p className="text-xs text-[var(--color-neutral-400)]">
-          Last updated: {new Date(config.updatedAt).toLocaleString("en-GB")}
+          {t("lastUpdated", { date: new Date(config.updatedAt).toLocaleString(locale) })}
         </p>
       )}
 
@@ -424,12 +425,12 @@ export default function AdminSettingsPage() {
         {isSaving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Saving…
+            {t("saving")}
           </>
         ) : (
           <>
             <Save className="h-4 w-4" />
-            Save Configuration
+            {t("saveConfiguration")}
           </>
         )}
       </Button>

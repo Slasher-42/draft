@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslations } from "next-intl";
 import { userService } from "@/services/userService";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { toast } from "react-toastify";
 import { Loader2, Save, Lock, LogOut, ShieldCheck } from "lucide-react";
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
   const { user, logout } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -28,39 +30,48 @@ export default function SettingsPage() {
     setError(null);
 
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
+      setError(t("errPasswordShort"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("errPasswordMismatch"));
       return;
     }
 
     setIsSaving(true);
     try {
       await userService.changePassword(user!.id, { currentPassword, newPassword });
-      toast.success("Password changed successfully.");
+      toast.success(t("toastPasswordChanged"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
       setError(
-        err.response?.data?.message ||
-          "Failed to change password. Check your current password."
+        err.response?.data?.message || t("toastPasswordFailed")
       );
     } finally {
       setIsSaving(false);
     }
   };
 
+  const accountItems = [
+    { labelKey: "labelFullName", value: user?.fullName ?? "—" },
+    { labelKey: "labelEmail",    value: user?.email ?? "—" },
+    { labelKey: "labelRole",     value: user?.role ?? "—" },
+    {
+      labelKey: "labelStatus",
+      value: (user?.enabled ?? user?.isActive) ? t("statusActive") : t("statusInactive"),
+    },
+  ];
+
   return (
    <div className="space-y-6 max-w-2xl mx-auto">
       <div>
         <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">
-          Settings
+          {t("title")}
         </h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Manage your account security and preferences
+          {t("subtitle")}
         </p>
       </div>
 
@@ -68,25 +79,17 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-[var(--color-secondary)]" />
-            Account Information
+            {t("accountInfoTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {[
-            { label: "Full Name", value: user?.fullName ?? "—" },
-            { label: "Email", value: user?.email ?? "—" },
-            { label: "Role", value: user?.role ?? "—" },
-            {
-              label: "Account Status",
-              value: (user?.enabled ?? user?.isActive) ? "Active" : "Inactive",
-            },
-          ].map((item) => (
+          {accountItems.map((item) => (
             <div
-              key={item.label}
+              key={item.labelKey}
               className="flex justify-between items-center border-b border-[var(--color-border)] pb-2 last:border-0"
             >
               <span className="text-xs text-[var(--color-neutral-400)]">
-                {item.label}
+                {t(item.labelKey as any)}
               </span>
               <span className="text-sm font-medium text-[var(--color-foreground)]">
                 {item.value}
@@ -100,10 +103,10 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-[var(--color-secondary)]" />
-            Change Password
+            {t("changePasswordTitle")}
           </CardTitle>
           <CardDescription>
-            You must enter your current password to set a new one
+            {t("changePasswordDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,7 +118,7 @@ export default function SettingsPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword">{t("currentPasswordLabel")}</Label>
               <Input
                 id="currentPassword"
                 type="password"
@@ -127,11 +130,11 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">{t("newPasswordLabel")}</Label>
               <Input
                 id="newPassword"
                 type="password"
-                placeholder="At least 8 characters"
+                placeholder={t("newPasswordPlaceholder")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={isSaving}
@@ -139,11 +142,11 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">{t("confirmPasswordLabel")}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Repeat new password"
+                placeholder={t("confirmPasswordPlaceholder")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isSaving}
@@ -163,12 +166,12 @@ export default function SettingsPage() {
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Changing Password…
+                  {t("changingPasswordBtn")}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Change Password
+                  {t("changePasswordBtn")}
                 </>
               )}
             </Button>
@@ -180,10 +183,10 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-red-600">
             <LogOut className="h-5 w-5" />
-            Sign Out
+            {t("signOutTitle")}
           </CardTitle>
           <CardDescription>
-            You will be redirected to the login page
+            {t("signOutDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -193,7 +196,7 @@ export default function SettingsPage() {
             onClick={logout}
           >
             <LogOut className="h-4 w-4" />
-            Sign Out of Account
+            {t("signOutBtn")}
           </Button>
         </CardContent>
       </Card>

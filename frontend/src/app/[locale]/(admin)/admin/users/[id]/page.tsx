@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
@@ -28,6 +29,9 @@ const roleColors: Record<string, string> = {
 };
 
 export default function UserDetailPage() {
+  const t = useTranslations("admin.userDetail");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const { id } = useParams();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -45,9 +49,9 @@ export default function UserDetailPage() {
     try {
       await userService.activateUser(id as string);
       setUser((prev) => (prev ? { ...prev, enabled: true, isActive: true } : prev));
-      toast.success("User activated.");
+      toast.success(t("toastActivated"));
     } catch {
-      toast.error("Failed to activate user.");
+      toast.error(t("toastActivateFailed"));
     } finally {
       setIsActing(false);
     }
@@ -58,24 +62,24 @@ export default function UserDetailPage() {
     try {
       await userService.deactivateUser(id as string);
       setUser((prev) => (prev ? { ...prev, enabled: false, isActive: false } : prev));
-      toast.success("User deactivated.");
+      toast.success(t("toastDeactivated"));
     } catch {
-      toast.error("Failed to deactivate user.");
+      toast.error(t("toastDeactivateFailed"));
     } finally {
       setIsActing(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to permanently delete this user?"))
+    if (!confirm(t("confirmDelete")))
       return;
     setIsActing(true);
     try {
       await userService.deleteUser(id as string);
-      toast.success("User deleted.");
+      toast.success(t("toastDeleted"));
       router.push("/admin/users");
     } catch {
-      toast.error("Failed to delete user.");
+      toast.error(t("toastDeleteFailed"));
       setIsActing(false);
     }
   };
@@ -92,9 +96,9 @@ export default function UserDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <AlertCircle className="h-10 w-10 text-[var(--color-neutral-400)]" />
-        <p className="text-[var(--color-neutral-500)]">User not found.</p>
+        <p className="text-[var(--color-neutral-500)]">{t("userNotFound")}</p>
         <Button variant="outline" onClick={() => router.back()}>
-          Go Back
+          {t("goBack")}
         </Button>
       </div>
     );
@@ -107,7 +111,7 @@ export default function UserDetailPage() {
         className="flex items-center gap-2 text-sm text-[var(--color-neutral-500)] hover:text-[var(--color-primary)] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to users
+        {t("backToUsers")}
       </button>
 
       {/* Profile card */}
@@ -127,12 +131,12 @@ export default function UserDetailPage() {
                     roleColors[user.role]
                   }`}
                 >
-                  {user.role}
+                  {tCommon(`roles.${user.role.toLowerCase()}`)}
                 </span>
                 <Badge
                   variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}
                 >
-                  {(user.enabled ?? user.isActive) ? "Active" : "Inactive"}
+                  {(user.enabled ?? user.isActive) ? tCommon("status.active") : tCommon("status.inactive")}
                 </Badge>
               </div>
 
@@ -150,8 +154,8 @@ export default function UserDetailPage() {
                 {user.createdAt && (
                   <div className="flex items-center gap-2 text-sm text-[var(--color-neutral-500)]">
                     <Calendar className="h-4 w-4" />
-                    Joined{" "}
-                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                    {t("joined")}{" "}
+                    {new Date(user.createdAt).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -170,26 +174,26 @@ export default function UserDetailPage() {
         user.evaluatorProfile) && (
         <Card className="border border-[var(--color-border)]">
           <CardHeader>
-            <CardTitle>Identity Profile</CardTitle>
+            <CardTitle>{t("identityProfile")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.startupProfile && (
               <>
                 {[
                   {
-                    label: "Company Name",
+                    label: t("fields.companyName"),
                     value: user.startupProfile.companyName,
                   },
-                  { label: "Industry", value: user.startupProfile.industry },
-                  { label: "Country", value: user.startupProfile.country },
-                  { label: "City", value: user.startupProfile.city },
-                  { label: "Website", value: user.startupProfile.website },
+                  { label: t("fields.industry"), value: user.startupProfile.industry },
+                  { label: t("fields.country"), value: user.startupProfile.country },
+                  { label: t("fields.city"), value: user.startupProfile.city },
+                  { label: t("fields.website"), value: user.startupProfile.website },
                   {
-                    label: "Team Size",
+                    label: t("fields.teamSize"),
                     value: user.startupProfile.teamSize?.toString(),
                   },
                   {
-                    label: "Founded Year",
+                    label: t("fields.foundedYear"),
                     value: user.startupProfile.foundedYear?.toString(),
                   },
                 ]
@@ -214,19 +218,19 @@ export default function UserDetailPage() {
               <>
                 {[
                   {
-                    label: "Organization",
+                    label: t("fields.organization"),
                     value: user.investorProfile.organizationName,
                   },
                   {
-                    label: "Preferred Industry",
+                    label: t("fields.preferredIndustry"),
                     value: user.investorProfile.preferredIndustry,
                   },
                   {
-                    label: "Budget Range",
+                    label: t("fields.budgetRange"),
                     value: user.investorProfile.investmentBudgetRange,
                   },
-                  { label: "Country", value: user.investorProfile.country },
-                  { label: "City", value: user.investorProfile.city },
+                  { label: t("fields.country"), value: user.investorProfile.country },
+                  { label: t("fields.city"), value: user.investorProfile.city },
                 ]
                   .filter((f) => f.value)
                   .map((field) => (
@@ -251,7 +255,7 @@ export default function UserDetailPage() {
       {/* Actions */}
       <Card className="border border-[var(--color-border)]">
         <CardHeader>
-          <CardTitle>Account Actions</CardTitle>
+          <CardTitle>{t("accountActions")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {(user.enabled ?? user.isActive) ? (
@@ -262,7 +266,7 @@ export default function UserDetailPage() {
               disabled={isActing}
             >
               <UserX className="h-4 w-4" />
-              Deactivate Account
+              {t("deactivateAccount")}
             </Button>
           ) : (
             <Button
@@ -272,7 +276,7 @@ export default function UserDetailPage() {
               disabled={isActing}
             >
               <UserCheck className="h-4 w-4" />
-              Activate Account
+              {t("activateAccount")}
             </Button>
           )}
           <Button
@@ -282,7 +286,7 @@ export default function UserDetailPage() {
             disabled={isActing}
           >
             <Trash2 className="h-4 w-4" />
-            Delete Permanently
+            {t("deletePermanently")}
           </Button>
         </CardContent>
       </Card>

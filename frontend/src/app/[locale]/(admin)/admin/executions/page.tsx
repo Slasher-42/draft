@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -33,14 +34,20 @@ aiApi.interceptors.request.use((config) => {
 
 const STATUS_FILTERS = ["ALL", "PENDING", "MATCHED", "REJECTED", "APPROVED"] as const;
 
-const statusConfig: Record<string, { label: string; icon: any; classes: string }> = {
-  PENDING:  { label: "Pending",  icon: Clock,        classes: "bg-blue-50 text-blue-700 border-blue-200" },
-  MATCHED:  { label: "Matched",  icon: TrendingUp,   classes: "bg-green-50 text-green-700 border-green-200" },
-  REJECTED: { label: "Rejected", icon: XCircle,      classes: "bg-red-50 text-red-700 border-red-200" },
-  APPROVED: { label: "Approved", icon: CheckCircle2, classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+const statusIcons: Record<string, any> = {
+  PENDING: Clock, MATCHED: TrendingUp, REJECTED: XCircle, APPROVED: CheckCircle2,
+};
+const statusClasses: Record<string, string> = {
+  PENDING:  "bg-blue-50 text-blue-700 border-blue-200",
+  MATCHED:  "bg-green-50 text-green-700 border-green-200",
+  REJECTED: "bg-red-50 text-red-700 border-red-200",
+  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 export default function AdminExecutionsPage() {
+  const t = useTranslations("admin.executions");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [triggeringId, setTriggeringId] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -76,7 +83,7 @@ export default function AdminExecutionsPage() {
       return {
         allExecutions: combined,
         fetchError: combined.length === 0 && startupRes.status === "rejected" && investorRes.status === "rejected"
-          ? "Could not load executions. Check that the StartupApplicationService is running."
+          ? t("fetchErrorMsg")
           : null,
       };
     },
@@ -93,11 +100,11 @@ export default function AdminExecutionsPage() {
         weight_business_viability: 0.25,
         minimum_passing_score: 50,
       });
-      toast.success(`Scoring triggered for execution #${executionId}. The evaluator review will appear shortly.`);
+      toast.success(t("toastScoringTriggered", { id: executionId }));
       queryClient.invalidateQueries({ queryKey: ["admin-executions"] });
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? "Scoring failed";
-      toast.error(`Failed to trigger scoring: ${msg}`);
+      const msg = err?.response?.data?.message ?? err?.message ?? t("toastScoringFailedDefault");
+      toast.error(t("toastScoringFailed", { msg }));
     } finally {
       setTriggeringId(null);
     }
@@ -118,9 +125,9 @@ export default function AdminExecutionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">All Executions</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          All startup and investor executions across the platform
+          {t("subtitle")}
         </p>
       </div>
 
@@ -135,7 +142,7 @@ export default function AdminExecutionsPage() {
                 : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-200)]"
             }`}
           >
-            {s}
+            {s === "ALL" ? t("all") : tCommon(`status.${s.toLowerCase()}`)}
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
               statusFilter === s
                 ? "bg-white/20 text-white"
@@ -156,7 +163,7 @@ export default function AdminExecutionsPage() {
           <CardContent className="flex items-start gap-3 p-5">
             <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-700">Failed to load executions</p>
+              <p className="text-sm font-medium text-red-700">{t("failedToLoad")}</p>
               <p className="text-xs text-red-600 mt-1">{fetchError}</p>
             </div>
           </CardContent>
@@ -166,15 +173,17 @@ export default function AdminExecutionsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
             <ClipboardList className="h-10 w-10 text-[var(--color-neutral-300)]" />
             <p className="text-[var(--color-neutral-500)] text-sm">
-              {statusFilter === "ALL" ? "No executions found." : `No ${statusFilter.toLowerCase()} executions.`}
+              {statusFilter === "ALL" ? t("noExecutions") : t("noStatusExecutions", { status: tCommon(`status.${statusFilter.toLowerCase()}`).toLowerCase() })}
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {executions.map((exec) => {
-            const cfg = statusConfig[exec.status] ?? statusConfig.PENDING;
-            const Icon = cfg.icon;
+            const status = exec.status ?? "PENDING";
+            const Icon = statusIcons[status] ?? statusIcons.PENDING;
+            const cfgClasses = statusClasses[status] ?? statusClasses.PENDING;
+            const cfgLabel = tCommon(`status.${status.toLowerCase()}`);
             const isStartup = exec.type === "STARTUP";
             const isPending = exec.status === "PENDING";
 
@@ -186,38 +195,38 @@ export default function AdminExecutionsPage() {
                       <span className={`mt-0.5 px-2 py-0.5 rounded-md text-xs font-bold flex-shrink-0 ${
                         isStartup ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
                       }`}>
-                        {isStartup ? "STARTUP" : "INVESTOR"}
+                        {tCommon(`roles.${isStartup ? "startup" : "investor"}`).toUpperCase()}
                       </span>
 
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-[var(--color-primary-800)] truncate">
                           {isStartup
-                            ? (exec.problemStatement ?? `Startup Execution #${exec.id}`)
-                            : (exec.industry ?? exec.preferredIndustry ?? `Investor Execution #${exec.id}`)}
+                            ? (exec.problemStatement ?? t("defaultStartupTitle", { id: exec.id }))
+                            : (exec.industry ?? exec.preferredIndustry ?? t("defaultInvestorTitle", { id: exec.id }))}
                         </p>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                          <span className="text-xs text-[var(--color-neutral-400)]">ID: {exec.id}</span>
+                          <span className="text-xs text-[var(--color-neutral-400)]">{t("id")}: {exec.id}</span>
                           {exec.createdAt && (
                             <span className="text-xs text-[var(--color-neutral-400)]">
-                              {new Date(exec.createdAt).toLocaleDateString("en-GB", {
+                              {new Date(exec.createdAt).toLocaleDateString(locale, {
                                 day: "numeric", month: "short", year: "numeric",
                               })}
                             </span>
                           )}
                           {isStartup && exec.fundingNeeded && (
                             <span className="text-xs text-[var(--color-neutral-400)]">
-                              Funding: ${Number(exec.fundingNeeded).toLocaleString()}
+                              {t("funding")}: ${Number(exec.fundingNeeded).toLocaleString()}
                             </span>
                           )}
                           {!isStartup && exec.investmentBudget && (
                             <span className="text-xs text-[var(--color-neutral-400)]">
-                              Budget: ${Number(exec.investmentBudget).toLocaleString()}
+                              {t("budget")}: ${Number(exec.investmentBudget).toLocaleString()}
                             </span>
                           )}
                         </div>
                         {exec.statusReason && (
                           <p className="text-xs text-[var(--color-neutral-500)] mt-1 italic truncate">
-                            Reason: {exec.statusReason}
+                            {t("reason")}: {exec.statusReason}
                           </p>
                         )}
 
@@ -229,18 +238,18 @@ export default function AdminExecutionsPage() {
                             className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-60"
                           >
                             {triggeringId === exec.id ? (
-                              <><Loader2 className="h-3 w-3 animate-spin" />Triggering…</>
+                              <><Loader2 className="h-3 w-3 animate-spin" />{t("triggering")}</>
                             ) : (
-                              <><Zap className="h-3 w-3" />Trigger AI Scoring</>
+                              <><Zap className="h-3 w-3" />{t("triggerAiScoring")}</>
                             )}
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <span className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.classes}`}>
+                    <span className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfgClasses}`}>
                       <Icon className="h-3 w-3" />
-                      {cfg.label}
+                      {cfgLabel}
                     </span>
                   </div>
                 </CardContent>

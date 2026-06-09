@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 import { followupService } from "@/services/followupService";
 import { matchingService } from "@/services/matchingService";
 import { userService } from "@/services/userService";
@@ -60,6 +61,7 @@ interface InvestorInfo {
 
 export default function StartupAccountPage() {
   const { user } = useAuth();
+  const t = useTranslations("startup.account");
   const [account, setAccount] = useState<Account | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [investorInfoMap, setInvestorInfoMap] = useState<Record<number, InvestorInfo>>({});
@@ -81,7 +83,7 @@ export default function StartupAccountPage() {
         ]);
 
         if (accSettled.status === "rejected" && txSettled.status === "rejected") {
-          toast.error("Failed to load account data. Please refresh.");
+          toast.error(t("toastLoadFailed"));
           throw new Error("Failed to load account data");
         }
 
@@ -150,7 +152,7 @@ export default function StartupAccountPage() {
           matchedExecutions: execList,
         };
       } catch {
-        toast.error("Failed to load account data");
+        toast.error(t("toastLoadFailed"));
         throw new Error("Failed to load account data");
       }
     },
@@ -169,13 +171,13 @@ export default function StartupAccountPage() {
 
   const handleSettle = async () => {
     const amount = parseFloat(settleAmount);
-    if (!settleAccountNumber.trim()) { toast.error("Account number is required"); return; }
-    if (isNaN(amount) || amount <= 0) { toast.error("Enter a valid amount"); return; }
-    if (amount > (account?.balance ?? 0)) { toast.error("Amount exceeds available balance"); return; }
+    if (!settleAccountNumber.trim()) { toast.error(t("toastAccountRequired")); return; }
+    if (isNaN(amount) || amount <= 0) { toast.error(t("toastValidAmount")); return; }
+    if (amount > (account?.balance ?? 0)) { toast.error(t("toastExceedsBalance")); return; }
     setSettling(true);
     try {
       await followupService.settle({ amount, accountNumber: settleAccountNumber.trim() });
-      toast.success("Settlement processed successfully");
+      toast.success(t("toastSettled"));
       setShowSettle(false);
       setSettleAmount("");
       setSettleAccountNumber("");
@@ -186,7 +188,7 @@ export default function StartupAccountPage() {
       setAccount(accRes.data?.data);
       setTransactions(txRes.data?.data ?? []);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Settlement failed");
+      toast.error(err?.response?.data?.message ?? t("toastSettleFailed"));
     } finally {
       setSettling(false);
     }
@@ -212,8 +214,8 @@ export default function StartupAccountPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Account</h2>
-        <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">View your investment funds received</p>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
+        <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">{t("subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -221,7 +223,7 @@ export default function StartupAccountPage() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Available Balance</p>
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wider">{t("availableBalance")}</p>
                 <p className="text-4xl font-bold text-white mt-1">
                   ${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </p>
@@ -236,7 +238,7 @@ export default function StartupAccountPage() {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-colors"
               >
                 <Banknote className="h-4 w-4" />
-                {showSettle ? "Cancel" : "Settle Funds"}
+                {showSettle ? t("cancelSettle") : t("settleFunds")}
               </button>
             </div>
           </CardContent>
@@ -252,7 +254,7 @@ export default function StartupAccountPage() {
                 <p className="text-xl font-bold text-[var(--color-primary-800)]">
                   ${totalReceived.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </p>
-                <p className="text-xs text-[var(--color-neutral-500)]">Total Received</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{t("totalReceived")}</p>
               </div>
             </CardContent>
           </Card>
@@ -264,7 +266,7 @@ export default function StartupAccountPage() {
               </div>
               <div>
                 <p className="text-xl font-bold text-[var(--color-primary-800)]">{investorCount}</p>
-                <p className="text-xs text-[var(--color-neutral-500)]">Investors</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{t("investors")}</p>
               </div>
             </CardContent>
           </Card>
@@ -275,25 +277,25 @@ export default function StartupAccountPage() {
         <Card className="border border-[var(--color-border)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-[var(--color-primary-800)] flex items-center gap-2">
-              <Banknote className="h-4 w-4" /> Settle Funds to Your Account
+              <Banknote className="h-4 w-4" /> {t("settleCardTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-[var(--color-neutral-500)]">
-              Available: <span className="font-semibold text-green-600">${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              {t("available")} <span className="font-semibold text-green-600">${(account?.balance ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
             </p>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">Account Number</label>
+              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">{t("accountNumberLabel")}</label>
               <input
                 type="text"
                 value={settleAccountNumber}
                 onChange={(e) => setSettleAccountNumber(e.target.value)}
-                placeholder="Enter your bank account number"
+                placeholder={t("accountNumberPlaceholder")}
                 className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">Amount (USD)</label>
+              <label className="block text-xs font-medium text-[var(--color-neutral-600)] mb-1">{t("amountLabel")}</label>
               <input
                 type="number"
                 value={settleAmount}
@@ -310,21 +312,20 @@ export default function StartupAccountPage() {
               className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-800)] text-white text-sm font-medium transition-colors disabled:opacity-60"
             >
               {settling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
-              {settling ? "Processing..." : "Confirm Settlement"}
+              {settling ? t("processing") : t("confirmSettlement")}
             </button>
           </CardContent>
         </Card>
       )}
 
-      {/* Matched Investment Status */}
       {matchedExecutions.length > 0 && (
         <Card className="border border-[var(--color-border)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-[var(--color-primary-800)]">
-              Matched Investment Status
+              {t("matchedInvestmentTitle")}
             </CardTitle>
             <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">
-              Investors matched to your startup — see which executions are funded
+              {t("matchedInvestmentSubtitle")}
             </p>
           </CardHeader>
           <CardContent className="pt-0">
@@ -353,7 +354,7 @@ export default function StartupAccountPage() {
                         {item.matchScore && (
                           <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-neutral-400)]">
                             <Star className="h-2.5 w-2.5" />
-                            {Number(item.matchScore).toFixed(0)}% match
+                            {t("matchPercent", { score: Number(item.matchScore).toFixed(0) })}
                           </span>
                         )}
                         {item.matchedAt && (
@@ -370,7 +371,7 @@ export default function StartupAccountPage() {
                         ? "bg-[var(--color-neutral-100)] text-[var(--color-neutral-500)]"
                         : "bg-amber-100 text-amber-700"
                     }`}>
-                      {isFunded ? "FUNDED" : isUnknown ? "UNKNOWN" : "NOT FUNDED"}
+                      {isFunded ? t("fundedBadge") : isUnknown ? t("unknownBadge") : t("notFundedBadge")}
                     </span>
                   </div>
                 );
@@ -382,11 +383,11 @@ export default function StartupAccountPage() {
 
       <Card className="border border-[var(--color-border)]">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base text-[var(--color-primary-800)]">Transaction History</CardTitle>
+          <CardTitle className="text-base text-[var(--color-primary-800)]">{t("transactionHistory")}</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <p className="text-sm text-[var(--color-neutral-400)] text-center py-8">No transactions yet</p>
+            <p className="text-sm text-[var(--color-neutral-400)] text-center py-8">{t("noTransactions")}</p>
           ) : (
             <div className="space-y-2">
               {transactions.map((tx) => {
@@ -414,9 +415,9 @@ export default function StartupAccountPage() {
                         <div>
                           <p className="text-sm font-medium text-[var(--color-primary-800)]">
                             {isReceived
-                              ? `Investment from ${info?.fullName ?? `Investor #${tx.fromUserId}`}`
+                              ? t("investmentFrom", { name: info?.fullName ?? `Investor #${tx.fromUserId}` })
                               : isSettlement
-                              ? "Settlement Withdrawal"
+                              ? t("settlementWithdrawal")
                               : `To ${info?.fullName ?? `Startup #${tx.toUserId}`}`}
                           </p>
                           <p className="text-xs text-[var(--color-neutral-400)]">
@@ -441,13 +442,13 @@ export default function StartupAccountPage() {
 
                     {isExpanded && info && (
                       <div className="border-t border-[var(--color-border)] px-4 py-4 bg-[var(--color-neutral-50)] space-y-3">
-                        <p className="text-xs font-semibold text-[var(--color-primary-800)] uppercase tracking-wide">Investor Details</p>
+                        <p className="text-xs font-semibold text-[var(--color-primary-800)] uppercase tracking-wide">{t("investorDetails")}</p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="flex gap-2">
                             <User className="h-3.5 w-3.5 text-[var(--color-primary)] mt-0.5 flex-shrink-0" />
                             <div>
-                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">Name</p>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("name")}</p>
                               <p className="text-xs text-[var(--color-neutral-800)]">{info.fullName}</p>
                             </div>
                           </div>
@@ -456,7 +457,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <Mail className="h-3.5 w-3.5 text-[var(--color-primary)] mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Email</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("email")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">{info.email}</p>
                               </div>
                             </div>
@@ -466,7 +467,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <Phone className="h-3.5 w-3.5 text-[var(--color-primary)] mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Phone</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("phone")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">{info.phoneNumber}</p>
                               </div>
                             </div>
@@ -476,7 +477,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <MapPin className="h-3.5 w-3.5 text-[var(--color-primary)] mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Location</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("location")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">
                                   {[info.city, info.country].filter(Boolean).join(", ")}
                                 </p>
@@ -488,7 +489,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <Building2 className="h-3.5 w-3.5 text-[var(--color-primary)] mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Preferred Industry</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("preferredIndustry")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">{info.preferredIndustry}</p>
                               </div>
                             </div>
@@ -498,7 +499,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <DollarSign className="h-3.5 w-3.5 text-green-600 mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Investment Budget</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("investmentBudget")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">
                                   ${info.investmentBudget.toLocaleString()}
                                 </p>
@@ -510,7 +511,7 @@ export default function StartupAccountPage() {
                             <div className="flex gap-2">
                               <Calendar className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">Expected Return Timeline</p>
+                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("expectedReturnTimeline")}</p>
                                 <p className="text-xs text-[var(--color-neutral-800)]">{info.expectedReturnTimeline}</p>
                               </div>
                             </div>
@@ -521,7 +522,7 @@ export default function StartupAccountPage() {
                           <div className="flex gap-2">
                             <Target className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
                             <div>
-                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">Why they invested</p>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("whyInvested")}</p>
                               <p className="text-xs text-[var(--color-neutral-700)] leading-relaxed">{info.investmentReason}</p>
                             </div>
                           </div>
@@ -531,25 +532,25 @@ export default function StartupAccountPage() {
                           <div className="flex gap-2">
                             <Star className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
                             <div>
-                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">What success looks like to them</p>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("successCriteria")}</p>
                               <p className="text-xs text-[var(--color-neutral-700)] leading-relaxed">{info.successCriteria}</p>
                             </div>
                           </div>
                         )}
 
                         <div className="pt-2 border-t border-[var(--color-border)]">
-                          <p className="text-xs font-semibold text-[var(--color-primary-800)] uppercase tracking-wide mb-2">Investment Details</p>
+                          <p className="text-xs font-semibold text-[var(--color-primary-800)] uppercase tracking-wide mb-2">{t("investmentDetails")}</p>
                           <div className="flex flex-wrap gap-x-6 gap-y-1">
                             <span className="text-xs text-[var(--color-neutral-500)]">
-                              Amount: <span className="font-semibold text-green-600">${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                              {t("amountDetail")} <span className="font-semibold text-green-600">${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                             </span>
                             {tx.description && (
                               <span className="text-xs text-[var(--color-neutral-500)]">
-                                Note: <span className="text-[var(--color-neutral-700)]">{tx.description}</span>
+                                {t("noteDetail")} <span className="text-[var(--color-neutral-700)]">{tx.description}</span>
                               </span>
                             )}
                             <span className="text-xs text-[var(--color-neutral-500)]">
-                              Date: <span className="text-[var(--color-neutral-700)]">{new Date(tx.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+                              {t("dateDetail")} <span className="text-[var(--color-neutral-700)]">{new Date(tx.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
                             </span>
                           </div>
                         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { matchingService } from "@/services/matchingService";
@@ -37,6 +38,7 @@ interface AIResult {
 }
 
 export default function AdminAlumniPage() {
+  const t = useTranslations("admin.alumni");
   const [expandedBond, setExpandedBond] = useState<string | null>(null);
   const [bondMessages, setBondMessages] = useState<Record<string, Message[]>>({});
   const [aiResults, setAiResults] = useState<Record<string, AIResult>>({});
@@ -127,7 +129,7 @@ export default function AdminAlumniPage() {
   const validateWithAI = async (bond: BondWithStatus) => {
     const key = bondKey(bond);
     const msgs = bondMessages[key] ?? [];
-    if (msgs.length === 0) { toast.error("No messages to analyze"); return; }
+    if (msgs.length === 0) { toast.error(t("toastNoMessages")); return; }
 
     setAiResults((prev) => ({ ...prev, [key]: { bondKey: key, analysis: "", loading: true } }));
 
@@ -172,7 +174,7 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
         }));
       }
     } catch {
-      analysis = "AI analysis failed. Please try again.";
+      analysis = t("aiAnalysisFailed");
     }
     setAiResults((prev) => ({ ...prev, [key]: { bondKey: key, analysis, loading: false } }));
   };
@@ -186,18 +188,18 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">Alumni Monitor</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-primary-800)]">{t("title")}</h2>
         <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-          Monitor all investor–startup bonds and validate their conversations with AI
+          {t("subtitle")}
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Total Bonds", value: bondsRaw.length, bgClass: "stat-bg-blue", textClass: "stat-text-blue", icon: Users, iconBg: "linear-gradient(135deg,#1D4ED8,#3B82F6)" },
-          { label: "Active (messaging)", value: activeBonds.length, bgClass: "stat-bg-green", textClass: "stat-text-green", icon: MessageSquare, iconBg: "linear-gradient(135deg,#059669,#10B981)" },
-          { label: "Inactive", value: inactiveBonds.length, bgClass: "stat-bg-amber", textClass: "stat-text-amber", icon: Clock, iconBg: "linear-gradient(135deg,#B45309,#D97706)" },
+          { label: t("totalBonds"), value: bondsRaw.length, bgClass: "stat-bg-blue", textClass: "stat-text-blue", icon: Users, iconBg: "linear-gradient(135deg,#1D4ED8,#3B82F6)" },
+          { label: t("activeMessaging"), value: activeBonds.length, bgClass: "stat-bg-green", textClass: "stat-text-green", icon: MessageSquare, iconBg: "linear-gradient(135deg,#059669,#10B981)" },
+          { label: t("inactive"), value: inactiveBonds.length, bgClass: "stat-bg-amber", textClass: "stat-text-amber", icon: Clock, iconBg: "linear-gradient(135deg,#B45309,#D97706)" },
         ].map((s) => (
           <div key={s.label} className={`${s.bgClass} rounded-2xl border p-5 flex items-center gap-4`}
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -217,7 +219,7 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
         <Card>
           <CardContent className="py-16 text-center">
             <Users className="h-10 w-10 mx-auto mb-3 text-[var(--color-neutral-300)]" />
-            <p className="text-[var(--color-neutral-400)]">No bonds found. Bonds are created when an investor and startup are matched.</p>
+            <p className="text-[var(--color-neutral-400)]">{t("noBonds")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -252,16 +254,16 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
                           isActive ? "bg-emerald-100 text-emerald-700" : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-500)]"
                         }`}>
                           {isActive
-                            ? <><CheckCircle2 className="h-2.5 w-2.5" /> ACTIVE</>
-                            : <><Clock className="h-2.5 w-2.5" /> INACTIVE</>}
+                            ? <><CheckCircle2 className="h-2.5 w-2.5" /> {t("active")}</>
+                            : <><Clock className="h-2.5 w-2.5" /> {t("inactiveBadge")}</>}
                         </span>
                         {isActive && (
                           <span className="text-xs text-[var(--color-neutral-400)]">
-                            {bond.status?.messageCount} message{bond.status?.messageCount !== 1 ? "s" : ""}
+                            {t("messageCount", { count: bond.status?.messageCount ?? 0 })}
                           </span>
                         )}
                         <span className="text-xs text-[var(--color-neutral-400)]">
-                          Match: {bond.matchScore.toFixed(0)}%
+                          {t("matchScore", { score: bond.matchScore.toFixed(0) })}
                         </span>
                       </div>
                     </div>
@@ -279,7 +281,7 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
                           {ai?.loading
                             ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             : <Brain className="h-3.5 w-3.5" />}
-                          Validate with AI
+                          {t("validateWithAI")}
                         </Button>
                       )}
                       <button
@@ -296,11 +298,11 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
                     <div className="mt-3 p-3 rounded-xl border stat-bg-violet">
                       <div className="flex items-center gap-2 mb-1.5">
                         <Sparkles className="h-3.5 w-3.5 stat-text-violet" />
-                        <span className="text-xs font-bold stat-text-violet uppercase tracking-wider">AI Analysis</span>
+                        <span className="text-xs font-bold stat-text-violet uppercase tracking-wider">{t("aiAnalysis")}</span>
                         {ai.loading && <Loader2 className="h-3 w-3 animate-spin stat-text-violet" />}
                       </div>
                       <p className="text-xs text-[var(--color-neutral-600)] leading-relaxed whitespace-pre-wrap">
-                        {ai.analysis || "Analyzing…"}
+                        {ai.analysis || t("analyzing")}
                       </p>
                     </div>
                   )}
@@ -315,12 +317,12 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
                       ) : msgs.length === 0 ? (
                         <div className="flex items-center gap-2 py-4 justify-center text-[var(--color-neutral-400)] text-sm">
                           <AlertCircle className="h-4 w-4" />
-                          No messages exchanged yet
+                          {t("noMessagesExchanged")}
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                           <p className="text-xs font-semibold text-[var(--color-neutral-400)] uppercase tracking-wider mb-2">
-                            Conversation ({msgs.length} messages)
+                            {t("conversationCount", { count: msgs.length })}
                           </p>
                           {msgs.map((msg) => {
                             const isInvestor = msg.senderId === bond.investorUserId;

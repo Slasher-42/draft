@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -94,6 +95,7 @@ function Field({
 
 // ─── Main page ─────────────────────────────────────────────────────────────
 export default function HomeControllerPage() {
+  const t = useTranslations("admin.homeController");
   const { config, saveConfig, resetConfig } = useHomeConfig();
   const [form, setForm] = useState<HomeConfig>(config);
   const [isSaving, setIsSaving] = useState(false);
@@ -139,9 +141,9 @@ export default function HomeControllerPage() {
     setIsSaving(true);
     try {
       saveConfig({ ...form, heroVideoUrl: liveVideoUrl });
-      toast.success("Homepage settings saved successfully.");
+      toast.success(t("toastSaved"));
     } catch {
-      toast.error("Failed to save homepage settings.");
+      toast.error(t("toastSaveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -151,18 +153,18 @@ export default function HomeControllerPage() {
   const handleReset = () => {
     resetConfig();
     setForm({ ...DEFAULT_HOME_CONFIG, heroVideoUrl: liveVideoUrl });
-    toast.info("Homepage settings reset to defaults.");
+    toast.info(t("toastReset"));
   };
 
   // ── Video upload ───────────────────────────────────────────────────────
   const handleFileSelect = (file: File) => {
     const validTypes = ["video/mp4", "video/webm", "video/ogg"];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please upload an MP4, WebM, or OGG video file.");
+      toast.error(t("toastInvalidVideoType"));
       return;
     }
     if (file.size > 150 * 1024 * 1024) {
-      toast.error("Video must be smaller than 150 MB.");
+      toast.error(t("toastVideoTooLarge"));
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -187,9 +189,9 @@ export default function HomeControllerPage() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      toast.success("Hero video uploaded successfully.");
+      toast.success(t("toastVideoUploaded"));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed to upload video.");
+      toast.error(err?.response?.data?.message ?? t("toastVideoUploadFailed"));
     } finally {
       setIsUploadingVideo(false);
     }
@@ -201,9 +203,9 @@ export default function HomeControllerPage() {
       await api.delete("/api/config/hero-video");
       setLiveVideoUrl(null);
       saveConfig({ heroVideoUrl: null });
-      toast.success("Hero video removed.");
+      toast.success(t("toastVideoRemoved"));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Failed to remove video.");
+      toast.error(err?.response?.data?.message ?? t("toastVideoRemoveFailed"));
     } finally {
       setIsRemovingVideo(false);
     }
@@ -223,10 +225,10 @@ export default function HomeControllerPage() {
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-primary-800)] flex items-center gap-2">
             <LayoutDashboard className="h-6 w-6 text-[var(--color-secondary)]" />
-            Home Controller
+            {t("title")}
           </h2>
           <p className="text-sm text-[var(--color-neutral-500)] mt-0.5">
-            Customize every aspect of the public-facing homepage
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -237,7 +239,7 @@ export default function HomeControllerPage() {
             onClick={() => window.open("/home", "_blank")}
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Preview
+            {t("previewBtn")}
           </Button>
           <Button
             variant="outline"
@@ -246,7 +248,7 @@ export default function HomeControllerPage() {
             onClick={handleReset}
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Reset
+            {t("resetBtn")}
           </Button>
         </div>
       </div>
@@ -256,14 +258,14 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Type className="h-5 w-5 text-[var(--color-secondary)]" />
-            Hero Content
+            {t("heroContentTitle")}
           </CardTitle>
           <CardDescription>
-            The main text and call-to-action buttons shown in the top hero section.
+            {t("heroContentDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field label="Hero Title">
+          <Field label={t("heroTitleLabel")}>
             <textarea
               rows={2}
               value={form.heroTitle}
@@ -271,7 +273,7 @@ export default function HomeControllerPage() {
               className="w-full rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-300)]"
             />
           </Field>
-          <Field label="Hero Subtitle" hint="Shown below the title in a smaller size.">
+          <Field label={t("heroSubtitleLabel")} hint={t("heroSubtitleHint")}>
             <textarea
               rows={2}
               value={form.heroSubtitle}
@@ -280,13 +282,13 @@ export default function HomeControllerPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Primary CTA Text" hint='e.g. "Get Started"'>
+            <Field label={t("ctaPrimaryLabel")} hint={t("ctaPrimaryHint")}>
               <Input
                 value={form.ctaPrimaryText}
                 onChange={(e) => set("ctaPrimaryText", e.target.value)}
               />
             </Field>
-            <Field label="Secondary CTA Text" hint='e.g. "Learn More"'>
+            <Field label={t("ctaSecondaryLabel")} hint={t("ctaSecondaryHint")}>
               <Input
                 value={form.ctaSecondaryText}
                 onChange={(e) => set("ctaSecondaryText", e.target.value)}
@@ -301,11 +303,10 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Video className="h-5 w-5 text-[var(--color-secondary)]" />
-            Background Video
+            {t("bgVideoTitle")}
           </CardTitle>
           <CardDescription>
-            Upload a loopable video that plays behind the hero section.
-            Recommended: MP4, 1920×1080, under 50 MB.
+            {t("bgVideoDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -313,7 +314,7 @@ export default function HomeControllerPage() {
           {liveVideoUrl && !selectedFile && (
             <div className="space-y-3">
               <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">
-                Current Video
+                {t("currentVideo")}
               </p>
               <div className="relative rounded-xl overflow-hidden border border-[var(--color-border)] bg-black aspect-video">
                 <video
@@ -343,7 +344,7 @@ export default function HomeControllerPage() {
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                Remove Video
+                {t("removeVideo")}
               </Button>
             </div>
           )}
@@ -368,10 +369,10 @@ export default function HomeControllerPage() {
             >
               <Upload className="h-8 w-8 mx-auto mb-3 text-[var(--color-neutral-400)]" />
               <p className="text-sm font-medium text-[var(--color-neutral-700)]">
-                {liveVideoUrl ? "Replace video" : "Upload a background video"}
+                {liveVideoUrl ? t("replaceVideo") : t("uploadVideo")}
               </p>
               <p className="text-xs text-[var(--color-neutral-400)] mt-1">
-                Drag & drop or click to browse · MP4, WebM, OGG · Max 150 MB
+                {t("dropOrClick")}
               </p>
               <input
                 ref={fileInputRef}
@@ -390,8 +391,7 @@ export default function HomeControllerPage() {
           {selectedFile && previewUrl && (
             <div className="space-y-3">
               <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide">
-                Preview — {selectedFile.name} (
-                {(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
+                {t("previewLabel", { name: selectedFile.name, size: (selectedFile.size / 1024 / 1024).toFixed(1) })}
               </p>
               <div className="rounded-xl overflow-hidden border border-[var(--color-primary-200)] bg-black aspect-video">
                 <video
@@ -412,12 +412,12 @@ export default function HomeControllerPage() {
                   {isUploadingVideo ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Uploading…
+                      {t("uploading")}
                     </>
                   ) : (
                     <>
                       <Upload className="h-4 w-4" />
-                      Upload Video
+                      {t("uploadVideoBtn")}
                     </>
                   )}
                 </Button>
@@ -430,7 +430,7 @@ export default function HomeControllerPage() {
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </div>
             </div>
@@ -443,14 +443,14 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Mail className="h-5 w-5 text-[var(--color-secondary)]" />
-            Contact Information
+            {t("contactTitle")}
           </CardTitle>
           <CardDescription>
-            Contact details displayed in the Contact section of the homepage.
+            {t("contactDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field label="Email Address">
+          <Field label={t("emailLabel")}>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
@@ -462,7 +462,7 @@ export default function HomeControllerPage() {
               />
             </div>
           </Field>
-          <Field label="Phone Number">
+          <Field label={t("phoneLabel")}>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
@@ -474,7 +474,7 @@ export default function HomeControllerPage() {
               />
             </div>
           </Field>
-          <Field label="Physical Address">
+          <Field label={t("addressLabel")}>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-neutral-400)]" />
               <Input
@@ -493,14 +493,14 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Map className="h-5 w-5 text-[var(--color-secondary)]" />
-            Location & Map
+            {t("locationTitle")}
           </CardTitle>
           <CardDescription>
-            GPS coordinates pinned on an OpenStreetMap embed shown on the homepage.
+            {t("locationDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field label="Location Label" hint="Friendly name shown above the map.">
+          <Field label={t("locationLabelField")} hint={t("locationLabelHint")}>
             <Input
               value={form.locationLabel}
               onChange={(e) => set("locationLabel", e.target.value)}
@@ -508,7 +508,7 @@ export default function HomeControllerPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Latitude" hint="e.g. -1.9441">
+            <Field label={t("latLabel")} hint={t("latHint")}>
               <Input
                 type="number"
                 step="0.0001"
@@ -516,7 +516,7 @@ export default function HomeControllerPage() {
                 onChange={(e) => set("locationLat", parseFloat(e.target.value) || 0)}
               />
             </Field>
-            <Field label="Longitude" hint="e.g. 30.0619">
+            <Field label={t("lngLabel")} hint={t("lngHint")}>
               <Input
                 type="number"
                 step="0.0001"
@@ -529,7 +529,7 @@ export default function HomeControllerPage() {
           {/* Live map preview */}
           <div>
             <p className="text-xs font-medium text-[var(--color-neutral-600)] uppercase tracking-wide mb-2">
-              Map Preview
+              {t("mapPreview")}
             </p>
             <div className="rounded-xl overflow-hidden border border-[var(--color-border)] shadow-sm">
               <div
@@ -549,7 +549,7 @@ export default function HomeControllerPage() {
               />
             </div>
             <p className="text-xs text-[var(--color-neutral-400)] mt-2">
-              Map updates after you save. Powered by OpenStreetMap.
+              {t("mapHint")}
             </p>
           </div>
         </CardContent>
@@ -560,18 +560,18 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-5 w-5 text-[var(--color-secondary)]" />
-            Animation Settings
+            {t("animTitle")}
           </CardTitle>
           <CardDescription>
-            Control motion effects, scroll reveals, and animated counters on the homepage.
+            {t("animDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Toggle
             value={form.animationsEnabled}
             onChange={(v) => set("animationsEnabled", v)}
-            label="Enable Animations"
-            description="Scroll-reveal effects, hero entrance, animated number counters."
+            label={t("animToggleLabel")}
+            description={t("animToggleDesc")}
           />
         </CardContent>
       </Card>
@@ -581,42 +581,42 @@ export default function HomeControllerPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Eye className="h-5 w-5 text-[var(--color-secondary)]" />
-            Section Visibility
+            {t("visibilityTitle")}
           </CardTitle>
           <CardDescription>
-            Toggle which sections appear on the public homepage.
+            {t("visibilityDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Toggle
             value={form.showStats}
             onChange={(v) => set("showStats", v)}
-            label="Stats Bar"
-            description="Investor count, startup count, and platform metrics."
+            label={t("showStatsLabel")}
+            description={t("showStatsDesc")}
           />
           <Toggle
             value={form.showInvestors}
             onChange={(v) => set("showInvestors", v)}
-            label="Investors Section"
-            description="Grid of investor profile cards."
+            label={t("showInvestorsLabel")}
+            description={t("showInvestorsDesc")}
           />
           <Toggle
             value={form.showStartups}
             onChange={(v) => set("showStartups", v)}
-            label="Startups Section"
-            description="Grid of startup profile cards."
+            label={t("showStartupsLabel")}
+            description={t("showStartupsDesc")}
           />
           <Toggle
             value={form.showContact}
             onChange={(v) => set("showContact", v)}
-            label="Contact Section"
-            description="Email, phone, address and CTA buttons."
+            label={t("showContactLabel")}
+            description={t("showContactDesc")}
           />
           <Toggle
             value={form.showMap}
             onChange={(v) => set("showMap", v)}
-            label="Map Embed"
-            description="OpenStreetMap location pin (requires Contact section to be visible)."
+            label={t("showMapLabel")}
+            description={t("showMapDesc")}
           />
         </CardContent>
       </Card>
@@ -631,12 +631,12 @@ export default function HomeControllerPage() {
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Saving…
+              {t("saving")}
             </>
           ) : (
             <>
               <Save className="h-4 w-4" />
-              Save Homepage Settings
+              {t("saveBtn")}
             </>
           )}
         </Button>
@@ -646,7 +646,7 @@ export default function HomeControllerPage() {
           onClick={() => window.open("/home", "_blank")}
         >
           <ExternalLink className="h-4 w-4" />
-          Open Homepage
+          {t("openHomepage")}
         </Button>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/AuthContext";
 import { aiService } from "@/services/aiService";
 import { investorService } from "@/services/investorService";
@@ -74,8 +75,7 @@ function AriaAvatar({ speaking }: { speaking: boolean }) {
   );
 }
 
-function ProgressBar({ step }: { step: number }) {
-  const steps = ["Connected", "Conversation", "Review", "Complete"];
+function ProgressBar({ step, steps }: { step: number; steps: string[] }) {
   return (
     <div className="flex items-center gap-2">
       {steps.map((label, i) => (
@@ -127,6 +127,7 @@ function InvestorAIConversation() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const t = useTranslations("investor.ai");
   const executionId = Number(searchParams.get("executionId"));
 
   const [sessionId, setSessionId] = useState("");
@@ -138,7 +139,6 @@ function InvestorAIConversation() {
   const [awaitingAdditional, setAwaitingAdditional] = useState(false);
   const [additionalText, setAdditionalText] = useState("");
   const [isDone, setIsDone] = useState(false);
-  const [updateInterval, setUpdateInterval] = useState("48 hours");
   const [progressStep, setProgressStep] = useState(0);
 
   const [inputMode, setInputMode] = useState<"text" | "voice">("text");
@@ -165,7 +165,6 @@ function InvestorAIConversation() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<any>(null);
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -239,7 +238,7 @@ function InvestorAIConversation() {
         setMessages([{ role: "ai", content: message, timestamp: new Date() }]);
         setTimeout(() => speakText(message), 500);
       } catch {
-        toast.error("Failed to start conversation. Please try again.");
+        toast.error(t("toastStartFailed"));
         router.push("/investor/execute");
       } finally {
         setIsStarting(false);
@@ -252,16 +251,16 @@ function InvestorAIConversation() {
   const startRecording = () => {
     if (typeof window === "undefined") return;
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast.error("Speech recognition not supported in this browser."); return; }
+    if (!SR) { toast.error(t("toastNoSpeech")); return; }
 
     const recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (e: any) => {
-      const t = Array.from(e.results).map((r: any) => r[0].transcript).join("");
-      setTranscript(t);
-      setUserInput(t);
+      const tr = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+      setTranscript(tr);
+      setUserInput(tr);
     };
     recognition.onend = () => setIsRecording(false);
     recognitionRef.current = recognition;
@@ -276,9 +275,9 @@ function InvestorAIConversation() {
   };
 
   const handlePdfUpload = async (file: File) => {
-    if (!file.type.includes("pdf")) { toast.error("Please upload a PDF file."); return; }
+    if (!file.type.includes("pdf")) { toast.error(t("toastInvalidPDF")); return; }
     setPdfFile(file);
-    toast.success(`PDF "${file.name}" attached — Aria will factor this into the assessment.`);
+    toast.success(t("toastPDFAttached", { name: file.name }));
     setPdfText(`[PDF Document: ${file.name} — ${(file.size / 1024).toFixed(1)} KB attached]`);
   };
 
@@ -321,7 +320,7 @@ function InvestorAIConversation() {
         speakText(reply);
       }
     } catch {
-      toast.error("Failed to send response. Please try again.");
+      toast.error(t("toastSendFailed"));
       setMessages((prev) => prev.slice(0, -1));
       setUserInput(rawAnswer);
     } finally {
@@ -351,7 +350,7 @@ function InvestorAIConversation() {
       setProgressStep(3);
       speakText(closing);
     } catch {
-      toast.error("Failed to finalise. Please try again.");
+      toast.error(t("toastFinaliseFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -387,10 +386,10 @@ function InvestorAIConversation() {
         </div>
         <div style={{ textAlign: "center" }}>
           <p style={{ color: "#d4af37", fontFamily: "'Playfair Display',serif", fontSize: 22, margin: 0 }}>
-            Aria is preparing your session
+            {t("reviewingSubmission")}
           </p>
           <p style={{ color: "#555", fontSize: 13, marginTop: 8 }}>
-            Welcome, {lastName}. Reviewing your investment profile…
+            {t("analysingProfile")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -506,10 +505,12 @@ function InvestorAIConversation() {
           </div>
         </div>
 
-        <ProgressBar step={progressStep} />
+        <ProgressBar
+          step={progressStep}
+          steps={[t("progressConnected"), t("progressAssessment"), t("progressReview"), t("progressComplete")]}
+        />
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {[1, 2, 3].map((i) => (
               <div key={i} style={{
@@ -527,9 +528,9 @@ function InvestorAIConversation() {
             {formatDuration(sessionDuration)}
           </span>
 
-          <button className={`icon-btn ${showSearch ? "active" : ""}`} onClick={() => setShowSearch(!showSearch)} title="Search messages">🔍</button>
-          <button className={`icon-btn ${showTimestamps ? "active" : ""}`} onClick={() => setShowTimestamps(!showTimestamps)} title="Toggle timestamps">🕐</button>
-          <button className={`icon-btn ${isMuted ? "active" : ""}`} onClick={() => setIsMuted(!isMuted)} title="Toggle voice">
+          <button className={`icon-btn ${showSearch ? "active" : ""}`} onClick={() => setShowSearch(!showSearch)} title={t("searchMessages")}>🔍</button>
+          <button className={`icon-btn ${showTimestamps ? "active" : ""}`} onClick={() => setShowTimestamps(!showTimestamps)} title={showTimestamps ? t("hideTimestamps") : t("showTimestamps")}>🕐</button>
+          <button className={`icon-btn ${isMuted ? "active" : ""}`} onClick={() => setIsMuted(!isMuted)} title={isMuted ? t("unmuteAria") : t("muteAria")}>
             {isMuted ? "🔇" : "🔊"}
           </button>
           <button className={`icon-btn ${isFullscreen ? "active" : ""}`} onClick={() => setIsFullscreen(!isFullscreen)} title="Fullscreen">⛶</button>
@@ -558,26 +559,26 @@ function InvestorAIConversation() {
             animation: "fadeSlideIn 0.2s ease",
           }}>
             <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
-              Session Controls
+              {t("sessionControls")}
             </p>
 
             <div className="sidebar-item" onClick={() => fileInputRef.current?.click()}>
-              <span>📎</span> Attach PDF
+              <span>📎</span> {t("attachPDF")}
             </div>
             <div className="sidebar-item" onClick={() => { setInputMode(inputMode === "voice" ? "text" : "voice"); }}>
               <span>{inputMode === "voice" ? "⌨️" : "🎙️"}</span>
-              {inputMode === "voice" ? "Switch to Text" : "Switch to Voice"}
+              {inputMode === "voice" ? t("switchToText") : t("switchToVoice")}
             </div>
             <div className="sidebar-item" onClick={() => setIsMuted(!isMuted)}>
-              <span>{isMuted ? "🔇" : "🔊"}</span> {isMuted ? "Unmute Aria" : "Mute Aria"}
+              <span>{isMuted ? "🔇" : "🔊"}</span> {isMuted ? t("unmuteAria") : t("muteAria")}
             </div>
             <div className="sidebar-item" onClick={() => setShowTimestamps(!showTimestamps)}>
-              <span>🕐</span> {showTimestamps ? "Hide" : "Show"} Timestamps
+              <span>🕐</span> {showTimestamps ? t("hideTimestamps") : t("showTimestamps")}
             </div>
 
             <div style={{ borderTop: "1px solid #111", margin: "8px 0" }} />
             <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
-              Text Size
+              {t("textSize")}
             </p>
             <div style={{ display: "flex", gap: 6, padding: "0 14px" }}>
               {[12, 14, 16].map((s) => (
@@ -589,17 +590,17 @@ function InvestorAIConversation() {
 
             <div style={{ borderTop: "1px solid #111", margin: "8px 0" }} />
             <p style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: 1.5, padding: "0 14px 8px" }}>
-              Session Stats
+              {t("sessionStats")}
             </p>
             <div style={{ padding: "0 14px" }}>
               {[
-                ["Messages", messageCount],
-                ["Duration", formatDuration(sessionDuration)],
-                ["Status", isDone ? "Complete" : "Active"],
+                [t("messages"), messageCount],
+                [t("duration"), formatDuration(sessionDuration)],
+                [t("status"), isDone ? t("statusComplete") : t("statusActive")],
               ].map(([k, v]) => (
                 <div key={String(k)} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #111", fontSize: 12 }}>
                   <span style={{ color: "#555" }}>{k}</span>
-                  <span style={{ color: isDone && k === "Status" ? "#22c55e" : "#d4af37" }}>{v}</span>
+                  <span style={{ color: isDone && k === t("status") ? "#22c55e" : "#d4af37" }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -608,9 +609,9 @@ function InvestorAIConversation() {
             <div className="sidebar-item" onClick={() => {
               const text = messages.map((m) => `${m.role === "ai" ? "Aria" : "You"}: ${m.content}`).join("\n\n");
               navigator.clipboard.writeText(text);
-              toast.success("Transcript copied!");
+              toast.success(t("transcriptCopied"));
             }}>
-              <span>📋</span> Copy Transcript
+              <span>📋</span> {t("copyTranscript")}
             </div>
           </div>
         )}
@@ -621,7 +622,7 @@ function InvestorAIConversation() {
             <div style={{ padding: "10px 20px", background: "#080808", borderBottom: "1px solid #151515" }}>
               <input
                 className="dark-input"
-                placeholder="Search messages…"
+                placeholder={t("searchMessages")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ maxWidth: 400 }}
@@ -639,10 +640,10 @@ function InvestorAIConversation() {
               <span style={{ fontSize: 28 }}>💼</span>
               <div>
                 <p style={{ margin: 0, color: "#d4af37", fontFamily: "'Playfair Display',serif", fontSize: 15 }}>
-                  Welcome back, {lastName}
+                  {t("welcomeBack", { name: lastName })}
                 </p>
                 <p style={{ margin: 0, color: "#555", fontSize: 12, marginTop: 3 }}>
-                  Your AI investment assessment session is now active. All responses are confidential.
+                  {t("sessionActive")}
                 </p>
               </div>
             </div>
@@ -707,17 +708,17 @@ function InvestorAIConversation() {
               }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
                 <p style={{ color: "#22c55e", fontFamily: "'Playfair Display',serif", fontSize: 18, margin: "0 0 6px" }}>
-                  Session Complete
+                  {t("assessmentComplete")}
                 </p>
                 <p style={{ color: "#555", fontSize: 13, margin: 0 }}>
-                  Your investment assessment has been saved. You will receive an update within {updateInterval}.
+                  {t("assessmentSaved")}
                 </p>
                 <button
                   className="gold-btn"
                   style={{ marginTop: 16 }}
                   onClick={() => { queryClient.invalidateQueries({ queryKey: ["investor-executions"] }); router.push("/investor/executions"); }}
                 >
-                  Return to Dashboard →
+                  {t("viewExecutions")}
                 </button>
               </div>
             )}
@@ -751,7 +752,7 @@ function InvestorAIConversation() {
                       >×</button>
                     </div>
                   ) : (
-                    <p style={{ color: "#555", fontSize: 12, margin: 0 }}>Drop PDF here or click to upload</p>
+                    <p style={{ color: "#555", fontSize: 12, margin: 0 }}>{t("dropPDF")}</p>
                   )}
                 </div>
               )}
@@ -768,13 +769,13 @@ function InvestorAIConversation() {
                     <button
                       className="icon-btn"
                       onClick={() => fileInputRef.current?.click()}
-                      title="Attach PDF"
+                      title={t("attachPDF")}
                     >📎</button>
                   )}
                   <button
                     className={`icon-btn ${isMuted ? "active" : ""}`}
                     onClick={() => setIsMuted(!isMuted)}
-                    title={isMuted ? "Unmute" : "Mute Aria"}
+                    title={isMuted ? t("unmuteAria") : t("muteAria")}
                   >
                     {isMuted ? "🔇" : "🔊"}
                   </button>
@@ -784,7 +785,7 @@ function InvestorAIConversation() {
               {awaitingAdditional ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
-                    Optional: Share any additional context for Aria to consider.
+                    {t("additionalContextHint")}
                   </p>
                   <textarea
                     className="dark-input"
@@ -796,10 +797,10 @@ function InvestorAIConversation() {
                   />
                   <div style={{ display: "flex", gap: 10 }}>
                     <button className="gold-btn" onClick={submitExecution} disabled={isSubmitting} style={{ flex: 1 }}>
-                      {isSubmitting ? "Saving…" : "✓ Submit & Complete Assessment"}
+                      {isSubmitting ? t("savingAssessment") : t("submitComplete")}
                     </button>
                     <button className="ghost-btn" onClick={() => submitExecution()} disabled={isSubmitting}>
-                      Skip
+                      {t("skip")}
                     </button>
                   </div>
                 </div>
@@ -810,7 +811,7 @@ function InvestorAIConversation() {
                       width: "100%", padding: "10px 14px", background: "#0f0f0f",
                       border: "1px solid #222", borderRadius: 10, fontSize: 13, color: "#ccc",
                     }}>
-                      <span style={{ color: "#d4af37", fontSize: 11 }}>Transcript: </span>
+                      <span style={{ color: "#d4af37", fontSize: 11 }}>{t("transcriptLabel")}</span>
                       {transcript}
                     </div>
                   )}
@@ -835,11 +836,11 @@ function InvestorAIConversation() {
                     <VoiceWave active={isRecording} />
                   </div>
                   <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
-                    {isRecording ? "Recording… click to stop" : "Click to start speaking"}
+                    {isRecording ? t("recordingHint") : t("startSpeaking")}
                   </p>
                   {transcript && (
                     <button className="gold-btn" onClick={sendAnswer} disabled={isSending || !transcript.trim()}>
-                      Send Response →
+                      {t("sendResponse")}
                     </button>
                   )}
                 </div>
@@ -849,7 +850,7 @@ function InvestorAIConversation() {
                     ref={textareaRef}
                     className="dark-input"
                     rows={2}
-                    placeholder="Type your response…  (Enter to send, Shift+Enter for new line)"
+                    placeholder={t("typeResponse")}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
                     onKeyDown={(e) => {
