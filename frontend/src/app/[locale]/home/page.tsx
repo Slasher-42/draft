@@ -368,7 +368,7 @@ export default function HomePage() {
 
         {/* ── Nav bar ─────────────────────────────────────────────────────── */}
         <nav className="relative flex items-center justify-between px-6 md:px-12 py-4"
-          style={{ zIndex: 10, background: "rgba(13,27,46,0.30)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(115,168,207,0.1)" }}>
+          style={{ zIndex: 30, background: "rgba(13,27,46,0.30)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(115,168,207,0.1)" }}>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl overflow-hidden flex-shrink-0 shadow-lg">
               <Image src="/logo.png" alt="RG Partners" width={40} height={40} className="object-cover w-full h-full" />
