@@ -29,6 +29,8 @@ const roleColors: Record<UserRole, string> = {
   ADMIN: "bg-[var(--color-primary-100)] text-[var(--color-primary-700)]",
 };
 
+const normalizeRole = (role: string) => role.replace(/^ROLE_/, "") as UserRole;
+
 export default function AdminUsersPage() {
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("common");
@@ -191,10 +193,10 @@ export default function AdminUsersPage() {
                         </p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            roleColors[user.role]
+                            roleColors[normalizeRole(user.role)]
                           }`}
                         >
-                          {tCommon(`roles.${user.role.toLowerCase()}`)}
+                          {tCommon(`roles.${normalizeRole(user.role).toLowerCase()}`)}
                         </span>
                         <Badge
                           variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}

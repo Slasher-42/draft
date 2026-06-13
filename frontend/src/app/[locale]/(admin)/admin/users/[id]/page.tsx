@@ -28,6 +28,8 @@ const roleColors: Record<string, string> = {
   ADMIN: "bg-[var(--color-primary-100)] text-[var(--color-primary-700)]",
 };
 
+const normalizeRole = (role: string) => role.replace(/^ROLE_/, "");
+
 export default function UserDetailPage() {
   const t = useTranslations("admin.userDetail");
   const tCommon = useTranslations("common");
@@ -38,11 +40,13 @@ export default function UserDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isActing, setIsActing] = useState(false);
 
- userService
-  .getUserById(id as string)
-  .then((user) => setUser(user))
-  .catch(() => setUser(null))
-  .finally(() => setIsLoading(false));
+  useEffect(() => {
+    userService
+      .getUserById(id as string)
+      .then((user) => setUser(user))
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
+  }, [id]);
 
   const handleActivate = async () => {
     setIsActing(true);
@@ -128,10 +132,10 @@ export default function UserDetailPage() {
                 </h3>
                 <span
                   className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                    roleColors[user.role]
+                    roleColors[normalizeRole(user.role)]
                   }`}
                 >
-                  {tCommon(`roles.${user.role.toLowerCase()}`)}
+                  {tCommon(`roles.${normalizeRole(user.role).toLowerCase()}`)}
                 </span>
                 <Badge
                   variant={(user.enabled ?? user.isActive) ? "success" : "destructive"}
