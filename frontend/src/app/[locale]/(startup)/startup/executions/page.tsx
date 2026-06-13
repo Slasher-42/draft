@@ -586,7 +586,7 @@ export default function StartupExecutionsPage() {
                     </p>
                   )}
 
-                  {exec.status === "PENDING" && (
+                  {exec.status === "PENDING" && !exec.aiSessionId && (
                     <div className="space-y-2">
                       <p className="text-xs text-blue-600 flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
@@ -599,6 +599,13 @@ export default function StartupExecutionsPage() {
                         </Button>
                       </Link>
                     </div>
+                  )}
+
+                  {exec.status === "PENDING" && exec.aiSessionId && (
+                    <p className="text-xs text-blue-600 flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {t("awaitingReview")}
+                    </p>
                   )}
 
                   {exec.status === "REJECTED" && exec.statusReason && (

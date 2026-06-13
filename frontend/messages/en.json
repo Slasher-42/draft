@@ -748,6 +748,7 @@
       "matchNoticeSingle": "A potential investor has been found for your startup!",
       "aiPending": "AI assessment may still be pending — complete it below",
       "completeAI": "Complete AI Assessment",
+      "awaitingReview": "AI assessment complete — awaiting evaluator review",
       "matchedInvestorTitle": "Matched Investor Details",
       "contactInfo": "Contact Information",
       "fullName": "Full Name",

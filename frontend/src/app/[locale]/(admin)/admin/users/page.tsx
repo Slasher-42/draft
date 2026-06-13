@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { userService } from "@/services/userService";
 import { User, UserRole } from "@/types/user";
@@ -53,25 +53,43 @@ export default function AdminUsersPage() {
     setSearch(searchInput);
   };
 
-  const handleActivate = async (id: string) => {
-    try {
-      await userService.activateUser(id);
-      toast.success(t("toastActivated"));
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (user: User) => {
+      const isActive = user.enabled ?? user.isActive;
+      if (isActive) {
+        await userService.deactivateUser(user.id);
+      } else {
+        await userService.activateUser(user.id);
+      }
+    },
+    onMutate: async (user) => {
+      const queryKey = ["admin-users", roleFilter, search];
+      await queryClient.cancelQueries({ queryKey });
+      const previousUsers = queryClient.getQueryData<User[]>(queryKey);
+      queryClient.setQueryData<User[]>(queryKey, (old) =>
+        old?.map((u) => {
+          if (u.id !== user.id) return u;
+          const nextActive = !(u.enabled ?? u.isActive);
+          return { ...u, enabled: nextActive, isActive: nextActive };
+        })
+      );
+      return { previousUsers, queryKey };
+    },
+    onError: (_err, user, context) => {
+      if (context) {
+        queryClient.setQueryData(context.queryKey, context.previousUsers);
+      }
+      const isActive = user.enabled ?? user.isActive;
+      toast.error(isActive ? t("toastDeactivateFailed") : t("toastActivateFailed"));
+    },
+    onSuccess: (_data, user) => {
+      const wasActive = user.enabled ?? user.isActive;
+      toast.success(wasActive ? t("toastDeactivated") : t("toastActivated"));
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch {
-      toast.error(t("toastActivateFailed"));
-    }
-  };
-
-  const handleDeactivate = async (id: string) => {
-    try {
-      await userService.deactivateUser(id);
-      toast.success(t("toastDeactivated"));
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch {
-      toast.error(t("toastDeactivateFailed"));
-    }
-  };
+    },
+  });
 
   const handleDelete = async (id: string) => {
     if (!confirm(t("confirmDelete")))
@@ -202,7 +220,8 @@ export default function AdminUsersPage() {
                         variant="ghost"
                         size="icon"
                         title={t("deactivate")}
-                        onClick={() => handleDeactivate(user.id)}
+                        onClick={() => toggleStatusMutation.mutate(user)}
+                        disabled={toggleStatusMutation.isPending}
                       >
                         <UserX className="h-4 w-4 text-yellow-500" />
                       </Button>
@@ -211,7 +230,8 @@ export default function AdminUsersPage() {
                         variant="ghost"
                         size="icon"
                         title={t("activate")}
-                        onClick={() => handleActivate(user.id)}
+                        onClick={() => toggleStatusMutation.mutate(user)}
+                        disabled={toggleStatusMutation.isPending}
                       >
                         <UserCheck className="h-4 w-4 text-green-600" />
                       </Button>

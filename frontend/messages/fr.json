@@ -748,6 +748,7 @@
       "matchNoticeSingle": "Un investisseur potentiel a été trouvé pour votre startup !",
       "aiPending": "L'évaluation IA peut encore être en attente — complétez-la ci-dessous",
       "completeAI": "Compléter l'évaluation IA",
+      "awaitingReview": "Évaluation IA terminée — en attente de l'examen de l'évaluateur",
       "matchedInvestorTitle": "Détails de l'investisseur correspondant",
       "contactInfo": "Informations de contact",
       "fullName": "Nom complet",
