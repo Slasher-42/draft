@@ -41,20 +41,26 @@ public class UserEventPublisher {
 
 
     private void send(String topic, String key, Object payload) {
-        CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key, payload);
-        future.whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("[Kafka] Failed to publish to topic '{}' with key '{}': {}",
-                        topic, key, ex.getMessage());
-            } else {
-                log.info("[Kafka] Published to topic '{}' | partition={} | offset={}",
-                        topic,
-                        result.getRecordMetadata().partition(),
-                        result.getRecordMetadata().offset());
-            }
-        });
-
-
+        try {
+            CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key, payload);
+            future.whenComplete((result, ex) -> {
+                if (ex != null) {
+                    log.error("[Kafka] Failed to publish to topic '{}' with key '{}': {}",
+                            topic, key, ex.getMessage());
+                } else {
+                    log.info("[Kafka] Published to topic '{}' | partition={} | offset={}",
+                            topic,
+                            result.getRecordMetadata().partition(),
+                            result.getRecordMetadata().offset());
+                }
+            });
+        } catch (Exception ex) {
+            // send() can throw synchronously (e.g. it couldn't fetch topic metadata
+            // within max.block.ms). Never let a Kafka outage fail the calling
+            // service method or skip its @CacheEvict.
+            log.error("[Kafka] Could not publish to topic '{}' with key '{}': {}",
+                    topic, key, ex.getMessage());
+        }
     }
 
     public void publishUserStatusChanged(UserStatusChangedEvent event) {

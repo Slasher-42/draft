@@ -30,6 +30,10 @@ public class KafkaProducerConfig {
         // Ensure reliable delivery
         config.put(ProducerConfig.ACKS_CONFIG, "all");
         config.put(ProducerConfig.RETRIES_CONFIG, 3);
+        // Fail fast instead of blocking the calling thread for the default 60s
+        // when the broker is unreachable (e.g. cluster paused/unavailable).
+        config.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 3000);
+        config.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 3000);
         return new DefaultKafkaProducerFactory<>(config);
     }
 
