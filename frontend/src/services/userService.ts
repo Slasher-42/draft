@@ -75,7 +75,8 @@ export const userService = {
   if (params?.role) url.searchParams.set("role", params.role);
   if (params?.search) url.searchParams.set("search", params.search);
   const res = await fetch(url.toString(), {
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    cache: "no-store",
   });
   const data = await res.json();
   const result = data?.data ?? data;
