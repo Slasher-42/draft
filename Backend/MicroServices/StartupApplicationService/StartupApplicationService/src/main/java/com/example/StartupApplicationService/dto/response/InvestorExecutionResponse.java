@@ -29,6 +29,7 @@ public class InvestorExecutionResponse {
     private LocalDateTime fundedAt;
     private Boolean withheld;
     private LocalDateTime withheldAt;
+    private String withholdReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

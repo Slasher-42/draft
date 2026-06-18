@@ -129,7 +129,8 @@
       "rejected": "Byanzwe",
       "escalated": "Byazamujwe",
       "matchFound": "Mahuriro Abonetse",
-      "update": "Kuvugurura"
+      "update": "Kuvugurura",
+      "withheld": "Igikorwa Cyahakanwe"
     },
     "timeAgo": {
       "justNow": "ubu nyine",
@@ -496,7 +497,8 @@
         "rejected": "Byanzwe",
         "escalated": "Byazamuwe",
         "matchFound": "Ihuriro Ryabonetse",
-        "update": "Ivugurura"
+        "update": "Ivugurura",
+        "withheld": "Igikorwa Cyahakanwe"
       }
     },
     "alumni": {
@@ -538,7 +540,8 @@
       "askForFund": "Saba Inkunga",
       "withheld": "Byanzwe",
       "withheldBadge": "BYANZWE",
-      "withheldOn": "Byanzwe {date}"
+      "withheldOn": "Byanzwe {date}",
+      "withholdReasonLabel": "Impamvu:"
     },
     "usersCreate": {
       "backToUsers": "Garuka ku bakoresha",
@@ -1245,7 +1248,10 @@
       "toastInvestSuccess": "Ishoramari ryoherejwe neza",
       "toastInvestFailed": "Ishoramari ntiryakunze",
       "withholdBtn": "Hakana",
-      "withholdConfirm": "Wifuza guhakana iki gikorwa? Kizafatwa nk'igihakanwe kandi kikuzwe burundu ku rutonde rwawe — ibi ntibishobora gusubizwa.",
+      "withholdReasonLabel": "Impamvu yo guhakana",
+      "withholdReasonPlaceholder": "urugero: Nabonye amahirwe meza ahandi",
+      "confirmWithholdBtn": "Emeza Guhakana",
+      "toastWithholdReasonRequired": "Nyamuneka tanga impamvu yo guhakana",
       "toastWithholdSuccess": "Igikorwa cyahakanwe neza",
       "toastWithholdFailed": "Guhakana igikorwa ntibyakunze"
     },

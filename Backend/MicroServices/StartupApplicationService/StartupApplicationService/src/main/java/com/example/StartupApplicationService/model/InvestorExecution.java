@@ -64,6 +64,9 @@ public class InvestorExecution {
 
     private LocalDateTime withheldAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String withholdReason;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -79,4 +79,23 @@ export const investmentMonitorService = {
       {},
       { headers: authHeader() }
     ),
+
+  notifyWithhold: (payload: {
+    investorUserId: number;
+    startupUserId: number;
+    executionId: number;
+    investorName: string;
+    executionTitle?: string;
+    reason: string;
+  }) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      return Promise.reject({ response: { status: 401 }, message: "Not authenticated" });
+    }
+    return axios.post(
+      "https://reporting-notification-service.onrender.com/api/notifications/withhold-notice",
+      { ...payload, token },
+      { timeout: 65000 }
+    );
+  },
 };

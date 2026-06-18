@@ -24,6 +24,7 @@ const typeColors: Record<string, string> = {
   STARTUP_ESCALATED: "bg-yellow-100 text-yellow-700 border-yellow-200",
   MATCH_FOUND:       "bg-blue-100 text-blue-700 border-blue-200",
   INTERVAL_UPDATE:   "bg-neutral-100 text-neutral-600 border-neutral-200",
+  EXECUTION_WITHHELD: "bg-red-100 text-red-700 border-red-200",
 };
 
 function getTypeLabels(t: ReturnType<typeof useTranslations<"admin.notifications">>): Record<string, string> {
@@ -33,6 +34,7 @@ function getTypeLabels(t: ReturnType<typeof useTranslations<"admin.notifications
     STARTUP_ESCALATED: t("types.escalated"),
     MATCH_FOUND:       t("types.matchFound"),
     INTERVAL_UPDATE:   t("types.update"),
+    EXECUTION_WITHHELD: t("types.withheld"),
   };
 }
 

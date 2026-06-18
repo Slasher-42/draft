@@ -1,6 +1,7 @@
 package com.example.Reporting.and.Notification.Service.controller;
 
 import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
+import com.example.Reporting.and.Notification.Service.dto.request.WithholdNoticeRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.ApiResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.TokenValidationResponse;
@@ -133,5 +134,49 @@ public class NotificationController {
         NotificationResponse response = notificationService.createFundRequestNotification(request);
         return ResponseEntity.ok(new ApiResponse<>(true,
                 "Fund request notification sent to " + request.getInvestorName(), response));
+    }
+
+    @PostMapping("/withhold-notice")
+    public ResponseEntity<ApiResponse<NotificationResponse>> withholdNotice(
+            @Valid @RequestBody WithholdNoticeRequest request) {
+        // Render strips the Authorization/X-Token headers before they reach this service
+        // (see askForFund above), so this endpoint is permitAll and validates the JWT
+        // carried in the request body instead.
+        String token = request.getToken();
+        if (!StringUtils.hasText(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "Unauthorized", null));
+        }
+
+        TokenValidationResponse validation;
+        try {
+            ApiResponse<TokenValidationResponse> result = webClientBuilder.build()
+                    .get()
+                    .uri(userManagementUrl + "/api/auth/validate")
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<TokenValidationResponse>>() {})
+                    .timeout(Duration.ofSeconds(60))
+                    .block();
+            validation = (result != null) ? result.getData() : null;
+        } catch (Exception e) {
+            log.error("WITHHOLD-NOTICE validate call to {} failed: {} - {}",
+                    userManagementUrl + "/api/auth/validate", e.getClass().getName(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new ApiResponse<>(false, "Authentication service unavailable, please try again in a moment", null));
+        }
+
+        if (validation == null || !validation.isValid()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "Token invalid or expired", null));
+        }
+
+        if (!"ROLE_INVESTOR".equals(validation.getRole()) || !validation.getUserId().equals(request.getInvestorUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>(false, "You don't have permission to send this notification", null));
+        }
+
+        NotificationResponse response = notificationService.createWithholdNotification(request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Startup notified of the withheld execution", response));
     }
 }

@@ -129,7 +129,8 @@
       "rejected": "Rejected",
       "escalated": "Escalated",
       "matchFound": "Match Found",
-      "update": "Update"
+      "update": "Update",
+      "withheld": "Execution Withheld"
     },
     "timeAgo": {
       "justNow": "just now",
@@ -496,7 +497,8 @@
         "rejected": "Rejected",
         "escalated": "Escalated",
         "matchFound": "Match Found",
-        "update": "Update"
+        "update": "Update",
+        "withheld": "Execution Withheld"
       }
     },
     "alumni": {
@@ -538,7 +540,8 @@
       "askForFund": "Ask for Fund",
       "withheld": "Withheld",
       "withheldBadge": "WITHHELD",
-      "withheldOn": "Withheld {date}"
+      "withheldOn": "Withheld {date}",
+      "withholdReasonLabel": "Reason:"
     },
     "usersCreate": {
       "backToUsers": "Back to users",
@@ -1245,7 +1248,10 @@
       "toastInvestSuccess": "Investment transferred successfully",
       "toastInvestFailed": "Investment failed",
       "withholdBtn": "Withhold",
-      "withholdConfirm": "Withhold this execution? It will be treated as refused and removed from your list permanently — this cannot be undone.",
+      "withholdReasonLabel": "Reason for withholding",
+      "withholdReasonPlaceholder": "e.g. Found a better opportunity elsewhere",
+      "confirmWithholdBtn": "Confirm Withhold",
+      "toastWithholdReasonRequired": "Please provide a reason for withholding",
       "toastWithholdSuccess": "Execution withheld successfully",
       "toastWithholdFailed": "Failed to withhold execution"
     },

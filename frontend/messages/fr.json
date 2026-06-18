@@ -129,7 +129,8 @@
       "rejected": "Rejeté",
       "escalated": "Escaladé",
       "matchFound": "Correspondance trouvée",
-      "update": "Mise à jour"
+      "update": "Mise à jour",
+      "withheld": "Exécution retenue"
     },
     "timeAgo": {
       "justNow": "à l'instant",
@@ -496,7 +497,8 @@
         "rejected": "Rejeté",
         "escalated": "Escaladé",
         "matchFound": "Correspondance trouvée",
-        "update": "Mise à jour"
+        "update": "Mise à jour",
+        "withheld": "Exécution retenue"
       }
     },
     "alumni": {
@@ -538,7 +540,8 @@
       "askForFund": "Demander un financement",
       "withheld": "Retenu",
       "withheldBadge": "RETENU",
-      "withheldOn": "Retenu le {date}"
+      "withheldOn": "Retenu le {date}",
+      "withholdReasonLabel": "Motif :"
     },
     "usersCreate": {
       "backToUsers": "Retour aux utilisateurs",
@@ -1245,7 +1248,10 @@
       "toastInvestSuccess": "Investissement transféré avec succès",
       "toastInvestFailed": "Échec de l'investissement",
       "withholdBtn": "Retenir",
-      "withholdConfirm": "Retenir cette exécution ? Elle sera considérée comme refusée et supprimée définitivement de votre liste — cette action est irréversible.",
+      "withholdReasonLabel": "Motif de la rétention",
+      "withholdReasonPlaceholder": "ex. J'ai trouvé une meilleure opportunité ailleurs",
+      "confirmWithholdBtn": "Confirmer la rétention",
+      "toastWithholdReasonRequired": "Veuillez indiquer un motif de rétention",
       "toastWithholdSuccess": "Exécution retenue avec succès",
       "toastWithholdFailed": "Échec de la rétention de l'exécution"
     },

@@ -1,6 +1,7 @@
 package com.example.StartupApplicationService.controller;
 
 import com.example.StartupApplicationService.dto.request.InvestorExecutionRequest;
+import com.example.StartupApplicationService.dto.request.WithholdRequest;
 import com.example.StartupApplicationService.dto.response.ApiResponse;
 import com.example.StartupApplicationService.dto.response.InvestorExecutionResponse;
 import com.example.StartupApplicationService.service.InvestorExecutionService;
@@ -121,9 +122,10 @@ public class InvestorExecutionController {
     @PatchMapping("/{id}/withhold")
     public ResponseEntity<ApiResponse<InvestorExecutionResponse>> withhold(
             Authentication authentication,
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @Valid @RequestBody WithholdRequest request) {
         Long userId = (Long) authentication.getPrincipal();
-        InvestorExecutionResponse response = investorExecutionService.withhold(id, userId);
+        InvestorExecutionResponse response = investorExecutionService.withhold(id, userId, request.getReason());
         return ResponseEntity.ok(new ApiResponse<>(true, "Execution withheld successfully", response));
     }
 }

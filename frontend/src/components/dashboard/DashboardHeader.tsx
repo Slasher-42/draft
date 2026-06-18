@@ -15,6 +15,7 @@ const typeColors: Record<string, string> = {
   STARTUP_ESCALATED: "bg-amber-50 text-amber-700 border border-amber-200",
   MATCH_FOUND: "bg-blue-50 text-blue-700 border border-blue-200",
   INTERVAL_UPDATE: "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] border border-[var(--color-border)]",
+  EXECUTION_WITHHELD: "bg-red-50 text-red-700 border border-red-200",
 };
 
 const typeDots: Record<string, string> = {
@@ -23,6 +24,7 @@ const typeDots: Record<string, string> = {
   STARTUP_ESCALATED: "bg-amber-400",
   MATCH_FOUND: "bg-blue-400",
   INTERVAL_UPDATE: "bg-[var(--color-neutral-400)]",
+  EXECUTION_WITHHELD: "bg-red-400",
 };
 
 export function DashboardHeader() {
@@ -42,6 +44,7 @@ export function DashboardHeader() {
     STARTUP_ESCALATED: tn("types.escalated"),
     MATCH_FOUND: tn("types.matchFound"),
     INTERVAL_UPDATE: tn("types.update"),
+    EXECUTION_WITHHELD: tn("types.withheld"),
   };
 
   useEffect(() => {

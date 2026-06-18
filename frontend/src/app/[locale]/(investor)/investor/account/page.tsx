@@ -78,6 +78,8 @@ export default function InvestorAccountPage() {
   const [investDesc, setInvestDesc] = useState("");
   const [investing, setInvesting] = useState(false);
   const [withholdingId, setWithholdingId] = useState<number | null>(null);
+  const [withholdReasonId, setWithholdReasonId] = useState<number | null>(null);
+  const [withholdReasonText, setWithholdReasonText] = useState("");
 
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["investor-account", user?.id],
@@ -217,17 +219,37 @@ export default function InvestorAccountPage() {
   };
 
   const handleWithhold = async (executionId: number) => {
-    if (!confirm(t("withholdConfirm"))) return;
+    const reason = withholdReasonText.trim();
+    if (!reason) { toast.error(t("toastWithholdReasonRequired")); return; }
     setWithholdingId(executionId);
     try {
-      await investorService.withholdExecution(executionId);
+      const exec = myExecutions.find((e) => e.id === executionId);
+      await investorService.withholdExecution(executionId, reason);
       setMyExecutions((prev) => prev.filter((e) => e.id !== executionId));
       if (selectedExecutionId === executionId) {
         setSelectedExecutionId(null);
         setSelectedMatchId(null);
         setInvestAmount("");
       }
+
+      const execMatches = matches.filter((m: any) => m.investorExecutionId === executionId);
+      const startupIds = [...new Set(execMatches.map((m: any) => m.startupUserId))];
+      await Promise.allSettled(
+        startupIds.map((startupUserId) =>
+          investmentMonitorService.notifyWithhold({
+            investorUserId: Number(user?.id),
+            startupUserId: startupUserId as number,
+            executionId,
+            investorName: user?.fullName ?? `Investor #${user?.id}`,
+            executionTitle: exec?.preferredIndustry,
+            reason,
+          })
+        )
+      );
+
       toast.success(t("toastWithholdSuccess"));
+      setWithholdReasonId(null);
+      setWithholdReasonText("");
     } catch {
       toast.error(t("toastWithholdFailed"));
     } finally {
@@ -427,20 +449,55 @@ export default function InvestorAccountPage() {
                           </button>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
-                              onClick={() => handleWithhold(exec.id)}
-                              disabled={withholdingId === exec.id}
-                            >
-                              {withholdingId === exec.id
-                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                : <Ban className="h-3.5 w-3.5" />}
-                              {t("withholdBtn")}
-                            </Button>
+                            {withholdReasonId !== exec.id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={() => { setWithholdReasonId(exec.id); setWithholdReasonText(""); }}
+                              >
+                                <Ban className="h-3.5 w-3.5" />
+                                {t("withholdBtn")}
+                              </Button>
+                            )}
                           </div>
                         </div>
+
+                        {withholdReasonId === exec.id && (
+                          <div className="mt-3 pt-3 border-t border-red-100 space-y-2">
+                            <label className="text-xs font-medium text-red-700 block">
+                              {t("withholdReasonLabel")}
+                            </label>
+                            <textarea
+                              value={withholdReasonText}
+                              onChange={(e) => setWithholdReasonText(e.target.value)}
+                              placeholder={t("withholdReasonPlaceholder")}
+                              rows={2}
+                              className="w-full text-sm border border-red-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleWithhold(exec.id)}
+                                disabled={withholdingId === exec.id}
+                                className="gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+                              >
+                                {withholdingId === exec.id
+                                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  : <Ban className="h-3.5 w-3.5" />}
+                                {t("confirmWithholdBtn")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => { setWithholdReasonId(null); setWithholdReasonText(""); }}
+                                disabled={withholdingId === exec.id}
+                              >
+                                {t("cancelBtn")}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

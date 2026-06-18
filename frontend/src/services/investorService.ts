@@ -43,6 +43,6 @@ export const investorService = {
   withdrawExecution: (id: string) =>
     startupServiceApi.delete(`/api/executions/investor/${id}`),
 
-  withholdExecution: (id: number | string) =>
-    startupServiceApi.patch(`/api/executions/investor/${id}/withhold`),
+  withholdExecution: (id: number | string, reason: string) =>
+    startupServiceApi.patch(`/api/executions/investor/${id}/withhold`, { reason }),
 };

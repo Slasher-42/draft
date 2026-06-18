@@ -1,6 +1,7 @@
 package com.example.Reporting.and.Notification.Service.service;
 
 import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
+import com.example.Reporting.and.Notification.Service.dto.request.WithholdNoticeRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.AnalyticsResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
 
@@ -23,4 +24,6 @@ public interface NotificationService {
     AnalyticsResponse getAnalytics();
 
     NotificationResponse createFundRequestNotification(AskForFundRequest request);
+
+    NotificationResponse createWithholdNotification(WithholdNoticeRequest request);
 }

@@ -29,5 +29,5 @@ public interface InvestorExecutionService {
 
     InvestorExecutionResponse markAsFunded(Long id, Long userId);
 
-    InvestorExecutionResponse withhold(Long id, Long userId);
+    InvestorExecutionResponse withhold(Long id, Long userId, String reason);
 }

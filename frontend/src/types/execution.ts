@@ -54,6 +54,7 @@ export interface InvestorExecution {
   fundedAt?: string;
   withheld?: boolean;
   withheldAt?: string;
+  withholdReason?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -257,6 +257,11 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                           </span>
                         )}
                       </div>
+                      {isWithheld && exec.withholdReason && (
+                        <p className="text-xs text-red-600 mt-1.5 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">
+                          <span className="font-semibold">{t("withholdReasonLabel")}</span> {exec.withholdReason}
+                        </p>
+                      )}
                     </div>
 
                     {/* Ask for Fund button — only for unfunded, non-withheld executions */}

@@ -1,6 +1,7 @@
 package com.example.Reporting.and.Notification.Service.service.impl;
 
 import com.example.Reporting.and.Notification.Service.dto.request.AskForFundRequest;
+import com.example.Reporting.and.Notification.Service.dto.request.WithholdNoticeRequest;
 import com.example.Reporting.and.Notification.Service.dto.response.AnalyticsResponse;
 import com.example.Reporting.and.Notification.Service.dto.response.NotificationResponse;
 import com.example.Reporting.and.Notification.Service.enums.NotificationType;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -158,6 +160,26 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = Notification.builder()
                 .recipientUserId(request.getInvestorUserId())
                 .type(NotificationType.FUND_REQUEST)
+                .message(message)
+                .relatedExecutionId(request.getExecutionId())
+                .read(false)
+                .build();
+
+        return toResponse(notificationRepository.save(notification));
+    }
+
+    @Override
+    public NotificationResponse createWithholdNotification(WithholdNoticeRequest request) {
+        String fieldPart = StringUtils.hasText(request.getExecutionTitle())
+                ? " in " + request.getExecutionTitle() : "";
+
+        String message = "Investor " + request.getInvestorName() + " has withheld execution #" +
+                request.getExecutionId() + fieldPart +
+                " — they will no longer be funding this investment. Reason: " + request.getReason();
+
+        Notification notification = Notification.builder()
+                .recipientUserId(request.getStartupUserId())
+                .type(NotificationType.EXECUTION_WITHHELD)
                 .message(message)
                 .relatedExecutionId(request.getExecutionId())
                 .read(false)
