@@ -71,6 +71,7 @@ export default function StartupAccountPage() {
   const [settleAccountNumber, setSettleAccountNumber] = useState("");
   const [settling, setSettling] = useState(false);
   const [matchedExecutions, setMatchedExecutions] = useState<any[]>([]);
+  const [expandedInvestors, setExpandedInvestors] = useState<Set<number>>(new Set());
 
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["startup-account", user?.id],
@@ -136,20 +137,66 @@ export default function StartupAccountPage() {
           });
         }
 
-        const execList = uniqueMatches.map((m: any) => ({
-          investorUserId: m.investorUserId,
-          investorExecutionId: m.investorExecutionId,
-          matchScore: m.matchScore,
-          matchedAt: m.matchedAt,
-          investorName: (map[m.investorUserId as number] as any)?.fullName ?? `Investor #${m.investorUserId}`,
-          funded: (map[m.investorUserId as number] as any)?._executionFunded ?? null,
-        }));
+        // Fetch actual funded status for every match's investor execution in parallel
+        const execFetchResults = await Promise.allSettled(
+          loadedMatches
+            .filter((m: any) => m.investorExecutionId)
+            .map(async (m: any) => {
+              try {
+                const execRes = await investorService.getExecutionByIdInternal(m.investorExecutionId);
+                const exec = execRes?.data?.data ?? execRes?.data;
+                return {
+                  investorUserId: m.investorUserId as number,
+                  investorExecutionId: m.investorExecutionId as number,
+                  funded: exec?.funded === true,
+                  executionTitle: exec?.preferredIndustry ?? `Execution #${m.investorExecutionId}`,
+                  amount: exec?.investmentBudget ?? 0,
+                  matchScore: m.matchScore,
+                  matchedAt: m.matchedAt,
+                };
+              } catch {
+                return {
+                  investorUserId: m.investorUserId as number,
+                  investorExecutionId: m.investorExecutionId as number,
+                  funded: false,
+                  executionTitle: `Execution #${m.investorExecutionId}`,
+                  amount: 0,
+                  matchScore: m.matchScore,
+                  matchedAt: m.matchedAt,
+                };
+              }
+            })
+        );
+
+        // Group execution results by investor
+        const investorGroupMap: Record<number, any> = {};
+        execFetchResults.forEach((r) => {
+          if (r.status !== "fulfilled") return;
+          const item = r.value;
+          if (!investorGroupMap[item.investorUserId]) {
+            investorGroupMap[item.investorUserId] = {
+              investorUserId: item.investorUserId,
+              investorName: map[item.investorUserId]?.fullName ?? `Investor #${item.investorUserId}`,
+              matchScore: item.matchScore,
+              matchedAt: item.matchedAt,
+              executions: [],
+            };
+          }
+          investorGroupMap[item.investorUserId].executions.push({
+            executionId: item.investorExecutionId,
+            funded: item.funded,
+            executionTitle: item.executionTitle,
+            amount: item.amount,
+            matchScore: item.matchScore,
+            matchedAt: item.matchedAt,
+          });
+        });
 
         return {
           account: accRes?.data?.data ?? null,
           transactions: loadedTx,
           investorInfoMap: map,
-          matchedExecutions: execList,
+          matchedInvestorGroups: Object.values(investorGroupMap),
         };
       } catch {
         toast.error(t("toastLoadFailed"));
@@ -166,7 +213,7 @@ export default function StartupAccountPage() {
     setAccount(accountData.account);
     setTransactions(accountData.transactions);
     setInvestorInfoMap(accountData.investorInfoMap);
-    setMatchedExecutions((accountData as any).matchedExecutions ?? []);
+    setMatchedExecutions((accountData as any).matchedInvestorGroups ?? []);
   }, [accountData]);
 
   const handleSettle = async () => {
@@ -330,49 +377,110 @@ export default function StartupAccountPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {matchedExecutions.map((item: any, i: number) => {
-                const info = investorInfoMap[item.investorUserId];
-                const isFunded = item.funded === true;
-                const isUnknown = item.funded === null || item.funded === undefined;
+              {matchedExecutions.map((investorGroup: any) => {
+                const info = investorInfoMap[investorGroup.investorUserId];
+                const isExpanded = expandedInvestors.has(investorGroup.investorUserId);
+                const executions: any[] = investorGroup.executions ?? [];
+                const fundedCount = executions.filter((e) => e.funded).length;
+
                 return (
-                  <div key={i}
-                    className={`flex items-center gap-3 p-3 rounded-xl border ${
-                      isFunded ? "border-green-200 bg-green-50" : isUnknown ? "border-[var(--color-border)] bg-[var(--color-neutral-50)]" : "border-amber-200 bg-amber-50"
-                    }`}>
-                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isFunded ? "bg-green-100" : isUnknown ? "bg-[var(--color-neutral-100)]" : "bg-amber-100"
-                    }`}>
-                      {isFunded
-                        ? <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        : <Clock className={`h-4 w-4 ${isUnknown ? "text-[var(--color-neutral-400)]" : "text-amber-600"}`} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
-                        {info?.fullName ?? item.investorName}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {item.matchScore && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-neutral-400)]">
-                            <Star className="h-2.5 w-2.5" />
-                            {t("matchPercent", { score: Number(item.matchScore).toFixed(0) })}
-                          </span>
-                        )}
-                        {item.matchedAt && (
-                          <span className="text-[10px] text-[var(--color-neutral-400)]">
-                            {new Date(item.matchedAt).toLocaleDateString()}
-                          </span>
+                  <div key={investorGroup.investorUserId} className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+                    <button
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-neutral-50)] transition-colors text-left"
+                      onClick={() =>
+                        setExpandedInvestors((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(investorGroup.investorUserId)) next.delete(investorGroup.investorUserId);
+                          else next.add(investorGroup.investorUserId);
+                          return next;
+                        })
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-[var(--color-neutral-100)] flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-[var(--color-neutral-500)]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                            {info?.fullName ?? investorGroup.investorName}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {investorGroup.matchScore != null && (
+                              <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-neutral-400)]">
+                                <Star className="h-2.5 w-2.5" />
+                                {t("matchPercent", { score: Number(investorGroup.matchScore).toFixed(0) })}
+                              </span>
+                            )}
+                            {investorGroup.matchedAt && (
+                              <span className="text-[10px] text-[var(--color-neutral-400)]">
+                                {new Date(investorGroup.matchedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                          fundedCount === executions.length && executions.length > 0
+                            ? "bg-green-100 text-green-700"
+                            : fundedCount > 0
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-500)]"
+                        }`}>
+                          {fundedCount}/{executions.length} funded
+                        </span>
+                        {isExpanded
+                          ? <ChevronUp className="h-4 w-4 text-[var(--color-neutral-400)]" />
+                          : <ChevronDown className="h-4 w-4 text-[var(--color-neutral-400)]" />}
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-[var(--color-border)] bg-[var(--color-neutral-50)] px-4 py-3 space-y-2">
+                        {executions.length === 0 ? (
+                          <p className="text-xs text-[var(--color-neutral-400)] text-center py-2">No executions found</p>
+                        ) : (
+                          executions.map((exec: any) => (
+                            <div
+                              key={exec.executionId}
+                              className={`flex items-center gap-3 p-3 rounded-lg border ${
+                                exec.funded ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"
+                              }`}
+                            >
+                              <div className={`h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                exec.funded ? "bg-green-100" : "bg-amber-100"
+                              }`}>
+                                {exec.funded
+                                  ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                  : <Clock className="h-3.5 w-3.5 text-amber-600" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-[var(--color-foreground)] truncate">
+                                  {exec.executionTitle}
+                                </p>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                  {exec.amount > 0 && (
+                                    <span className="text-[10px] text-[var(--color-neutral-500)]">
+                                      Budget: ${exec.amount.toLocaleString()}
+                                    </span>
+                                  )}
+                                  {exec.matchedAt && (
+                                    <span className="text-[10px] text-[var(--color-neutral-400)]">
+                                      {new Date(exec.matchedAt).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                                exec.funded ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                              }`}>
+                                {exec.funded ? t("fundedBadge") : t("notFundedBadge")}
+                              </span>
+                            </div>
+                          ))
                         )}
                       </div>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
-                      isFunded
-                        ? "bg-green-100 text-green-700"
-                        : isUnknown
-                        ? "bg-[var(--color-neutral-100)] text-[var(--color-neutral-500)]"
-                        : "bg-amber-100 text-amber-700"
-                    }`}>
-                      {isFunded ? t("fundedBadge") : isUnknown ? t("unknownBadge") : t("notFundedBadge")}
-                    </span>
+                    )}
                   </div>
                 );
               })}

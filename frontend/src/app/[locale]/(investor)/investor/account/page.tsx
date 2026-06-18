@@ -230,6 +230,9 @@ export default function InvestorAccountPage() {
 
   const selectedMatch = matches.find((m) => m.id === selectedMatchId);
   const selectedStartup = selectedMatch ? startupInfoMap[selectedMatch.startupUserId] : null;
+  const execMatches = selectedExecutionId
+    ? matches.filter((m: any) => m.investorExecutionId === selectedExecutionId)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -373,11 +376,15 @@ export default function InvestorAccountPage() {
                       <button
                         key={exec.id}
                         onClick={() => {
-                          setSelectedExecutionId(isSelected ? null : exec.id);
-                          if (!isSelected && exec.investmentBudget) {
-                            setInvestAmount(String(exec.investmentBudget));
-                          } else if (isSelected) {
+                          if (isSelected) {
+                            setSelectedExecutionId(null);
+                            setSelectedMatchId(null);
                             setInvestAmount("");
+                          } else {
+                            setSelectedExecutionId(exec.id);
+                            if (exec.investmentBudget) setInvestAmount(String(exec.investmentBudget));
+                            const execMatches = matches.filter((m: any) => m.investorExecutionId === exec.id);
+                            setSelectedMatchId(execMatches.length === 1 ? execMatches[0].id : null);
                           }
                         }}
                         className={`w-full text-left rounded-xl border p-3 transition-all ${
@@ -409,33 +416,124 @@ export default function InvestorAccountPage() {
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-[var(--color-neutral-700)] block mb-3">
-                <span className="inline-flex items-center gap-1.5">
-                  <Briefcase className="h-4 w-4 text-[var(--color-primary)]" />
-                  {t("step2")}
-                </span>
-              </label>
-              {matches.length === 0 ? (
-                <p className="text-sm text-[var(--color-neutral-400)] py-4 text-center border border-dashed border-[var(--color-border)] rounded-lg">
-                  {t("noMatches")}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {matches.map((m) => {
+            {selectedExecutionId && (
+              <div>
+                {execMatches.length === 0 ? (
+                  <p className="text-sm text-[var(--color-neutral-400)] py-4 text-center border border-dashed border-[var(--color-border)] rounded-lg">
+                    {t("noMatches")}
+                  </p>
+                ) : execMatches.length === 1 ? (
+                  (() => {
+                    const m = execMatches[0];
                     const info = startupInfoMap[m.startupUserId];
-                    const isSelected = selectedMatchId === m.id;
                     return (
-                      <button
-                        key={m.id}
-                        onClick={() => setSelectedMatchId(isSelected ? null : m.id)}
-                        className={`w-full text-left rounded-xl border p-4 transition-all ${
-                          isSelected
-                            ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)]"
-                            : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] bg-white"
-                        }`}
-                      >
-                        <div className="space-y-3">
+                      <div className="rounded-xl border border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)] p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3">
+                            <div className="h-10 w-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
+                              <Briefcase className="h-5 w-5 text-[var(--color-primary)]" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[var(--color-primary-800)] text-sm">
+                                {info?.fullName ?? `Startup #${m.startupUserId}`}
+                              </p>
+                              {info?.industry && (
+                                <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary)] mt-0.5">
+                                  {info.industry}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-green-50 text-green-700">
+                              <BadgePercent className="h-3 w-3" />
+                              {Math.round((m.matchScore ?? 0) * 100)}% match
+                            </span>
+                            <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />
+                          </div>
+                        </div>
+                        {info?.problemStatement && (
+                          <div className="flex gap-2">
+                            <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("problemSolve")}</p>
+                              <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.problemStatement}</p>
+                            </div>
+                          </div>
+                        )}
+                        {info?.businessModel && (
+                          <div className="flex gap-2">
+                            <Briefcase className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("businessModel")}</p>
+                              <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.businessModel}</p>
+                            </div>
+                          </div>
+                        )}
+                        {info?.targetMarket && (
+                          <div className="flex gap-2">
+                            <Target className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("targetMarket")}</p>
+                              <p className="text-xs text-[var(--color-neutral-500)] line-clamp-1">{info.targetMarket}</p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-2 border-t border-[var(--color-primary-200)]">
+                          {info?.fundingNeeded && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)] font-medium">
+                              <DollarSign className="h-3 w-3 text-green-600" />
+                              {t("seeking", { amount: info.fundingNeeded.toLocaleString() })}
+                              {info.suggestedFundingRange && (
+                                <span className="text-[var(--color-neutral-400)] font-normal">({info.suggestedFundingRange})</span>
+                              )}
+                            </span>
+                          )}
+                          {info?.teamDetails && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-500)]">
+                              <Users className="h-3 w-3" />{info.teamDetails}
+                            </span>
+                          )}
+                          {info?.email && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                              <Mail className="h-3 w-3" />{info.email}
+                            </span>
+                          )}
+                          {info?.phoneNumber && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                              <Phone className="h-3 w-3" />{info.phoneNumber}
+                            </span>
+                          )}
+                          {(info?.city || info?.country) && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                              <MapPin className="h-3 w-3" />
+                              {[info.city, info.country].filter(Boolean).join(", ")}
+                            </span>
+                          )}
+                          {info?.website && (
+                            <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
+                              <Globe className="h-3 w-3" />{info.website}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="space-y-2">
+                    {execMatches.map((m: any) => {
+                      const info = startupInfoMap[m.startupUserId];
+                      const isMatchSel = selectedMatchId === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => setSelectedMatchId(isMatchSel ? null : m.id)}
+                          className={`w-full text-left rounded-xl border p-4 transition-all ${
+                            isMatchSel
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)]"
+                              : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] bg-white"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3">
                               <div className="h-10 w-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center flex-shrink-0">
@@ -452,86 +550,21 @@ export default function InvestorAccountPage() {
                                 )}
                               </div>
                             </div>
-                            <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-green-50 text-green-700 flex-shrink-0">
-                              <BadgePercent className="h-3 w-3" />
-                              {Math.round((m.matchScore ?? 0) * 100)}% match
-                            </span>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-green-50 text-green-700">
+                                <BadgePercent className="h-3 w-3" />
+                                {Math.round((m.matchScore ?? 0) * 100)}% match
+                              </span>
+                              {isMatchSel && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
+                            </div>
                           </div>
-
-                          {info?.problemStatement && (
-                            <div className="flex gap-2">
-                              <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("problemSolve")}</p>
-                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.problemStatement}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          {info?.businessModel && (
-                            <div className="flex gap-2">
-                              <Briefcase className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("businessModel")}</p>
-                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-2">{info.businessModel}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          {info?.targetMarket && (
-                            <div className="flex gap-2">
-                              <Target className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-xs font-medium text-[var(--color-neutral-600)]">{t("targetMarket")}</p>
-                                <p className="text-xs text-[var(--color-neutral-500)] line-clamp-1">{info.targetMarket}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1 border-t border-[var(--color-border)]">
-                            {info?.fundingNeeded && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-600)] font-medium">
-                                <DollarSign className="h-3 w-3 text-green-600" />
-                                {t("seeking", { amount: info.fundingNeeded.toLocaleString() })}
-                                {info.suggestedFundingRange && (
-                                  <span className="text-[var(--color-neutral-400)] font-normal">({info.suggestedFundingRange})</span>
-                                )}
-                              </span>
-                            )}
-                            {info?.teamDetails && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-500)]">
-                                <Users className="h-3 w-3" />{info.teamDetails}
-                              </span>
-                            )}
-                            {info?.email && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
-                                <Mail className="h-3 w-3" />{info.email}
-                              </span>
-                            )}
-                            {info?.phoneNumber && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
-                                <Phone className="h-3 w-3" />{info.phoneNumber}
-                              </span>
-                            )}
-                            {(info?.city || info?.country) && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
-                                <MapPin className="h-3 w-3" />
-                                {[info.city, info.country].filter(Boolean).join(", ")}
-                              </span>
-                            )}
-                            {info?.website && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--color-neutral-400)]">
-                                <Globe className="h-3 w-3" />{info.website}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {selectedMatchId && selectedStartup && (
               <div className="rounded-lg bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] p-3 text-sm text-[var(--color-primary-800)]">
