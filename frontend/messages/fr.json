@@ -535,7 +535,10 @@
       "fundedBadge": "FINANCÉ",
       "notFundedBadge": "NON FINANCÉ",
       "fundedOn": "Financé le {date}",
-      "askForFund": "Demander un financement"
+      "askForFund": "Demander un financement",
+      "withheld": "Retenu",
+      "withheldBadge": "RETENU",
+      "withheldOn": "Retenu le {date}"
     },
     "usersCreate": {
       "backToUsers": "Retour aux utilisateurs",
@@ -1240,7 +1243,11 @@
       "toastInvestInvalid": "Saisissez un montant valide",
       "toastSelectStartup": "Sélectionnez une start-up dans laquelle investir",
       "toastInvestSuccess": "Investissement transféré avec succès",
-      "toastInvestFailed": "Échec de l'investissement"
+      "toastInvestFailed": "Échec de l'investissement",
+      "withholdBtn": "Retenir",
+      "withholdConfirm": "Retenir cette exécution ? Elle sera considérée comme refusée et supprimée définitivement de votre liste — cette action est irréversible.",
+      "toastWithholdSuccess": "Exécution retenue avec succès",
+      "toastWithholdFailed": "Échec de la rétention de l'exécution"
     },
     "executionDetail": {
       "backToInvestments": "Retour aux investissements",

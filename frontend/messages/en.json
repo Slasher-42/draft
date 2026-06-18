@@ -535,7 +535,10 @@
       "fundedBadge": "FUNDED",
       "notFundedBadge": "NOT FUNDED",
       "fundedOn": "Funded {date}",
-      "askForFund": "Ask for Fund"
+      "askForFund": "Ask for Fund",
+      "withheld": "Withheld",
+      "withheldBadge": "WITHHELD",
+      "withheldOn": "Withheld {date}"
     },
     "usersCreate": {
       "backToUsers": "Back to users",
@@ -1240,7 +1243,11 @@
       "toastInvestInvalid": "Enter a valid amount",
       "toastSelectStartup": "Select a startup to invest in",
       "toastInvestSuccess": "Investment transferred successfully",
-      "toastInvestFailed": "Investment failed"
+      "toastInvestFailed": "Investment failed",
+      "withholdBtn": "Withhold",
+      "withholdConfirm": "Withhold this execution? It will be treated as refused and removed from your list permanently — this cannot be undone.",
+      "toastWithholdSuccess": "Execution withheld successfully",
+      "toastWithholdFailed": "Failed to withhold execution"
     },
     "executionDetail": {
       "backToInvestments": "Back to investments",

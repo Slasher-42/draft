@@ -16,7 +16,7 @@ import {
   Wallet, ArrowDownToLine, ArrowUpFromLine, CreditCard, Building2,
   Smartphone, Bitcoin, Loader2, CheckCircle2, XCircle, Clock,
   TrendingUp, Briefcase, Mail, Phone, MapPin, BadgePercent, Globe,
-  Target, Users, DollarSign, Lightbulb, ClipboardList,
+  Target, Users, DollarSign, Lightbulb, ClipboardList, Ban,
 } from "lucide-react";
 import { investorService } from "@/services/investorService";
 import { investmentMonitorService } from "@/services/messageService";
@@ -77,6 +77,7 @@ export default function InvestorAccountPage() {
   const [investAmount, setInvestAmount] = useState("");
   const [investDesc, setInvestDesc] = useState("");
   const [investing, setInvesting] = useState(false);
+  const [withholdingId, setWithholdingId] = useState<number | null>(null);
 
   const { data: accountData, isLoading } = useQuery({
     queryKey: ["investor-account", user?.id],
@@ -212,6 +213,25 @@ export default function InvestorAccountPage() {
       toast.error(e?.response?.data?.message ?? t("toastInvestFailed"));
     } finally {
       setInvesting(false);
+    }
+  };
+
+  const handleWithhold = async (executionId: number) => {
+    if (!confirm(t("withholdConfirm"))) return;
+    setWithholdingId(executionId);
+    try {
+      await investorService.withholdExecution(executionId);
+      setMyExecutions((prev) => prev.filter((e) => e.id !== executionId));
+      if (selectedExecutionId === executionId) {
+        setSelectedExecutionId(null);
+        setSelectedMatchId(null);
+        setInvestAmount("");
+      }
+      toast.success(t("toastWithholdSuccess"));
+    } catch {
+      toast.error(t("toastWithholdFailed"));
+    } finally {
+      setWithholdingId(null);
     }
   };
 
@@ -370,44 +390,61 @@ export default function InvestorAccountPage() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {myExecutions.filter((e) => !e.funded).map((exec) => {
+                  {myExecutions.filter((e) => !e.funded && !e.withheld).map((exec) => {
                     const isSelected = selectedExecutionId === exec.id;
                     return (
-                      <button
+                      <div
                         key={exec.id}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedExecutionId(null);
-                            setSelectedMatchId(null);
-                            setInvestAmount("");
-                          } else {
-                            setSelectedExecutionId(exec.id);
-                            if (exec.investmentBudget) setInvestAmount(String(exec.investmentBudget));
-                            const execMatches = matches.filter((m: any) => m.investorExecutionId === exec.id);
-                            setSelectedMatchId(execMatches.length === 1 ? execMatches[0].id : null);
-                          }
-                        }}
-                        className={`w-full text-left rounded-xl border p-3 transition-all ${
+                        className={`w-full rounded-xl border p-3 transition-all ${
                           isSelected
                             ? "border-[var(--color-primary)] bg-[var(--color-primary-50)] ring-1 ring-[var(--color-primary)]"
                             : "border-[var(--color-border)] hover:border-[var(--color-primary-300)] bg-[var(--color-card)]"
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedExecutionId(null);
+                                setSelectedMatchId(null);
+                                setInvestAmount("");
+                              } else {
+                                setSelectedExecutionId(exec.id);
+                                if (exec.investmentBudget) setInvestAmount(String(exec.investmentBudget));
+                                const execMatches = matches.filter((m: any) => m.investorExecutionId === exec.id);
+                                setSelectedMatchId(execMatches.length === 1 ? execMatches[0].id : null);
+                              }
+                            }}
+                            className="flex-1 text-left min-w-0"
+                          >
                             <p className="text-sm font-semibold text-[var(--color-primary-800)]">
                               {t("executionLabel", { id: exec.id, industry: exec.preferredIndustry ?? "Investment" })}
                             </p>
                             <p className="text-xs text-[var(--color-neutral-400)] mt-0.5">
                               {t("budgetLabel", { budget: Number(exec.investmentBudget ?? 0).toLocaleString() })} · {exec.status}
                             </p>
+                          </button>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+                              onClick={() => handleWithhold(exec.id)}
+                              disabled={withholdingId === exec.id}
+                            >
+                              {withholdingId === exec.id
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <Ban className="h-3.5 w-3.5" />}
+                              {t("withholdBtn")}
+                            </Button>
                           </div>
-                          {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--color-primary)]" />}
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
-                  {myExecutions.every((e) => e.funded) && (
+                  {myExecutions.length > 0 && myExecutions.every((e) => e.funded || e.withheld) && (
                     <p className="text-sm text-green-600 py-3 text-center border border-green-200 rounded-lg bg-green-50">
                       {t("allFunded")} 🎉
                     </p>

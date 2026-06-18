@@ -9,12 +9,12 @@ import { userService } from "@/services/userService";
 import { investmentMonitorService } from "@/services/messageService";
 import {
   Loader2, CheckCircle2, Clock, DollarSign, Briefcase,
-  Mail, Send, TrendingUp, AlertCircle, Filter,
+  Mail, Send, TrendingUp, AlertCircle, Filter, Ban,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-type FilterType = "ALL" | "FUNDED" | "NOT_FUNDED";
+type FilterType = "ALL" | "FUNDED" | "NOT_FUNDED" | "WITHHELD";
 
 export default function AdminInvestmentMonitorPage() {
   return <InvestmentMonitorView role="ADMIN" />;
@@ -89,12 +89,14 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
 
   const filtered = executions.filter((e: any) => {
     if (filter === "FUNDED") return e.funded === true;
-    if (filter === "NOT_FUNDED") return !e.funded;
+    if (filter === "WITHHELD") return e.withheld === true;
+    if (filter === "NOT_FUNDED") return !e.funded && !e.withheld;
     return true;
   });
 
   const fundedCount = executions.filter((e: any) => e.funded).length;
-  const notFundedCount = executions.filter((e: any) => !e.funded).length;
+  const withheldCount = executions.filter((e: any) => e.withheld).length;
+  const notFundedCount = executions.filter((e: any) => !e.funded && !e.withheld).length;
 
   if (isLoading) {
     return (
@@ -115,7 +117,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat-bg-blue rounded-2xl border p-5 flex items-center gap-4"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
@@ -149,12 +151,23 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
             <p className="text-xs font-medium stat-text-amber opacity-75">{t("notFunded")}</p>
           </div>
         </div>
+        <div className="rounded-2xl border p-5 flex items-center gap-4 bg-red-50"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#B91C1C,#EF4444)" }}>
+            <Ban className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-2xl font-extrabold text-red-700">{withheldCount}</p>
+            <p className="text-xs font-medium text-red-700 opacity-75">{t("withheld")}</p>
+          </div>
+        </div>
       </div>
 
       {/* Filter */}
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-[var(--color-neutral-400)]" />
-        {(["ALL", "FUNDED", "NOT_FUNDED"] as FilterType[]).map((f) => (
+        {(["ALL", "FUNDED", "NOT_FUNDED", "WITHHELD"] as FilterType[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -164,7 +177,7 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                 : "bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-200)]"
             }`}
           >
-            {f === "NOT_FUNDED" ? t("notFunded") : f === "ALL" ? t("filterAll") : t("funded")}
+            {f === "NOT_FUNDED" ? t("notFunded") : f === "ALL" ? t("filterAll") : f === "WITHHELD" ? t("withheld") : t("funded")}
           </button>
         ))}
       </div>
@@ -182,13 +195,16 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
               {filtered.map((exec: any) => {
                 const inv = exec.investorInfo;
                 const isFunded = exec.funded === true;
+                const isWithheld = exec.withheld === true;
                 return (
                   <div key={exec.id} className="flex items-center gap-4 p-4 hover:bg-[var(--color-neutral-50)] transition-colors">
                     {/* Status indicator */}
                     <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isFunded ? "bg-green-100" : "bg-amber-100"
+                      isWithheld ? "bg-red-100" : isFunded ? "bg-green-100" : "bg-amber-100"
                     }`}>
-                      {isFunded
+                      {isWithheld
+                        ? <Ban className="h-5 w-5 text-red-600" />
+                        : isFunded
                         ? <CheckCircle2 className="h-5 w-5 text-green-600" />
                         : <Clock className="h-5 w-5 text-amber-600" />}
                     </div>
@@ -200,11 +216,13 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                           {inv?.fullName ?? `Investor #${exec.userId}`}
                         </p>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isFunded
+                          isWithheld
+                            ? "bg-red-100 text-red-700"
+                            : isFunded
                             ? "bg-green-100 text-green-700"
                             : "bg-amber-100 text-amber-700"
                         }`}>
-                          {isFunded ? t("fundedBadge") : t("notFundedBadge")}
+                          {isWithheld ? t("withheldBadge") : isFunded ? t("fundedBadge") : t("notFundedBadge")}
                         </span>
                         {exec.status && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)]">
@@ -233,11 +251,16 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
                             {t("fundedOn", { date: new Date(exec.fundedAt).toLocaleDateString() })}
                           </span>
                         )}
+                        {isWithheld && exec.withheldAt && (
+                          <span className="text-xs text-red-600 font-medium">
+                            {t("withheldOn", { date: new Date(exec.withheldAt).toLocaleDateString() })}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Ask for Fund button — only for unfunded */}
-                    {!isFunded && (
+                    {/* Ask for Fund button — only for unfunded, non-withheld executions */}
+                    {!isFunded && !isWithheld && (
                       <Button
                         size="sm"
                         variant="outline"

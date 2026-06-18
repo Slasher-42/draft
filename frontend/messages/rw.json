@@ -535,7 +535,10 @@
       "fundedBadge": "BYAHAWE INKUNGA",
       "notFundedBadge": "NTIBYAHAWE INKUNGA",
       "fundedOn": "Byahawe inkunga {date}",
-      "askForFund": "Saba Inkunga"
+      "askForFund": "Saba Inkunga",
+      "withheld": "Byanzwe",
+      "withheldBadge": "BYANZWE",
+      "withheldOn": "Byanzwe {date}"
     },
     "usersCreate": {
       "backToUsers": "Garuka ku bakoresha",
@@ -1240,7 +1243,11 @@
       "toastInvestInvalid": "Injiza amafaranga akwiye",
       "toastSelectStartup": "Hitamo igigo gishya ushora muri",
       "toastInvestSuccess": "Ishoramari ryoherejwe neza",
-      "toastInvestFailed": "Ishoramari ntiryakunze"
+      "toastInvestFailed": "Ishoramari ntiryakunze",
+      "withholdBtn": "Hakana",
+      "withholdConfirm": "Wifuza guhakana iki gikorwa? Kizafatwa nk'igihakanwe kandi kikuzwe burundu ku rutonde rwawe — ibi ntibishobora gusubizwa.",
+      "toastWithholdSuccess": "Igikorwa cyahakanwe neza",
+      "toastWithholdFailed": "Guhakana igikorwa ntibyakunze"
     },
     "executionDetail": {
       "backToInvestments": "Subira ku ishoramari",

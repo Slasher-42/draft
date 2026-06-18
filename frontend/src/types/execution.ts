@@ -50,6 +50,10 @@ export interface InvestorExecution {
   status: ExecutionStatus;
   statusReason?: string;
   statusUpdatedAt?: string;
+  funded?: boolean;
+  fundedAt?: string;
+  withheld?: boolean;
+  withheldAt?: string;
   createdAt: string;
   updatedAt: string;
 }

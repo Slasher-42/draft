@@ -59,6 +59,11 @@ public class InvestorExecution {
 
     private LocalDateTime fundedAt;
 
+    @Column
+    private Boolean withheld = false;
+
+    private LocalDateTime withheldAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

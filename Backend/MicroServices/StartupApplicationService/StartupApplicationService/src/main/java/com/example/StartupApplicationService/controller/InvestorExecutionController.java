@@ -117,4 +117,13 @@ public class InvestorExecutionController {
         InvestorExecutionResponse response = investorExecutionService.markAsFunded(id, userId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Execution marked as funded", response));
     }
+
+    @PatchMapping("/{id}/withhold")
+    public ResponseEntity<ApiResponse<InvestorExecutionResponse>> withhold(
+            Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = (Long) authentication.getPrincipal();
+        InvestorExecutionResponse response = investorExecutionService.withhold(id, userId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Execution withheld successfully", response));
+    }
 }

@@ -135,6 +135,18 @@ return toResponse(saved);
         return toResponse(investorExecutionRepository.save(execution));
     }
 
+    @Override
+    public InvestorExecutionResponse withhold(Long id, Long userId) {
+        InvestorExecution execution = investorExecutionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Execution not found with id: " + id));
+        if (!execution.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Execution not found with id: " + id);
+        }
+        execution.setWithheld(Boolean.TRUE);
+        execution.setWithheldAt(LocalDateTime.now());
+        return toResponse(investorExecutionRepository.save(execution));
+    }
+
     private InvestorExecutionResponse toResponse(InvestorExecution e) {
         InvestorExecutionResponse response = new InvestorExecutionResponse();
         response.setId(e.getId());
@@ -151,6 +163,8 @@ return toResponse(saved);
         response.setStatusUpdatedAt(e.getStatusUpdatedAt());
         response.setFunded(Boolean.TRUE.equals(e.getFunded()));
         response.setFundedAt(e.getFundedAt());
+        response.setWithheld(Boolean.TRUE.equals(e.getWithheld()));
+        response.setWithheldAt(e.getWithheldAt());
         response.setCreatedAt(e.getCreatedAt());
         response.setUpdatedAt(e.getUpdatedAt());
         return response;

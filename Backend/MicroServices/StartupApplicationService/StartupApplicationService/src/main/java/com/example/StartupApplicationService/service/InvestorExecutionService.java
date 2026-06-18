@@ -28,4 +28,6 @@ public interface InvestorExecutionService {
     void updateStatusInternal(Long id, String status);
 
     InvestorExecutionResponse markAsFunded(Long id, Long userId);
+
+    InvestorExecutionResponse withhold(Long id, Long userId);
 }
