@@ -68,17 +68,22 @@ public EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, Decisio
 
     EvaluatorReview saved = reviewRepository.save(review);
 
-    switch (request.getDecision()) {
-        case APPROVED -> eventPublisher.publishStartupApproved(
-                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-        case REJECTED -> eventPublisher.publishStartupRejected(
-                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-        case ESCALATED -> eventPublisher.publishStartupEscalated(
-                saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-    }
+    try {
+        switch (request.getDecision()) {
+            case APPROVED -> eventPublisher.publishStartupApproved(
+                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+            case REJECTED -> eventPublisher.publishStartupRejected(
+                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+            case ESCALATED -> eventPublisher.publishStartupEscalated(
+                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+        }
 
-    eventPublisher.publishEvaluationCompleted(
-            saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+        eventPublisher.publishEvaluationCompleted(
+                saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+    } catch (Exception e) {
+        log.error("[Review] Decision {} saved for reviewId={} but event publishing failed: {}",
+                saved.getDecision(), saved.getId(), e.getMessage());
+    }
 
     return toResponse(saved);
 }
@@ -101,16 +106,21 @@ public EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, Decisio
         review.setDecidedAt(LocalDateTime.now());
         EvaluatorReview saved = reviewRepository.save(review);
 
-        switch (request.getDecision()) {
-            case APPROVED -> eventPublisher.publishStartupApproved(
-                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-            case REJECTED -> eventPublisher.publishStartupRejected(
-                    saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
-            default -> {}
-        }
+        try {
+            switch (request.getDecision()) {
+                case APPROVED -> eventPublisher.publishStartupApproved(
+                        saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+                case REJECTED -> eventPublisher.publishStartupRejected(
+                        saved.getExecutionId(), saved.getStartupUserId(), saved.getReason());
+                default -> {}
+            }
 
-        eventPublisher.publishEvaluationCompleted(
-                saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+            eventPublisher.publishEvaluationCompleted(
+                    saved.getId(), saved.getExecutionId(), saved.getDecision().name());
+        } catch (Exception e) {
+            log.error("[Review] Admin decision {} saved for reviewId={} but event publishing failed: {}",
+                    saved.getDecision(), saved.getId(), e.getMessage());
+        }
 
         return toResponse(saved);
     }
