@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,7 +37,24 @@ import {
   MessageSquare,
   TrendingUp,
   GraduationCap,
+  Palette,
 } from "lucide-react";
+
+const SIDEBAR_COLOR_PRESETS = [
+  { name: "Navy",          gradient: "linear-gradient(180deg,#020C1B 0%,#071C38 55%,#030F1F 100%)", swatch: "#0B2A4A" },
+  { name: "Charcoal",      gradient: "linear-gradient(180deg,#0A0A0A 0%,#1C1C1C 55%,#0A0A0A 100%)", swatch: "#222222" },
+  { name: "Slate",         gradient: "linear-gradient(180deg,#0F172A 0%,#1E293B 55%,#0F172A 100%)", swatch: "#334155" },
+  { name: "Forest",        gradient: "linear-gradient(180deg,#02160F 0%,#0B3D27 55%,#021109 100%)", swatch: "#13633F" },
+  { name: "Emerald",       gradient: "linear-gradient(180deg,#031F1A 0%,#0E4A3C 55%,#021510 100%)", swatch: "#16916F" },
+  { name: "Plum",          gradient: "linear-gradient(180deg,#170826 0%,#3A1559 55%,#120620 100%)", swatch: "#7C3AED" },
+  { name: "Wine",          gradient: "linear-gradient(180deg,#220A14 0%,#551226 55%,#180810 100%)", swatch: "#9D2A4E" },
+  { name: "Espresso",      gradient: "linear-gradient(180deg,#1B120A 0%,#3E2616 55%,#140D08 100%)", swatch: "#7C4A26" },
+  { name: "Midnight Teal", gradient: "linear-gradient(180deg,#021A1C 0%,#0A3F45 55%,#021416 100%)", swatch: "#10707A" },
+  { name: "Indigo",        gradient: "linear-gradient(180deg,#0A0A2E 0%,#1E1E5C 55%,#08081F 100%)", swatch: "#3B3BA8" },
+  { name: "White",         gradient: "linear-gradient(180deg,#FFFFFF 0%,#F8FAFC 55%,#FFFFFF 100%)", swatch: "#FFFFFF", light: true },
+  { name: "Pearl",         gradient: "linear-gradient(180deg,#F1F5F9 0%,#E2E8F0 55%,#F1F5F9 100%)", swatch: "#E2E8F0", light: true },
+  { name: "Sky",           gradient: "linear-gradient(180deg,#EFF6FF 0%,#DBEAFE 55%,#EFF6FF 100%)", swatch: "#BFDBFE", light: true },
+];
 
 export function Sidebar() {
   const t = useTranslations("nav");
@@ -106,14 +123,39 @@ export function Sidebar() {
     ADMIN:     "from-amber-500/20 to-amber-600/10 border-amber-400/30 text-amber-300",
   };
 
+  const roleColorsLight: Record<string, string> = {
+    STARTUP:   "from-emerald-500/15 to-emerald-600/10 border-emerald-500/30 text-emerald-700",
+    INVESTOR:  "from-blue-500/15 to-blue-600/10 border-blue-400/30 text-blue-700",
+    EVALUATOR: "from-violet-500/15 to-violet-600/10 border-violet-400/30 text-violet-700",
+    ADMIN:     "from-amber-500/15 to-amber-600/10 border-amber-400/30 text-amber-700",
+  };
+
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile]   = useState(false);
+  const [sidebarBg, setSidebarBg] = useState(SIDEBAR_COLOR_PRESETS[0].gradient);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
   const pathname    = usePathname();
   const { user, logout } = useAuth();
   const queryClient = useQueryClient();
 
   const navigation = navByRole[user?.role ?? "STARTUP"] ?? startupNav;
-  const roleColor  = roleColors[user?.role ?? "STARTUP"] ?? roleColors.INVESTOR;
+  const isLightBg  = SIDEBAR_COLOR_PRESETS.find((p) => p.gradient === sidebarBg)?.light ?? false;
+  const roleColor  = (isLightBg ? roleColorsLight : roleColors)[user?.role ?? "STARTUP"] ?? (isLightBg ? roleColorsLight.INVESTOR : roleColors.INVESTOR);
+
+  const c = {
+    heading:     isLightBg ? "text-slate-800" : "text-white",
+    body:        isLightBg ? "text-slate-700" : "text-white",
+    subtle:      isLightBg ? "text-slate-500" : "text-white/50",
+    faint:       isLightBg ? "text-slate-400" : "text-white/40",
+    faintest:    isLightBg ? "text-slate-400" : "text-white/30",
+    accentText:  isLightBg ? "#1B4965" : "#73A8CF",
+    activeIcon:  isLightBg ? "#1B4965" : "#73A8CF",
+    border:      isLightBg ? "rgba(15,23,42,0.1)"  : "rgba(115,168,207,0.1)",
+    borderFaint: isLightBg ? "rgba(15,23,42,0.07)" : "rgba(115,168,207,0.08)",
+    iconHoverBg: isLightBg ? "hover:bg-black/5" : "hover:bg-white/8",
+    hoverOverlay: isLightBg ? "rgba(15,23,42,0.05)" : "rgba(255,255,255,0.05)",
+  };
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -125,6 +167,27 @@ export function Sidebar() {
   useEffect(() => {
     if (isMobile) setCollapsed(true);
   }, [isMobile]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("rg-sidebar-bg");
+    if (saved) setSidebarBg(saved);
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectSidebarColor = (gradient: string) => {
+    setSidebarBg(gradient);
+    localStorage.setItem("rg-sidebar-bg", gradient);
+    setShowColorPicker(false);
+  };
 
   const initials = user?.fullName
     ?.split(" ")
@@ -145,7 +208,7 @@ export function Sidebar() {
       <motion.aside
         className="fixed md:relative z-40 h-full flex flex-col overflow-hidden"
         style={{
-          background: "linear-gradient(180deg,#020C1B 0%,#071C38 55%,#030F1F 100%)",
+          background: sidebarBg,
           borderRight: "1px solid rgba(115,168,207,0.1)",
         }}
         initial={false}
@@ -161,7 +224,7 @@ export function Sidebar() {
         {/* ── Logo ──────────────────────────────────────────────────────── */}
         <div
           className="relative z-10 flex items-center justify-between p-4 min-h-[64px]"
-          style={{ borderBottom: "1px solid rgba(115,168,207,0.1)" }}
+          style={{ borderBottom: `1px solid ${c.border}` }}
         >
           <AnimatePresence initial={false}>
             {!collapsed && (
@@ -177,10 +240,10 @@ export function Sidebar() {
                     <Image src="/logo.png" alt="RG Partners Logo" width={32} height={32} className="object-cover w-full h-full" />
                   </div>
                   <div className="leading-tight">
-                    <p className="font-bold text-white text-xs tracking-widest uppercase">
+                    <p className={cn("font-bold text-xs tracking-widest uppercase", c.heading)}>
                       RG Partners
                     </p>
-                    <p className="text-[10px]" style={{ color: "#73A8CF" }}>
+                    <p className="text-[10px]" style={{ color: c.accentText }}>
                       {ts("investmentReadiness")}
                     </p>
                   </div>
@@ -197,17 +260,66 @@ export function Sidebar() {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex h-6 w-6 items-center justify-center rounded-md text-white/40 hover:text-white hover:bg-white/8 transition-all flex-shrink-0"
+            className={cn(
+              "hidden md:flex h-6 w-6 items-center justify-center rounded-md transition-all flex-shrink-0",
+              c.faint, isLightBg ? "hover:text-slate-800" : "hover:text-white", c.iconHoverBg
+            )}
           >
             {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
           </button>
+        </div>
+
+        {/* ── Sidebar colour picker ───────────────────────────────────────── */}
+        <div
+          className="relative z-20 flex items-center px-4 py-2"
+          style={{ borderBottom: `1px solid ${c.borderFaint}` }}
+          ref={colorPickerRef}
+        >
+          <button
+            onClick={() => setShowColorPicker((v) => !v)}
+            title={ts("changeColor")}
+            className={cn(
+              "flex items-center gap-2 h-7 rounded-md transition-all px-2",
+              c.faint, isLightBg ? "hover:text-slate-800" : "hover:text-white", c.iconHoverBg,
+              collapsed && "mx-auto px-0 w-7 justify-center"
+            )}
+          >
+            <Palette className="h-3.5 w-3.5 flex-shrink-0" />
+            {!collapsed && <span className="text-[11px]">{ts("changeColor")}</span>}
+          </button>
+
+          <AnimatePresence>
+            {showColorPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-2 mt-1 grid grid-cols-5 gap-2 p-3 rounded-lg shadow-xl z-30"
+                style={{ background: "#0B1E33", border: "1px solid rgba(115,168,207,0.2)" }}
+              >
+                {SIDEBAR_COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => selectSidebarColor(preset.gradient)}
+                    title={preset.name}
+                    className="h-6 w-6 rounded-full ring-1 ring-white/20 hover:ring-white/60 hover:scale-110 transition-all flex-shrink-0"
+                    style={{
+                      background: preset.swatch,
+                      boxShadow: sidebarBg === preset.gradient ? "0 0 0 2px #2F72A5" : undefined,
+                    }}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* ── Role badge ───────────────────────────────────────────────── */}
         {!collapsed && user?.role && (
           <div
             className="relative z-10 px-4 py-2.5"
-            style={{ borderBottom: "1px solid rgba(115,168,207,0.08)" }}
+            style={{ borderBottom: `1px solid ${c.borderFaint}` }}
           >
             <span
               className={cn(
@@ -235,8 +347,8 @@ export function Sidebar() {
                     className={cn(
                       "group relative flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 overflow-hidden",
                       isActive
-                        ? "text-white"
-                        : "text-white/50 hover:text-white/90"
+                        ? c.heading
+                        : cn(c.subtle, isLightBg ? "hover:text-slate-800" : "hover:text-white/90")
                     )}
                     style={
                       isActive
@@ -251,8 +363,7 @@ export function Sidebar() {
                     onMouseEnter={(e) => {
                       prefetchRoute(queryClient, item.href, Number(user?.id));
                       if (!isActive) {
-                        (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "rgba(255,255,255,0.05)";
+                        (e.currentTarget as HTMLElement).style.backgroundColor = c.hoverOverlay;
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -273,8 +384,11 @@ export function Sidebar() {
                       className={cn(
                         "h-4.5 w-4.5 flex-shrink-0 transition-colors",
                         collapsed ? "mx-auto h-5 w-5" : "mr-3",
-                        isActive ? "text-[#73A8CF]" : "text-white/40 group-hover:text-white/70"
+                        isActive
+                          ? ""
+                          : cn(c.faint, isLightBg ? "group-hover:text-slate-600" : "group-hover:text-white/70")
                       )}
+                      style={isActive ? { color: c.activeIcon } : undefined}
                     />
                     {!collapsed && (
                       <span className="truncate">{item.name}</span>
@@ -289,7 +403,7 @@ export function Sidebar() {
         {/* ── User footer ──────────────────────────────────────────────── */}
         <div
           className="relative z-10 p-3"
-          style={{ borderTop: "1px solid rgba(115,168,207,0.1)" }}
+          style={{ borderTop: `1px solid ${c.border}` }}
         >
           {!collapsed ? (
             <div className="flex items-center gap-3">
@@ -312,10 +426,10 @@ export function Sidebar() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-white truncate leading-tight">
+                <p className={cn("text-xs font-semibold truncate leading-tight", c.heading)}>
                   {user?.fullName || "User"}
                 </p>
-                <p className="text-[10px] truncate mt-0.5" style={{ color: "#73A8CF" }}>
+                <p className="text-[10px] truncate mt-0.5" style={{ color: c.accentText }}>
                   {user?.email}
                 </p>
               </div>
@@ -325,7 +439,10 @@ export function Sidebar() {
                 <ThemeToggle />
                 <button
                   onClick={logout}
-                  className="h-7 w-7 flex items-center justify-center rounded-md text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                  className={cn(
+                    "h-7 w-7 flex items-center justify-center rounded-md hover:text-red-400 hover:bg-red-400/10 transition-all",
+                    c.faintest
+                  )}
                   title={ts("logout")}
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -347,7 +464,10 @@ export function Sidebar() {
               <ThemeToggle />
               <button
                 onClick={logout}
-                className="flex items-center justify-center w-full text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all py-1 rounded-md"
+                className={cn(
+                  "flex items-center justify-center w-full hover:text-red-400 hover:bg-red-400/10 transition-all py-1 rounded-md",
+                  c.faintest
+                )}
                 title={ts("logout")}
               >
                 <LogOut className="h-3.5 w-3.5" />

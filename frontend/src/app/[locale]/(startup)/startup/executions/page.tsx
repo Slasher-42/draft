@@ -656,16 +656,13 @@ export default function StartupExecutionsPage() {
                         size="sm"
                         className="gap-1.5 pointer-events-none"
                         disabled={uploadingImageId === exec.id}
-                        asChild
                       >
-                        <span>
-                          {uploadingImageId === exec.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Upload className="h-3.5 w-3.5" />
-                          )}
-                          {exec.imageUrl ? t("replaceImage") : t("uploadImage")}
-                        </span>
+                        {uploadingImageId === exec.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="h-3.5 w-3.5" />
+                        )}
+                        {exec.imageUrl ? t("replaceImage") : t("uploadImage")}
                       </Button>
                     </label>
 

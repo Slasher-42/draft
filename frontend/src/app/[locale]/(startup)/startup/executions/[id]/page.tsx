@@ -82,7 +82,7 @@ export default function ExecutionDetailPage() {
   useEffect(() => {
     if (execution?.status === "MATCHED" && user?.id) {
       matchingService
-        .getMatchesForStartup(user.id)
+        .getMatchesForStartup(Number(user.id))
         .then((res) => setMatches(res.data.data ?? []))
         .catch(() => {});
     }

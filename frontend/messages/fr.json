@@ -80,7 +80,8 @@
   },
   "sidebar": {
     "investmentReadiness": "Préparation à l'investissement",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "changeColor": "Changer la couleur de la barre latérale"
   },
   "dashboard": {
     "pageTitles": {

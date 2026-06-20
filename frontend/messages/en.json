@@ -80,7 +80,8 @@
   },
   "sidebar": {
     "investmentReadiness": "Investment Readiness",
-    "logout": "Logout"
+    "logout": "Logout",
+    "changeColor": "Change sidebar colour"
   },
   "dashboard": {
     "pageTitles": {

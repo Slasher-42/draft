@@ -55,7 +55,7 @@ export default function InvestorExecutionDetailPage() {
   useEffect(() => {
     if (execution?.status === "MATCHED" && user?.id) {
       matchingService
-        .getMatchesForInvestor(user.id)
+        .getMatchesForInvestor(Number(user.id))
         .then((res) => setMatches(res.data.data ?? []))
         .catch(() => {});
     }

@@ -265,7 +265,7 @@ export default function InvestorExecutionsPage() {
     if (!user?.id) return;
     setLoadingMatchId(execId);
     try {
-      const matchRes = await matchingService.getMatchesForInvestor(user.id);
+      const matchRes = await matchingService.getMatchesForInvestor(Number(user.id));
       const matches: any[] = matchRes.data?.data ?? matchRes.data ?? [];
 
       const match = matches.find((m: any) => m.investorExecutionId === execId);
