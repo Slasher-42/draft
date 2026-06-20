@@ -13,6 +13,18 @@ from app.security import get_current_user
 
 router = APIRouter(prefix="/assessment", tags=["Assessment"])
 
+
+def _safe_str(value) -> str:
+    return str(value) if value is not None else ""
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 @router.post("/score", response_model=ScoreResponse)
 async def score_execution(
     request: ScoreRequest,
@@ -52,11 +64,11 @@ async def score_execution(
             overall_score=score.overall_score,
             classification=score.classification.value,
             ai_reasoning=score.reasoning,
-            company_size=form.get("companySize", ""),
-            problem_statement=form.get("problemStatement", ""),
-            business_model=form.get("businessModel", ""),
-            target_market=form.get("targetMarket", ""),
-            funding_needed=float(form.get("fundingNeeded", 0))
+            company_size=_safe_str(form.get("companySize")),
+            problem_statement=_safe_str(form.get("problemStatement")),
+            business_model=_safe_str(form.get("businessModel")),
+            target_market=_safe_str(form.get("targetMarket")),
+            funding_needed=_safe_float(form.get("fundingNeeded"))
         )
 
         return ScoreResponse(
