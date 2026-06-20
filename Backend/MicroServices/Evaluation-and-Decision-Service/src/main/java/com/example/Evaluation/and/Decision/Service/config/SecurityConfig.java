@@ -34,6 +34,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/api/evaluator/internal/**").permitAll()
                         .requestMatchers("/api/reviews/all").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/reviews/*/assign").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/reviews/**").hasAnyAuthority("ROLE_EVALUATOR", "ROLE_ADMIN")

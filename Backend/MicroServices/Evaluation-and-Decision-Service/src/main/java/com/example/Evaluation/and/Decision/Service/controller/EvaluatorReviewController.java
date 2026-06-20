@@ -1,6 +1,7 @@
 package com.example.Evaluation.and.Decision.Service.controller;
 
 import com.example.Evaluation.and.Decision.Service.dto.request.AssignEvaluatorRequest;
+import com.example.Evaluation.and.Decision.Service.dto.request.CreateReviewFromScoreRequest;
 import com.example.Evaluation.and.Decision.Service.dto.request.DecisionRequest;
 import com.example.Evaluation.and.Decision.Service.dto.response.ApiResponse;
 import com.example.Evaluation.and.Decision.Service.dto.response.DashboardStatsResponse;
@@ -84,6 +85,28 @@ public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getAllReviews(
             @Valid @RequestBody AssignEvaluatorRequest request) {
         EvaluatorReviewResponse review = reviewService.assignEvaluator(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Evaluator assigned successfully", review));
+    }
+
+    @PostMapping("/internal/reviews/from-score")
+    public ResponseEntity<ApiResponse<EvaluatorReviewResponse>> createFromScore(
+            @Valid @RequestBody CreateReviewFromScoreRequest request) {
+        EvaluatorReviewResponse review = reviewService.createReviewFromScore(
+                request.getExecutionId(),
+                request.getStartupUserId(),
+                request.getFinancialHealth(),
+                request.getTeamStrength(),
+                request.getMarketPotential(),
+                request.getBusinessViability(),
+                request.getOverallScore(),
+                request.getClassification(),
+                request.getAiReasoning(),
+                request.getCompanySize(),
+                request.getProblemStatement(),
+                request.getBusinessModel(),
+                request.getTargetMarket(),
+                request.getFundingNeeded()
+        );
+        return ResponseEntity.ok(new ApiResponse<>(true, "Review created from score", review));
     }
 
     @GetMapping("/dashboard")

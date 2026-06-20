@@ -140,6 +140,31 @@ public EvaluatorReviewResponse createReviewFromScore(
         String targetMarket,
         Double fundingNeeded) {
 
+    return reviewRepository.findByExecutionId(executionId)
+            .map(this::toResponse)
+            .orElseGet(() -> insertReviewFromScore(
+                    executionId, startupUserId, financialHealth, teamStrength,
+                    marketPotential, businessViability, overallScore, classification,
+                    aiReasoning, companySize, problemStatement, businessModel,
+                    targetMarket, fundingNeeded));
+}
+
+private EvaluatorReviewResponse insertReviewFromScore(
+        Long executionId,
+        Long startupUserId,
+        Double financialHealth,
+        Double teamStrength,
+        Double marketPotential,
+        Double businessViability,
+        Double overallScore,
+        String classification,
+        String aiReasoning,
+        String companySize,
+        String problemStatement,
+        String businessModel,
+        String targetMarket,
+        Double fundingNeeded) {
+
     EvaluatorReview review = new EvaluatorReview();
     review.setExecutionId(executionId);
     review.setStartupUserId(startupUserId);
@@ -160,10 +185,16 @@ public EvaluatorReviewResponse createReviewFromScore(
     if (assignedEvaluatorId == null) {
         log.warn("[Review] No evaluator could be assigned for executionId={}. Review saved as unassigned.", executionId);
     }
-    review.setEvaluatorId(assignedEvaluatorId); 
+    review.setEvaluatorId(assignedEvaluatorId);
     review.setStatus(DecisionStatus.PENDING);
 
-    return toResponse(reviewRepository.save(review));
+    try {
+        return toResponse(reviewRepository.save(review));
+    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+        return reviewRepository.findByExecutionId(executionId)
+                .map(this::toResponse)
+                .orElseThrow(() -> e);
+    }
 }
     @Override
     public long countPendingForEvaluator(Long evaluatorId) {
