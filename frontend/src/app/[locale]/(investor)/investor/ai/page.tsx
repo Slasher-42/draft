@@ -211,6 +211,13 @@ function InvestorAIConversation() {
   }, [isMuted, voiceEnabled]);
 
   useEffect(() => {
+    if (isMuted && typeof window !== "undefined") {
+      window.speechSynthesis?.cancel();
+      setIsAriaSpeaking(false);
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
     if (!executionId || !user || started.current) return;
     started.current = true;
 

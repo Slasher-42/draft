@@ -221,6 +221,13 @@ function AIConversationPage() {
   );
 
   useEffect(() => {
+    if (isMuted && typeof window !== "undefined") {
+      window.speechSynthesis?.cancel();
+      setIsAriaSpeaking(false);
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
     if (user && voiceEnabled) {
       const lastName = user.fullName?.split(" ").pop() || "there";
       const greeting = `Welcome to RG AI Conversation. Good to have you here, ${lastName}. I'm Aria, your AI Assessment Analyst. Let me review your startup submission.`;
