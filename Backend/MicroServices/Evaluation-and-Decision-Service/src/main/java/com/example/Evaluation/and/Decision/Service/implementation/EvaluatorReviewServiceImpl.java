@@ -41,11 +41,7 @@ public class EvaluatorReviewServiceImpl implements EvaluatorReviewService {
 
    @Override
 public List<EvaluatorReviewResponse> getMyReviews(Long evaluatorId) {
-    return reviewRepository
-        .findByEvaluatorIdOrEvaluatorIdIsNull(evaluatorId)
-        .stream()
-        .map(this::toResponse)
-        .toList();
+    return getAllReviews();
 }
 
     @Override
@@ -60,14 +56,11 @@ public EvaluatorReviewResponse submitDecision(Long id, Long evaluatorId, Decisio
     EvaluatorReview review = reviewRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
 
-    if (review.getEvaluatorId() != null && !review.getEvaluatorId().equals(evaluatorId)) {
-        throw new UnauthorizedException("You are not assigned to this review");
-    }
-
     if (review.getStatus() == DecisionStatus.DECIDED) {
         throw new UnauthorizedException("This review has already been decided");
     }
 
+    review.setEvaluatorId(evaluatorId);
     review.setDecision(request.getDecision());
     review.setReason(request.getReason());
     review.setStatus(DecisionStatus.DECIDED);
