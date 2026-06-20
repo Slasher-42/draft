@@ -40,4 +40,12 @@ public class MatchController {
         matchingService.runMatchingForAll();
         return ResponseEntity.ok(new ApiResponse<>(true, "Matching run triggered successfully", null));
     }
+
+    @PostMapping("/internal/investor-submitted")
+    public ResponseEntity<ApiResponse<String>> runMatchingForNewInvestor(
+            @RequestParam Long executionId,
+            @RequestParam Long investorUserId) {
+        matchingService.runMatchingForNewInvestor(executionId, investorUserId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Matching run triggered for investor execution", null));
+    }
 }

@@ -9,18 +9,26 @@ import com.example.StartupApplicationService.model.InvestorExecution;
 import com.example.StartupApplicationService.repository.InvestorExecutionRepository;
 import com.example.StartupApplicationService.service.InvestorExecutionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import java.util.concurrent.CompletableFuture;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvestorExecutionServiceImpl implements InvestorExecutionService {
 
     private final InvestorExecutionRepository investorExecutionRepository;
     private final ExecutionEventPublisher eventPublisher;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${services.matching.url}")
+    private String matchingServiceUrl;
 
     @Override
     public InvestorExecutionResponse submit(Long userId, InvestorExecutionRequest request) {
@@ -35,7 +43,22 @@ public class InvestorExecutionServiceImpl implements InvestorExecutionService {
 
 InvestorExecution saved = investorExecutionRepository.save(execution);
 CompletableFuture.runAsync(() -> eventPublisher.publishInvestorExecutionSubmitted(saved.getId(), userId));
+CompletableFuture.runAsync(() -> triggerMatching(saved.getId(), userId));
 return toResponse(saved);
+    }
+
+    private void triggerMatching(Long executionId, Long userId) {
+        try {
+            webClientBuilder.build()
+                    .post()
+                    .uri(matchingServiceUrl + "/api/matching/internal/investor-submitted"
+                            + "?executionId=" + executionId + "&investorUserId=" + userId)
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .block();
+        } catch (Exception e) {
+            log.warn("[Matching] Direct trigger failed for investor executionId={}: {}", executionId, e.getMessage());
+        }
     }
 
     @Override
