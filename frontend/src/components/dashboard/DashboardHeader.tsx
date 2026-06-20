@@ -58,7 +58,10 @@ export function DashboardHeader() {
   }, []);
 
   function timeAgo(dateStr: string): string {
-    const diff  = Date.now() - new Date(dateStr).getTime();
+    // Backend sends naive LocalDateTime (no timezone) in server (UTC) time.
+    // Without a "Z"/offset suffix, JS parses it as local time, so make it explicit.
+    const utcStr = /[Zz]|[+-]\d\d:?\d\d$/.test(dateStr) ? dateStr : `${dateStr}Z`;
+    const diff  = Date.now() - new Date(utcStr).getTime();
     const mins  = Math.floor(diff / 60_000);
     const hours = Math.floor(diff / 3_600_000);
     const days  = Math.floor(diff / 86_400_000);
