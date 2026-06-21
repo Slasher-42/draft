@@ -46,7 +46,6 @@ public class Meetup {
     @Column(columnDefinition = "TEXT")
     private String adminNotes;
 
-    @Column(nullable = false)
     private Boolean reminderSent = false;
 
     @Column(columnDefinition = "TEXT")
