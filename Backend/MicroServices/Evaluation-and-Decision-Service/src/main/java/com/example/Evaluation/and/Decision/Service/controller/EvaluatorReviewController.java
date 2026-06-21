@@ -111,17 +111,14 @@ public ResponseEntity<ApiResponse<List<EvaluatorReviewResponse>>> getAllReviews(
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyAuthority('ROLE_EVALUATOR', 'ROLE_ADMIN')")
-    public ResponseEntity<ApiResponse<DashboardStatsResponse>> getDashboardStats(
-            Authentication authentication) {
-        Long evaluatorId = (Long) authentication.getPrincipal();
-
-        long totalAssigned = reviewRepository.findByEvaluatorId(evaluatorId).size();
-        long pending       = reviewRepository.countByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.PENDING);
-        long approved      = reviewRepository.findByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.DECIDED)
+    public ResponseEntity<ApiResponse<DashboardStatsResponse>> getDashboardStats() {
+        long totalAssigned = reviewRepository.count();
+        long pending       = reviewRepository.countByStatus(DecisionStatus.PENDING);
+        long approved      = reviewRepository.findByStatus(DecisionStatus.DECIDED)
                 .stream().filter(r -> r.getDecision() == ReviewDecision.APPROVED).count();
-        long rejected      = reviewRepository.findByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.DECIDED)
+        long rejected      = reviewRepository.findByStatus(DecisionStatus.DECIDED)
                 .stream().filter(r -> r.getDecision() == ReviewDecision.REJECTED).count();
-        long escalated     = reviewRepository.findByEvaluatorIdAndStatus(evaluatorId, DecisionStatus.DECIDED)
+        long escalated     = reviewRepository.findByStatus(DecisionStatus.DECIDED)
                 .stream().filter(r -> r.getDecision() == ReviewDecision.ESCALATED).count();
 
         DashboardStatsResponse stats = new DashboardStatsResponse(
