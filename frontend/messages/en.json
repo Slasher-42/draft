@@ -915,7 +915,14 @@
       "statusScheduled": "Scheduled",
       "statusInProgress": "In Progress",
       "statusCompleted": "Completed",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "adjourn": "Adjournment",
+      "adjournDialogTitle": "Adjourn Meetup",
+      "feedbackPlaceholder": "Share feedback about this meetup…",
+      "cancel": "Cancel",
+      "submitFeedback": "Submit & Adjourn",
+      "adjournSuccess": "Meetup adjourned successfully",
+      "adjournFailed": "Failed to adjourn meetup"
     },
     "messages": {
       "title": "Messages",
@@ -1173,7 +1180,14 @@
       "statusScheduled": "Scheduled",
       "statusInProgress": "In Progress",
       "statusCompleted": "Completed",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "adjourn": "Adjournment",
+      "adjournDialogTitle": "Adjourn Meetup",
+      "feedbackPlaceholder": "Share feedback about this meetup…",
+      "cancel": "Cancel",
+      "submitFeedback": "Submit & Adjourn",
+      "adjournSuccess": "Meetup adjourned successfully",
+      "adjournFailed": "Failed to adjourn meetup"
     },
     "messages": {
       "title": "Messages",

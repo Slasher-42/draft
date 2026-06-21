@@ -19,6 +19,11 @@ public class KafkaTopicConfig {
     }
 
     @Bean
+    public NewTopic meetupReminderTopic() {
+        return TopicBuilder.name("meetup-reminder").partitions(1).replicas(1).build();
+    }
+
+    @Bean
     public NewTopic contractValidatedTopic() {
         return TopicBuilder.name("contract-validated").partitions(1).replicas(1).build();
     }

@@ -197,20 +197,21 @@ Ignore any unrelated personal messages. Respond in plain English with a clear bu
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: t("totalBonds"), value: bondsRaw.length, bgClass: "stat-bg-blue", textClass: "stat-text-blue", icon: Users, iconBg: "linear-gradient(135deg,#1D4ED8,#3B82F6)" },
-          { label: t("activeMessaging"), value: activeBonds.length, bgClass: "stat-bg-green", textClass: "stat-text-green", icon: MessageSquare, iconBg: "linear-gradient(135deg,#059669,#10B981)" },
-          { label: t("inactive"), value: inactiveBonds.length, bgClass: "stat-bg-amber", textClass: "stat-text-amber", icon: Clock, iconBg: "linear-gradient(135deg,#B45309,#D97706)" },
+          { label: t("totalBonds"),      value: bondsRaw.length,    icon: Users,         bg: "bg-blue-50",  color: "text-blue-600" },
+          { label: t("activeMessaging"), value: activeBonds.length, icon: MessageSquare, bg: "bg-green-50", color: "text-green-600" },
+          { label: t("inactive"),        value: inactiveBonds.length, icon: Clock,       bg: "bg-amber-50", color: "text-amber-600" },
         ].map((s) => (
-          <div key={s.label} className={`${s.bgClass} rounded-2xl border p-5 flex items-center gap-4`}
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: s.iconBg }}>
-              <s.icon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className={`text-2xl font-extrabold ${s.textClass}`}>{s.value}</p>
-              <p className={`text-xs font-medium opacity-75 ${s.textClass}`}>{s.label}</p>
-            </div>
-          </div>
+          <Card key={s.label} className="border border-[var(--color-border)]">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 ${s.bg}`}>
+                <s.icon className={`h-4 w-4 ${s.color}`} />
+              </div>
+              <div>
+                <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{s.label}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 

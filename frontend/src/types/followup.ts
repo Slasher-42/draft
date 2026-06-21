@@ -19,6 +19,8 @@ export interface Meetup {
   status: MeetupStatus;
   roomId: string;
   adminNotes?: string;
+  feedback?: string;
+  adjournedByUserId?: number;
   createdAt: string;
   updatedAt: string;
 }

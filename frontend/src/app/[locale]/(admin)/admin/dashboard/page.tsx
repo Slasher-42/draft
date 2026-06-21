@@ -102,59 +102,22 @@ export default function AdminDashboardPage() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          {
-            label: t("totalExecutions"),
-            value: analytics?.totalExecutions ?? 0,
-            icon: ClipboardList,
-            bgClass: "stat-bg-blue",
-            textClass: "stat-text-blue",
-            iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
-            iconShadow: "rgba(59,130,246,0.35)",
-          },
-          {
-            label: t("approved"),
-            value: analytics?.totalApproved ?? 0,
-            icon: CheckCircle2,
-            bgClass: "stat-bg-green",
-            textClass: "stat-text-green",
-            iconBg: "linear-gradient(135deg,#059669,#10B981)",
-            iconShadow: "rgba(16,185,129,0.35)",
-          },
-          {
-            label: t("matched"),
-            value: analytics?.totalMatched ?? 0,
-            icon: TrendingUp,
-            bgClass: "stat-bg-teal",
-            textClass: "stat-text-teal",
-            iconBg: "linear-gradient(135deg,#0D9488,#14B8A6)",
-            iconShadow: "rgba(20,184,166,0.35)",
-          },
-          {
-            label: t("pending"),
-            value: analytics?.totalPending ?? 0,
-            icon: Clock,
-            bgClass: "stat-bg-amber",
-            textClass: "stat-text-amber",
-            iconBg: "linear-gradient(135deg,#D97706,#F59E0B)",
-            iconShadow: "rgba(245,158,11,0.35)",
-          },
+          { label: t("totalExecutions"), value: analytics?.totalExecutions ?? 0, icon: ClipboardList, bg: "bg-blue-50",  color: "text-blue-600" },
+          { label: t("approved"),        value: analytics?.totalApproved ?? 0,   icon: CheckCircle2,  bg: "bg-green-50", color: "text-green-600" },
+          { label: t("matched"),         value: analytics?.totalMatched ?? 0,    icon: TrendingUp,     bg: "bg-teal-50",  color: "text-teal-600" },
+          { label: t("pending"),         value: analytics?.totalPending ?? 0,    icon: Clock,          bg: "bg-amber-50", color: "text-amber-600" },
         ].map((stat) => (
-          <div
-            key={stat.label}
-            className={`${stat.bgClass} rounded-2xl border p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-0.5`}
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)" }}
-          >
-            <div
-              className="h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: stat.iconBg, boxShadow: `0 4px 12px ${stat.iconShadow}` }}
-            >
-              <stat.icon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className={`text-2xl font-extrabold ${stat.textClass}`}>{stat.value}</p>
-              <p className={`text-xs font-medium mt-0.5 opacity-75 ${stat.textClass}`}>{stat.label}</p>
-            </div>
-          </div>
+          <Card key={stat.label} className="border border-[var(--color-border)]">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 ${stat.bg}`}>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </div>
+              <div>
+                <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
@@ -262,51 +225,23 @@ export default function AdminDashboardPage() {
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          {
-            label: t("manageUsers"),
-            desc: t("manageUsersDesc"),
-            href: "/admin/users",
-            icon: Users,
-            bgClass: "stat-bg-blue",
-            textClass: "stat-text-blue",
-            iconBg: "linear-gradient(135deg,#2563EB,#3B82F6)",
-          },
-          {
-            label: t("auditLogs"),
-            desc: t("auditLogsDesc"),
-            href: "/admin/audit-logs",
-            icon: ClipboardList,
-            bgClass: "stat-bg-violet",
-            textClass: "stat-text-violet",
-            iconBg: "linear-gradient(135deg,#7C3AED,#8B5CF6)",
-          },
-          {
-            label: t("allExecutions"),
-            desc: t("allExecutionsDesc"),
-            href: "/admin/executions",
-            icon: BarChart2,
-            bgClass: "stat-bg-teal",
-            textClass: "stat-text-teal",
-            iconBg: "linear-gradient(135deg,#0D9488,#14B8A6)",
-          },
+          { label: t("manageUsers"),    desc: t("manageUsersDesc"),    href: "/admin/users",        icon: Users,         bg: "bg-blue-50",   color: "text-blue-600" },
+          { label: t("auditLogs"),      desc: t("auditLogsDesc"),      href: "/admin/audit-logs",   icon: ClipboardList, bg: "bg-violet-50", color: "text-violet-600" },
+          { label: t("allExecutions"),  desc: t("allExecutionsDesc"),  href: "/admin/executions",   icon: BarChart2,     bg: "bg-teal-50",   color: "text-teal-600" },
         ].map((link) => (
           <Link key={link.label} href={link.href}>
-            <div
-              className={`${link.bgClass} rounded-2xl border p-5 flex items-start gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group`}
-              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-            >
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: link.iconBg }}
-              >
-                <link.icon className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-bold ${link.textClass}`}>{link.label}</p>
-                <p className="text-xs text-[var(--color-neutral-500)] mt-0.5">{link.desc}</p>
-              </div>
-              <ArrowRight className={`h-4 w-4 flex-shrink-0 mt-0.5 opacity-50 transition-transform group-hover:translate-x-1 ${link.textClass}`} />
-            </div>
+            <Card className="border border-[var(--color-border)] hover:shadow-md transition-shadow cursor-pointer group">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${link.bg}`}>
+                  <link.icon className={`h-5 w-5 ${link.color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold ${link.color}`}>{link.label}</p>
+                  <p className="text-xs text-[var(--color-neutral-500)] mt-0.5">{link.desc}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 flex-shrink-0 mt-0.5 text-[var(--color-neutral-400)] transition-transform group-hover:translate-x-1" />
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>

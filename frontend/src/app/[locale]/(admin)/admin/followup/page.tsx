@@ -317,22 +317,6 @@ export default function AdminFollowUpPage() {
                             </p>
                           </div>
                           <div className="flex flex-col gap-2 flex-shrink-0">
-                            {m.status === "SCHEDULED" && (
-                              <Button size="sm" variant="outline" className="gap-1.5 text-amber-600 border-amber-200 hover:bg-amber-50"
-                                onClick={() => handleUpdateStatus(m.id, "IN_PROGRESS")}
-                                disabled={updatingStatusId === m.id}>
-                                {updatingStatusId === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-                                {t("start")}
-                              </Button>
-                            )}
-                            {m.status === "IN_PROGRESS" && (
-                              <Button size="sm" variant="outline" className="gap-1.5 text-green-600 border-green-200 hover:bg-green-50"
-                                onClick={() => handleUpdateStatus(m.id, "COMPLETED")}
-                                disabled={updatingStatusId === m.id}>
-                                {updatingStatusId === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                                {t("complete")}
-                              </Button>
-                            )}
                             {(m.status === "SCHEDULED" || m.status === "IN_PROGRESS") && (
                               <Button size="sm" variant="outline" className="gap-1.5 text-red-500 border-red-200 hover:bg-red-50"
                                 onClick={() => handleUpdateStatus(m.id, "CANCELLED")}

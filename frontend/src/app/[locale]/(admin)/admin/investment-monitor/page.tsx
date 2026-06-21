@@ -118,50 +118,24 @@ export function InvestmentMonitorView({ role }: { role: "ADMIN" | "EVALUATOR" })
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-bg-blue rounded-2xl border p-5 flex items-center gap-4"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#1D4ED8,#3B82F6)" }}>
-            <Briefcase className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold stat-text-blue">{executions.length}</p>
-            <p className="text-xs font-medium stat-text-blue opacity-75">{t("totalExecutions")}</p>
-          </div>
-        </div>
-        <div className="stat-bg-green rounded-2xl border p-5 flex items-center gap-4"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#059669,#10B981)" }}>
-            <CheckCircle2 className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold stat-text-green">{fundedCount}</p>
-            <p className="text-xs font-medium stat-text-green opacity-75">{t("funded")}</p>
-          </div>
-        </div>
-        <div className="stat-bg-amber rounded-2xl border p-5 flex items-center gap-4"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#B45309,#D97706)" }}>
-            <Clock className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold stat-text-amber">{notFundedCount}</p>
-            <p className="text-xs font-medium stat-text-amber opacity-75">{t("notFunded")}</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border p-5 flex items-center gap-4 bg-red-50"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#B91C1C,#EF4444)" }}>
-            <Ban className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="text-2xl font-extrabold text-red-700">{withheldCount}</p>
-            <p className="text-xs font-medium text-red-700 opacity-75">{t("withheld")}</p>
-          </div>
-        </div>
+        {[
+          { label: t("totalExecutions"), value: executions.length, icon: Briefcase,    bg: "bg-blue-50",  color: "text-blue-600" },
+          { label: t("funded"),          value: fundedCount,       icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: t("notFunded"),       value: notFundedCount,    icon: Clock,        bg: "bg-amber-50", color: "text-amber-600" },
+          { label: t("withheld"),        value: withheldCount,     icon: Ban,          bg: "bg-red-50",   color: "text-red-600" },
+        ].map((stat) => (
+          <Card key={stat.label} className="border border-[var(--color-border)]">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 ${stat.bg}`}>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </div>
+              <div>
+                <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-[var(--color-neutral-500)]">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filter */}

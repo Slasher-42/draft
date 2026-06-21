@@ -915,7 +915,14 @@
       "statusScheduled": "Iteganyijwe",
       "statusInProgress": "Irimo Gukorwa",
       "statusCompleted": "Yarangiye",
-      "statusCancelled": "Ihagaritswe"
+      "statusCancelled": "Ihagaritswe",
+      "adjourn": "Soza Inama",
+      "adjournDialogTitle": "Soza Inama",
+      "feedbackPlaceholder": "Tanga ibitekerezo kuri iyi nama…",
+      "cancel": "Hagarika",
+      "submitFeedback": "Ohereza Maze Usoze",
+      "adjournSuccess": "Inama yasojwe neza",
+      "adjournFailed": "Gusoza inama byanze"
     },
     "messages": {
       "title": "Ubutumwa",
@@ -1173,7 +1180,14 @@
       "statusScheduled": "Byateganyijwe",
       "statusInProgress": "Birakorwa",
       "statusCompleted": "Byarangiye",
-      "statusCancelled": "Byahagaritswe"
+      "statusCancelled": "Byahagaritswe",
+      "adjourn": "Soza Inama",
+      "adjournDialogTitle": "Soza Inama",
+      "feedbackPlaceholder": "Tanga ibitekerezo kuri iyi nama…",
+      "cancel": "Hagarika",
+      "submitFeedback": "Ohereza Maze Usoze",
+      "adjournSuccess": "Inama yasojwe neza",
+      "adjournFailed": "Gusoza inama byanze"
     },
     "messages": {
       "title": "Ubutumwa",

@@ -915,7 +915,14 @@
       "statusScheduled": "Planifiée",
       "statusInProgress": "En cours",
       "statusCompleted": "Terminée",
-      "statusCancelled": "Annulée"
+      "statusCancelled": "Annulée",
+      "adjourn": "Clôturer",
+      "adjournDialogTitle": "Clôturer la réunion",
+      "feedbackPlaceholder": "Partagez vos retours sur cette réunion…",
+      "cancel": "Annuler",
+      "submitFeedback": "Envoyer et clôturer",
+      "adjournSuccess": "Réunion clôturée avec succès",
+      "adjournFailed": "Échec de la clôture de la réunion"
     },
     "messages": {
       "title": "Messages",
@@ -1173,7 +1180,14 @@
       "statusScheduled": "Planifiée",
       "statusInProgress": "En cours",
       "statusCompleted": "Terminée",
-      "statusCancelled": "Annulée"
+      "statusCancelled": "Annulée",
+      "adjourn": "Clôturer",
+      "adjournDialogTitle": "Clôturer la réunion",
+      "feedbackPlaceholder": "Partagez vos retours sur cette réunion…",
+      "cancel": "Annuler",
+      "submitFeedback": "Envoyer et clôturer",
+      "adjournSuccess": "Réunion clôturée avec succès",
+      "adjournFailed": "Échec de la clôture de la réunion"
     },
     "messages": {
       "title": "Messages",

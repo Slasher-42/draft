@@ -1,5 +1,6 @@
 package com.example.Followup_service.service;
 
+import com.example.Followup_service.dto.request.AdjournMeetupRequest;
 import com.example.Followup_service.dto.request.ScheduleMeetupRequest;
 import com.example.Followup_service.dto.request.UpdateMeetupStatusRequest;
 import com.example.Followup_service.dto.response.MeetupResponse;
@@ -13,4 +14,5 @@ public interface MeetupService {
     List<MeetupResponse> getAll();
     List<MeetupResponse> getMyMeetups(Long userId);
     MeetupResponse getByRoomId(String roomId);
+    MeetupResponse adjournMeetup(Long meetupId, Long requesterUserId, AdjournMeetupRequest request);
 }

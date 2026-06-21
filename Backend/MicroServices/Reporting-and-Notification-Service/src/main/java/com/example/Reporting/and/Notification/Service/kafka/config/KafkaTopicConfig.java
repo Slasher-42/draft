@@ -14,6 +14,9 @@ public class KafkaTopicConfig {
     public static final String TOPIC_MATCH_PRESENTED_TO_STARTUP  = "match.presented.to.startup";
     public static final String TOPIC_MATCH_PRESENTED_TO_INVESTOR = "match.presented.to.investor";
     public static final String TOPIC_SCORE_GENERATED             = "score.generated.full";
+    public static final String TOPIC_MEETUP_SCHEDULED            = "meetup-scheduled";
+    public static final String TOPIC_MEETUP_REMINDER             = "meetup-reminder";
+    public static final String TOPIC_MEETUP_COMPLETED            = "meetup-completed";
 
     @Bean
     public NewTopic startupApprovedTopic() {
@@ -43,5 +46,20 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic scoreGeneratedTopic() {
         return TopicBuilder.name(TOPIC_SCORE_GENERATED).partitions(3).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic meetupScheduledTopic() {
+        return TopicBuilder.name(TOPIC_MEETUP_SCHEDULED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic meetupReminderTopic() {
+        return TopicBuilder.name(TOPIC_MEETUP_REMINDER).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic meetupCompletedTopic() {
+        return TopicBuilder.name(TOPIC_MEETUP_COMPLETED).partitions(1).replicas(1).build();
     }
 }

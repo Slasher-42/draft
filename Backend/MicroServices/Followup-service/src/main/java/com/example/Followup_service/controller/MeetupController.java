@@ -1,5 +1,6 @@
 package com.example.Followup_service.controller;
 
+import com.example.Followup_service.dto.request.AdjournMeetupRequest;
 import com.example.Followup_service.dto.request.ScheduleMeetupRequest;
 import com.example.Followup_service.dto.request.UpdateMeetupStatusRequest;
 import com.example.Followup_service.dto.response.ApiResponse;
@@ -65,5 +66,16 @@ public class MeetupController {
             @Valid @RequestBody UpdateMeetupStatusRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Status updated",
                 meetupService.updateStatus(id, request)));
+    }
+
+    @PatchMapping("/{id}/adjourn")
+    @PreAuthorize("hasAnyAuthority('ROLE_INVESTOR', 'ROLE_STARTUP')")
+    public ResponseEntity<ApiResponse<MeetupResponse>> adjourn(
+            Authentication auth,
+            @PathVariable Long id,
+            @Valid @RequestBody AdjournMeetupRequest request) {
+        Long requesterUserId = (Long) auth.getPrincipal();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Meetup adjourned",
+                meetupService.adjournMeetup(id, requesterUserId, request)));
     }
 }

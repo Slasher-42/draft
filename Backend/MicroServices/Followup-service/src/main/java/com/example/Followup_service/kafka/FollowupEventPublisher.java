@@ -6,6 +6,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -16,16 +17,23 @@ public class FollowupEventPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     public void publishMeetupScheduled(Long meetupId, Long investorUserId, Long startupUserId,
-                                       Long matchId, String roomId) {
+                                       Long matchId, String roomId, LocalDateTime scheduledAt) {
         send("meetup-scheduled",
                 String.valueOf(meetupId),
-                meetupId + ":" + investorUserId + ":" + startupUserId + ":" + matchId + ":" + roomId);
+                meetupId + ":" + investorUserId + ":" + startupUserId + ":" + matchId + ":" + roomId + ":" + scheduledAt);
     }
 
-    public void publishMeetupCompleted(Long meetupId, Long matchId) {
+    public void publishMeetupReminder(Long meetupId, Long investorUserId, Long startupUserId,
+                                      Long matchId, String roomId, LocalDateTime scheduledAt) {
+        send("meetup-reminder",
+                String.valueOf(meetupId),
+                meetupId + ":" + investorUserId + ":" + startupUserId + ":" + matchId + ":" + roomId + ":" + scheduledAt);
+    }
+
+    public void publishMeetupCompleted(Long meetupId, Long matchId, Long investorUserId, Long startupUserId) {
         send("meetup-completed",
                 String.valueOf(meetupId),
-                meetupId + ":" + matchId);
+                meetupId + ":" + matchId + ":" + investorUserId + ":" + startupUserId);
     }
 
     public void publishContractValidated(Long contractId, Long meetupId,

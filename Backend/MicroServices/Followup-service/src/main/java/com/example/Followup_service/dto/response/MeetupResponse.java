@@ -16,6 +16,8 @@ public class MeetupResponse {
     private MeetupStatus status;
     private String roomId;
     private String adminNotes;
+    private String feedback;
+    private Long adjournedByUserId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

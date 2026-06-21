@@ -39,6 +39,9 @@ export const followupService = {
   updateMeetupStatus: (id: number, payload: { status: string; adminNotes?: string }) =>
     followupApi.patch(`/api/followup/meetups/${id}/status`, payload),
 
+  adjournMeetup: (id: number, payload: { feedback: string }) =>
+    followupApi.patch(`/api/followup/meetups/${id}/adjourn`, payload),
+
   
   getAllContracts: () =>
     followupApi.get("/api/followup/contracts"),
