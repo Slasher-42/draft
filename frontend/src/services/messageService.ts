@@ -2,7 +2,7 @@ import axios from "axios";
 import { api } from "@/lib/api";
 import { Message, ConversationSummary, BondStatus } from "@/types/message";
 
-const BASE_URL = "https://followup-service.onrender.com";
+const BASE_URL = "https://followup-service-c1jp.onrender.com";
 
 function authHeader() {
   if (typeof window === "undefined") return {};
@@ -67,7 +67,7 @@ export const investmentMonitorService = {
       return Promise.reject({ response: { status: 401 }, message: "Not authenticated" });
     }
     return axios.post(
-      "https://reporting-notification-service.onrender.com/api/notifications/ask-for-fund",
+      "https://reporting-and-notification-service.onrender.com/api/notifications/ask-for-fund",
       { ...payload, token },
       { timeout: 65000 }
     );
@@ -75,7 +75,7 @@ export const investmentMonitorService = {
 
   markAsFunded: (executionId: number) =>
     axios.patch(
-      `https://startup-application-service.onrender.com/api/executions/investor/${executionId}/fund`,
+      `https://startupapplicationservice.onrender.com/api/executions/investor/${executionId}/fund`,
       {},
       { headers: authHeader() }
     ),
@@ -93,7 +93,7 @@ export const investmentMonitorService = {
       return Promise.reject({ response: { status: 401 }, message: "Not authenticated" });
     }
     return axios.post(
-      "https://reporting-notification-service.onrender.com/api/notifications/withhold-notice",
+      "https://reporting-and-notification-service.onrender.com/api/notifications/withhold-notice",
       { ...payload, token },
       { timeout: 65000 }
     );

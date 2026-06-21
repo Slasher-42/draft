@@ -71,7 +71,7 @@ export const userService = {
 
   async getAllUsers(params?: { role?: string; search?: string; page?: number }): Promise<any[]> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const url = new URL("https://user-management-service-2zr5.onrender.com/api/users");
+  const url = new URL("https://usermanagement-microservice.onrender.com/api/users");
   if (params?.role) url.searchParams.set("role", params.role);
   if (params?.search) url.searchParams.set("search", params.search);
   const res = await fetch(url.toString(), {

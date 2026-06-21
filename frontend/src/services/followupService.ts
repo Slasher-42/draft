@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const followupApi = axios.create({
-  baseURL: "https://followup-service.onrender.com",
+  baseURL: "https://followup-service-c1jp.onrender.com",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });

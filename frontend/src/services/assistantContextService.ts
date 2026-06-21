@@ -1,9 +1,9 @@
 import axios from "axios";
 import { User } from "@/types/user";
 
-const BASE_STARTUP_SVC = "https://startup-application-service.onrender.com";
-const BASE_EVAL_SVC = "https://evaluation-decision-service.onrender.com";
-const BASE_USER_SVC = "https://user-management-service-2zr5.onrender.com";
+const BASE_STARTUP_SVC = "https://startupapplicationservice.onrender.com";
+const BASE_EVAL_SVC = "https://evaluation-and-decision-service.onrender.com";
+const BASE_USER_SVC = "https://usermanagement-microservice.onrender.com";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;

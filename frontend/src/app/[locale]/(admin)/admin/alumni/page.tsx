@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const AI_SERVICE_URL = "https://ai-assessment-service.onrender.com";
+const AI_SERVICE_URL = "https://aiassessmentengine-service.onrender.com";
 
 interface Bond {
   investorUserId: number;

@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     USER_MANAGEMENT_URL: str
     STARTUP_SERVICE_URL: str
-    EVALUATION_SERVICE_URL: str = "https://evaluation-decision-service.onrender.com"
+    EVALUATION_SERVICE_URL: str = "https://evaluation-and-decision-service.onrender.com"
     KAFKA_BOOTSTRAP_SERVERS: str
     KAFKA_USERNAME: str = "slasher"        
     KAFKA_PASSWORD: str = ""              

@@ -6,7 +6,7 @@ import { X, Send, Loader2, RefreshCw, ChevronDown, Sparkles, Bot } from "lucide-
 import { useAuth } from "@/context/AuthContext";
 import { getWelcomeMessage } from "@/services/assistantContextService";
 
-const AI_SERVICE_URL = "https://ai-assessment-service.onrender.com";
+const AI_SERVICE_URL = "https://aiassessmentengine-service.onrender.com";
 
 interface Message {
   role: "user" | "assistant";

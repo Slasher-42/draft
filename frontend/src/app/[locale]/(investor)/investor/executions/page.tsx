@@ -284,7 +284,7 @@ export default function InvestorExecutionsPage() {
       let startupExecution = null;
       try {
         const execRes = await fetch(
-          `https://startup-application-service.onrender.com/api/executions/startup/internal/${match.startupExecutionId}`,
+          `https://startupapplicationservice.onrender.com/api/executions/startup/internal/${match.startupExecutionId}`,
           {
             headers: {
               Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("token") : ""}`,

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const startupServiceApi = axios.create({
-  baseURL: "https://startup-application-service.onrender.com",
+  baseURL: "https://startupapplicationservice.onrender.com",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });

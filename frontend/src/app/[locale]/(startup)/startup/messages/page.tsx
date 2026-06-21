@@ -86,7 +86,7 @@ export default function StartupMessagesPage() {
     if (!user?.id) return;
     const token = localStorage.getItem("token");
     const client = new Client({
-      webSocketFactory: () => new (SockJS as any)("https://followup-service.onrender.com/ws/chat"),
+      webSocketFactory: () => new (SockJS as any)("https://followup-service-c1jp.onrender.com/ws/chat"),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       onConnect: () => {
         client.subscribe(`/topic/user-${user.id}`, (frame) => {

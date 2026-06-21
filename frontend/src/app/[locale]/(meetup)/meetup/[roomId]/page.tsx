@@ -264,7 +264,7 @@ export default function MeetupRoomPage() {
 
       const stomp = new Client({
         webSocketFactory: () =>
-          new SockJS("https://followup-service.onrender.com/ws/signaling"),
+          new SockJS("https://followup-service-c1jp.onrender.com/ws/signaling"),
         reconnectDelay: 3000,
         onConnect: () => {
           if (!mounted) return;

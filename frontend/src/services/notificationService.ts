@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const notificationApi = axios.create({
-  baseURL: "https://reporting-notification-service.onrender.com",
+  baseURL: "https://reporting-and-notification-service.onrender.com",
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });

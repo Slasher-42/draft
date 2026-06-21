@@ -11,21 +11,21 @@ import {
   TrendingUp, AlertCircle, Zap,
 } from "lucide-react";
 
-const execApi = axios.create({ baseURL: "https://startup-application-service.onrender.com", timeout: 30000 });
+const execApi = axios.create({ baseURL: "https://startupapplicationservice.onrender.com", timeout: 30000 });
 execApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-const evalApi = axios.create({ baseURL: "https://evaluation-decision-service.onrender.com", timeout: 30000 });
+const evalApi = axios.create({ baseURL: "https://evaluation-and-decision-service.onrender.com", timeout: 30000 });
 evalApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-const aiApi = axios.create({ baseURL: "https://ai-assessment-service.onrender.com", timeout: 120000 });
+const aiApi = axios.create({ baseURL: "https://aiassessmentengine-service.onrender.com", timeout: 120000 });
 aiApi.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
