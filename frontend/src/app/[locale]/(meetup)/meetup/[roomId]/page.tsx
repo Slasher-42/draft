@@ -421,20 +421,19 @@ export default function MeetupRoomPage() {
         </div>
 
         <div className="relative rounded-2xl overflow-hidden bg-gray-800">
-          {remoteConnected ? (
-            <>
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-3 left-3 bg-black/50 text-xs text-white px-2 py-1 rounded-md">
-                {t("remoteLabel")}
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-3">
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {remoteConnected && (
+            <div className="absolute bottom-3 left-3 bg-black/50 text-xs text-white px-2 py-1 rounded-md">
+              {t("remoteLabel")}
+            </div>
+          )}
+          {!remoteConnected && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-800">
               <div className="h-16 w-16 rounded-full bg-gray-700 flex items-center justify-center">
                 <Users className="h-7 w-7 text-white/30" />
               </div>
